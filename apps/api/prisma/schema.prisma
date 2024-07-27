@@ -14,11 +14,39 @@ datasource db {
 }
 
 model User {
-  id Int @default(autoincrement()) @map("id")
+  id Int @id @default(autoincrement()) @map("id")
   email String @unique @map("email")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  notebooks Notebook[]
+
   @@map("users")
+}
+
+model Notebook {
+  id Int @id @default(autoincrement()) @map("id")
+  name String @map("name")
+  userId Int @map("user_id")
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  notes Note[]
+
+  @@map("notebooks")
+}
+
+model Note {
+  id Int @id @default(autoincrement()) @map("id")
+  title String @map("title")
+  content String @map("content")
+  notebookId Int @map("notebook_id")
+
+  notebook Notebook @relation(fields: [notebookId], references: [id])
+
+  @@map("notes")
 }
