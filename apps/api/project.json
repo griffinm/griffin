@@ -1,7 +1,7 @@
 {
-  "name": "griffin",
+  "name": "api",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/griffin/src",
+  "sourceRoot": "apps/api/src",
   "projectType": "application",
   "tags": [],
   "targets": {
@@ -9,14 +9,14 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "griffin:build"
+        "buildTarget": "api:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "griffin:build:development"
+          "buildTarget": "api:build:development"
         },
         "production": {
-          "buildTarget": "griffin:build:production"
+          "buildTarget": "api:build:production"
         }
       }
     }
