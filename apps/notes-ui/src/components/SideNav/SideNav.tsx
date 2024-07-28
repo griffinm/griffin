@@ -22,16 +22,6 @@ export function SideNav() {
 
       <Divider />
 
-      <div className="p-2 flex items-center justify-between">
-        <Typography variant='body1'>Notebooks</Typography>
-        <Button
-          size='small'
-          variant='outlined'
-        >
-          New
-        </Button>
-      </div>
-
       <div>
         <NotebookList />
       </div>

@@ -12,6 +12,7 @@ export class NotebookService {
     return this.prisma.notebook.findMany({
       where: {
         userId,
+        deletedAt: null,
       },
     });
   }
@@ -37,6 +38,18 @@ export class NotebookService {
       data: {
         ...dto,
         userId,
+      },
+    });
+  }
+  
+  async deleteNotebook(userId: number, notebookId: number): Promise<NotebookEntity> {
+    return this.prisma.notebook.update({
+      where: {
+        id: notebookId,
+        userId,
+      },
+      data: {
+        deletedAt: new Date(),
       },
     });
   }

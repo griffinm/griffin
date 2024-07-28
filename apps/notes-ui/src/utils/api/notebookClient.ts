@@ -20,3 +20,18 @@ export const updateNotebook = async (
 ): Promise<AxiosResponse<Notebook>> => {
   return baseClient.patch(`${urlBase}/${notebookId}`, data);
 }
+
+export const createNotebook = async (
+  title: string,
+): Promise<AxiosResponse<Notebook>> => {
+  const body = {
+    title,
+  }
+  return baseClient.post(`${urlBase}`, body);
+}
+
+export const deleteNotebook = async (
+  notebookId: number,
+): Promise<AxiosResponse<Notebook>> => {
+  return baseClient.delete(`${urlBase}/${notebookId}`);
+}

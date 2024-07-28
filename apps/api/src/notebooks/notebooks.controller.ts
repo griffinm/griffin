@@ -9,6 +9,7 @@ import {
   Body,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { NotebookEntity } from './dto/notebook.entity';
@@ -55,5 +56,13 @@ export class NotebooksController {
     @Body() dto: CreateDto,
   ): Promise<NotebookEntity> {
     return this.notebookService.createNotebook(request.user.id, dto);
+  }
+
+  @Delete("/:id")
+  async delete(
+    @Req() request: any,
+    @Param('id') id: string,
+  ): Promise<NotebookEntity> {
+    return this.notebookService.deleteNotebook(request.user.id, Number(id));
   }
 }

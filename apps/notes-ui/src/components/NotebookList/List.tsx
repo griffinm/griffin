@@ -14,16 +14,19 @@ import { Button, Input } from "@mui/material";
 interface NotebooksProps {
   notebooks: Notebook[],
   onUpdateNotebook: (notebook: Notebook) => void,
+  onDeleteNotebook: (notebook: Notebook) => void,
 }
 
 interface ListItemProps {
   notebook: Notebook,
   onUpdateNotebook: (notebook: Notebook) => void,
+  onDeleteNotebook: (notebook: Notebook) => void,
 }
 
 export function ListItem({
   notebook,
   onUpdateNotebook,
+  onDeleteNotebook,
 }: ListItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -55,7 +58,15 @@ export function ListItem({
           setIsEditing(true);
           setAnchorEl(null);
         }}>Edit Name</MenuItem>
-        <MenuItem>Delete</MenuItem>
+
+        <MenuItem 
+          onClick={() => {
+            onDeleteNotebook(notebook)
+            setAnchorEl(null);
+          }}
+        >
+          Delete
+        </MenuItem>
       </Menu>
     )
   }
@@ -154,6 +165,7 @@ export function ListItem({
 export function List({
   notebooks,
   onUpdateNotebook,
+  onDeleteNotebook,
 }: NotebooksProps) {
   return (
     <div className="p-2">
@@ -162,6 +174,7 @@ export function List({
           key={notebook.id}
           notebook={notebook}
           onUpdateNotebook={onUpdateNotebook}
+          onDeleteNotebook={onDeleteNotebook}
         />
       ))}
     </div>

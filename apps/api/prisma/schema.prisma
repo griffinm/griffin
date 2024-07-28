@@ -29,6 +29,7 @@ model Notebook {
   id Int @id @default(autoincrement()) @map("id")
   title String? @map("title")
   userId Int @map("user_id")
+  deletedAt DateTime? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -45,6 +46,7 @@ model Note {
   title String? @map("title")
   content String? @map("content")
   notebookId Int @map("notebook_id")
+  deletedAt DateTime? @map("deleted_at")
 
   notebook Notebook @relation(fields: [notebookId], references: [id])
 

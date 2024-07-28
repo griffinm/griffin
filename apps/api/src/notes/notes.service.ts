@@ -10,8 +10,10 @@ export class NoteService {
   async findAllForUser(userId: number) {
     return await this.prisma.note.findMany({
       where: {
+        deletedAt: null,
         notebook: {
           user: { id: userId },
+          deletedAt: null,
         },
       },
     });
@@ -21,6 +23,7 @@ export class NoteService {
     return await this.prisma.note.findMany({
       where: {
         notebook: { id: notebookId, user: { id: userId } },
+        deletedAt: null,
       },
     });
   }
