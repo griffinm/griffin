@@ -1,7 +1,7 @@
 import { PickType } from '@nestjs/mapped-types';
 import { NotebookEntity } from './notebook.entity';
 
-export class CreateDto extends PickType(
+export class UpdateDto extends PickType(
   NotebookEntity,
   [
     'title',

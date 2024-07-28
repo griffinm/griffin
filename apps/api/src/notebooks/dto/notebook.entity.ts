@@ -12,7 +12,7 @@ export class NotebookEntity {
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  title: string;
 
   @IsInt()
   @IsNotEmpty()

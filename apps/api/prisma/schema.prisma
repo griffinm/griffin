@@ -27,7 +27,7 @@ model User {
 
 model Notebook {
   id Int @id @default(autoincrement()) @map("id")
-  name String @map("name")
+  title String? @map("title")
   userId Int @map("user_id")
 
   user User @relation(fields: [userId], references: [id])
@@ -42,8 +42,8 @@ model Notebook {
 
 model Note {
   id Int @id @default(autoincrement()) @map("id")
-  title String @map("title")
-  content String @map("content")
+  title String? @map("title")
+  content String? @map("content")
   notebookId Int @map("notebook_id")
 
   notebook Notebook @relation(fields: [notebookId], references: [id])

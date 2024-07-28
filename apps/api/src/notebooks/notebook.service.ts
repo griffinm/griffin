@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { NotebookEntity } from './dto/notebook.entity';
 import { CreateDto } from './dto/create.dto';
+import { UpdateDto } from './dto/update.dto';
 
 @Injectable()
 export class NotebookService {
@@ -11,6 +12,22 @@ export class NotebookService {
     return this.prisma.notebook.findMany({
       where: {
         userId,
+      },
+    });
+  }
+
+  async updateNotebook(
+    userId: number,
+    notebookId: number,
+    dto: UpdateDto,
+  ): Promise<NotebookEntity> {
+    return this.prisma.notebook.update({
+      where: {
+        id: notebookId,
+        userId,
+      },
+      data: {
+        ...dto,
       },
     });
   }
