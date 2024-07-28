@@ -48,5 +48,8 @@ model Note {
 
   notebook Notebook @relation(fields: [notebookId], references: [id])
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@map("notes")
 }
