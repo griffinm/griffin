@@ -1,60 +1,29 @@
 import { Note, Notebook } from "@prisma/client";
 import { useEffect, useState } from "react";
-import { 
-  fetchNotebooks, 
-  updateNotebook, 
-  createNotebook, 
-  deleteNotebook,
-  createNote,
-} from "../../utils/api";
 import { List } from "./List";
 import { Button, Typography } from "@mui/material";
 import { ConfirmDialog } from "../ConfirmDialog/ConfirmDialog";
+import { useNotes } from "../../providers/NoteProvider";
 
 export function NotebookList() {
-  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [deleteNotebookDialogOpen, setDeleteNotebookDialogOpen] = useState(false);
   const [notebookForDelete, setNotebookForDelete] = useState<Notebook | null>(null);
-  const [newNote, setNewNote] = useState<Note | null>(null);
+  const { 
+    createNote,
+    createNotebook, 
+    deleteNotebook, 
+    fetchNotebooks, 
+    notebooks,
+    updateNotebook, 
+  } = useNotes();
 
   useEffect(() => {
-    fetchNotebooks().then((resp) => {
-      setNotebooks(resp.data)
-    })
+    fetchNotebooks()
   }, []);
-
-  const onUpdateNotebook = (notebook: Notebook) => {
-    updateNotebook(notebook.id, notebook)
-      .then((resp) => {
-        setNotebooks(notebooks.map((nb) => nb.id === notebook.id ? notebook : nb))
-      })
-  }
-
-  const onCreateNotebook = () => {
-    createNotebook("New Notebook")
-      .then((resp) => {
-        setNotebooks([resp.data, ...notebooks])
-      })
-  }
 
   const showDeleteNotebookDialog = (notebook: Notebook) => {
     setNotebookForDelete(notebook);
     setDeleteNotebookDialogOpen(true);
-  }
-
-  const onDeleteNotebook = (notebook: Notebook) => {
-    deleteNotebook(notebook.id)
-      .then((resp) => {
-        setNotebooks(notebooks.filter((nb) => nb.id !== notebook.id))
-        setNotebookForDelete(null);
-      })
-  }
-
-  const onCreateNote = (notebook: Notebook) => {
-    createNote(notebook.id)
-      .then((resp) => {
-        setNewNote(resp.data);
-      })
   }
 
   return (
@@ -65,7 +34,7 @@ export function NotebookList() {
           <Button
             size='small'
             variant='outlined'
-            onClick={onCreateNotebook}
+            onClick={createNotebook}
           >
             New
           </Button>
@@ -74,10 +43,9 @@ export function NotebookList() {
       <div>
         <List
           notebooks={notebooks}
-          onUpdateNotebook={onUpdateNotebook}
+          onUpdateNotebook={updateNotebook}
           onDeleteNotebook={showDeleteNotebookDialog}
-          onCreateNote={onCreateNote}
-          newNote={newNote}
+          onCreateNote={(notebook) => createNote(notebook.id)}
         />
       </div>
       {notebookForDelete && (
@@ -87,8 +55,8 @@ export function NotebookList() {
           data={{ notebook: notebookForDelete }}
           open={deleteNotebookDialogOpen}
           onClose={() => setDeleteNotebookDialogOpen(false)}
-          onConfirm={({ notebook }) => onDeleteNotebook(notebook)}
-        />  
+          onConfirm={({ notebook }) => deleteNotebook(notebook.id)}
+        />
       )}
     </div>
   );

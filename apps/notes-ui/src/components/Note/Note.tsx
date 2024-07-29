@@ -1,26 +1,33 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { CircularProgress, Input } from "@mui/material";
+import { Button, CircularProgress, Input } from "@mui/material";
 import { Editor } from './Editor'
-import { useCurrentNote } from "../../providers/CurrentNoteProvider";
+import { useNotes } from "../../providers/NoteProvider";
+import { Delete } from '@mui/icons-material';
+import { ConfirmDialog } from "../ConfirmDialog";
+import { Note as NoteType } from "@prisma/client"
+import { useNavigate } from "react-router-dom";
 
 export function Note() {
-  const { noteId } = useParams();
+  const { noteId: noteIdParam } = useParams();
+  const noteId = Number(noteIdParam);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const navigate = useNavigate();
   const { 
-    note,
-    setCurrentNote,
-    isLoading,
-    isSaving,
-    saveNote,
-  } = useCurrentNote();
-  const [newNoteTitle, setNewNoteTitle] = useState(note?.title);
+    currentNote,
+    updateNote,
+    deleteNote,
+    noteLoading,
+    setCurrentNoteId,
+  } = useNotes();
+  const [newNoteTitle, setNewNoteTitle] = useState(currentNote?.title);
 
   useEffect(() => {
     if (!noteId) return;
-    setCurrentNote(noteId);
+    setCurrentNoteId(noteId);
   }, [noteId]);
 
-  if (isLoading || !note) {
+  if (noteLoading || !currentNote) {
     return (
       <div className="flex items-center justify-center h-screen">
         <CircularProgress />;
@@ -28,25 +35,51 @@ export function Note() {
     )
   }
 
+  const handleDeleteNote = (note: NoteType) => {
+    deleteNote(note.id);
+    setOpenDeleteDialog(false);
+    navigate("/");
+  }
+
   return (
     <div className="pr-5 pt-5">
-      <Input
-        sx={{ fontSize: 24 }}
-        fullWidth
-        type="text"
-        value={newNoteTitle || note.title}
-        onChange={(e) => {
-          setNewNoteTitle(e.target.value);
-          saveNote({ ...note, title: e.target.value });
-        }}
-      />
+      <div className="flex">
+        <Input
+          sx={{ fontSize: 24 }}
+          fullWidth
+          type="text"
+          value={newNoteTitle || currentNote.title}
+          onChange={(e) => {
+            setNewNoteTitle(e.target.value);
+            updateNote({ ...currentNote, title: e.target.value });
+          }}
+        />
+        <div className="p-2">
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => setOpenDeleteDialog(true)}
+            size="small"
+          >
+            <Delete />
+          </Button>
+        </div>
+      </div>
       <div className="mt-5">
         <Editor
-          note={note}
-          onChange={(content) => saveNote({ ...note, content })}
-          isSaving={isSaving}
+          note={currentNote}
+          onChange={(content) => updateNote({ ...currentNote, content })}
+          isSaving={false}
         />
       </div>
+      <ConfirmDialog<NoteType>
+        open={openDeleteDialog}
+        onConfirm={(n) => handleDeleteNote(n)}
+        onClose={() => setOpenDeleteDialog(false)}
+        title="Delete Note"
+        message="Are you sure you want to delete this note?"
+        data={currentNote}
+      />
     </div>
   );
 }

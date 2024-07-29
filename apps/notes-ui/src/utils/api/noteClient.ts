@@ -14,3 +14,7 @@ export const updateNote = async(note: Note): Promise<AxiosResponse<Note>> => {
     title: note.title,
   });
 }
+
+export const deleteNote = async(noteId: number): Promise<AxiosResponse<void>> => {
+  return baseClient.delete(`/notes/${noteId}`);
+}

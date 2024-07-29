@@ -7,6 +7,7 @@ import {
   Post, 
   Req, 
   UseGuards,
+  Delete,
  } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { NoteService } from './notes.service';
@@ -47,5 +48,13 @@ export class NotesController {
     @Body() body: UpdateDto,
   ): Promise<NoteEntity> {
     return this.noteService.update(Number(id), body, request.user.id);
+  }
+
+  @Delete(':id')
+  async delete(
+    @Req() request: any,
+    @Param('id') id: string,
+  ): Promise<void> {
+    this.noteService.delete(Number(id), request.user.id);
   }
 }

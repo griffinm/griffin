@@ -1,23 +1,30 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { RouterProvider } from "react-router-dom";
-import { router } from './router';
-import { UserProvider } from './providers/UserProvider/UserProvider';
-import { CurrentNoteProvider } from './providers/CurrentNoteProvider/CurrentNoteProvider';
+import { BrowserRouter, Route, Router, RouterProvider, Routes } from "react-router-dom";
+import { UserProvider } from './providers/UserProvider';
+import { NoteProvider } from './providers/NoteProvider';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import { Layout } from './components/Layout';
+import { Note } from './components/Note';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <StrictMode>
-    <UserProvider>
-      <CurrentNoteProvider>
-        <RouterProvider router={router} />
-      </CurrentNoteProvider>
-    </UserProvider>
+    <BrowserRouter>
+      <UserProvider>
+        <NoteProvider>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route path="notes/:noteId" element={<Note />} />
+            </Route>
+          </Routes>
+        </NoteProvider>
+      </UserProvider>
+    </BrowserRouter>
   </StrictMode>
 );

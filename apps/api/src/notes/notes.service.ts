@@ -66,4 +66,13 @@ export class NoteService {
       },
     });
   }
+
+  async delete(id: number, userId: number) {
+    return await this.prisma.note.update({
+      where: { id, notebook: { user: { id: userId } } },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+  }
 }

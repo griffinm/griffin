@@ -6,60 +6,49 @@ import {
   Check,
 } from '@mui/icons-material';
 import { useEffect, useMemo, useState } from "react";
-import { fetchNotesForNotebook } from "../../utils/api";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Button, Input, Typography } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
-import { useCurrentNote } from "../../providers/CurrentNoteProvider";
+import { useNotes } from "../../providers/NoteProvider";
 import classnames from "classnames";
-
-interface NotebooksProps {
-  notebooks: Notebook[],
-  onUpdateNotebook: (notebook: Notebook) => void,
-  onDeleteNotebook: (notebook: Notebook) => void,
-  onCreateNote: (notebook: Notebook) => void,
-  newNote: Note | null,
-}
+import { urls } from "../../utils/urls";
 
 interface ListItemProps {
   notebook: Notebook,
-  onUpdateNotebook: (notebook: Notebook) => void,
-  onDeleteNotebook: (notebook: Notebook) => void,
-  onCreateNote: (notebook: Notebook) => void,
-  newNote: Note | null,
   open: boolean,
 }
 
 export function ListItem({
   notebook,
-  onUpdateNotebook,
-  onDeleteNotebook,
-  onCreateNote,
-  newNote,  
   open,
 }: ListItemProps) {
+  const { 
+    notes, 
+    fetchNotesForNotebook,
+    currentNote,
+    updateNotebook,
+    deleteNotebook,
+    createNote,
+  } = useNotes();
   const [isOpen, setIsOpen] = useState(open);
-  const [notes, setNotes] = useState<Note[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
-  const { note: currentNote } = useCurrentNote();
+  const notesForNotebook = useMemo(() => {
+    return notes.filter((note) => note.notebookId === notebook.id);
+  }, [notes, notebook]);
+  const orderedNotes = useMemo(() => {
+    return notesForNotebook.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [notesForNotebook]);
 
   useEffect(() => {
     if (isOpen) {
       fetchNotesForNotebook(notebook.id)
-        .then((res) => setNotes(res.data))
-        .catch((err) => console.error(err));
-    } else {
-      setNotes([]);
     }
-  }, [isOpen, newNote, notebook]);
+  }, [isOpen, notebook]);
 
-  const orderedNotes = useMemo(() => {
-    return notes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [notes]);
 
   const renderMenu = () => {
     return (
@@ -78,7 +67,7 @@ export function ListItem({
 
         <MenuItem 
           onClick={() => {
-            onDeleteNotebook(notebook)
+            deleteNotebook(notebook.id)
             setAnchorEl(null);
           }}
         >
@@ -101,7 +90,7 @@ export function ListItem({
               if (e.key === 'Enter') {
                 setIsEditing(false);
                 setAnchorEl(null);
-                onUpdateNotebook({
+                updateNotebook({
                   ...notebook,
                   title: newNotebookTitle,
                 });
@@ -116,7 +105,7 @@ export function ListItem({
             onClick={() => {
               setIsEditing(false);
               setAnchorEl(null);
-              onUpdateNotebook({
+              updateNotebook({
                 ...notebook,
                 title: newNotebookTitle,
               });
@@ -140,7 +129,7 @@ export function ListItem({
     );
 
     return (
-      <Link to={`/note/${note.id}`} key={note.id}>
+      <Link to={urls.note(note.id)} key={note.id}>
         <div className={containerClasses}>
         <Typography variant="h6">
           {note.title}
@@ -181,7 +170,7 @@ export function ListItem({
           variant="text"
           size="small"
           color="primary"
-          onClick={() => onCreateNote(notebook)}
+          onClick={() => createNote()}
         >
           Create a new note
         </Button>
@@ -225,27 +214,16 @@ export function ListItem({
   );
 }
 
-export function List({
-  notebooks,
-  onUpdateNotebook,
-  onDeleteNotebook,
-  onCreateNote,
-  newNote,
-}: NotebooksProps) {
-  const { note: currentNote } = useCurrentNote();
+export function List() {
+  const { currentNote, notebooks } = useNotes();
   return (
     <div className="p-2">
       {notebooks.map((notebook) => {
         const containsCurrentNote = notebook.id === currentNote?.notebookId;
-        console.log("Contains current note: ", containsCurrentNote);
         return (
           <ListItem
             key={notebook.id}
             notebook={notebook}
-            onUpdateNotebook={onUpdateNotebook}
-            onDeleteNotebook={onDeleteNotebook}
-            onCreateNote={onCreateNote}
-            newNote={newNote}
             open={containsCurrentNote}
           />
         )
