@@ -1,6 +1,7 @@
 import { Note, Notebook } from "@prisma/client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { 
+  NoteUpdateProps,
   createNote as createNoteApi, 
   createNotebook as createNotebookApi, 
   deleteNote as deleteNoteApi, 
@@ -33,7 +34,7 @@ interface CurrentNoteProps {
   notes: Note[];
   notesLoading: boolean;
   setCurrentNoteId: (noteId: number) => void;
-  updateNote: (note: Note) => void;
+  updateNote: (note: NoteUpdateProps) => void;
   updateNotebook: (notebook: Notebook) => void;
 }
 
@@ -131,13 +132,17 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setNotebooksLoading(false)})
   }
 
-  const updateNote = (note: Note) => {
+  const updateNote = (note: NoteUpdateProps) => {
     setIsSaving(true);
     updateNoteApi(note)
-      .then(() => {
-        setNotes(notes.map((n) => n.id === note.id ? note : n));
-      })
       .finally(() => {setIsSaving(false)})
+
+    const updatedNote = notes.find((n) => n.id === note.id);
+    const newNote = {...updatedNote, ...note};
+
+    if (updatedNote) {
+      setNotes(notes.map((n) => n.id === note.id ? newNote as Note : n));
+    }
   }
 
   const fetchNotesForNotebook = (notebookId: number) => {

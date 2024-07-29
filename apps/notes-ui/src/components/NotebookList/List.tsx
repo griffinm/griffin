@@ -42,7 +42,7 @@ export function ListItem({
   const orderedNotes = useMemo(() => {
     return notesForNotebook.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [notesForNotebook]);
-
+  
   useEffect(() => {
     if (isOpen) {
       fetchNotesForNotebook(notebook.id)

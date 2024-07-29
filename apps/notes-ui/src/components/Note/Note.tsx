@@ -27,6 +27,10 @@ export function Note() {
     setCurrentNoteId(noteId);
   }, [noteId]);
 
+  useEffect(() => {
+    setNewNoteTitle(currentNote?.title);
+  }, [currentNote]);
+
   if (noteLoading || !currentNote) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -51,7 +55,7 @@ export function Note() {
           value={newNoteTitle || currentNote.title}
           onChange={(e) => {
             setNewNoteTitle(e.target.value);
-            updateNote({ ...currentNote, title: e.target.value });
+            updateNote({ id: currentNote.id, title: e.target.value });
           }}
         />
         <div className="p-2">
@@ -68,7 +72,7 @@ export function Note() {
       <div className="mt-5">
         <Editor
           note={currentNote}
-          onChange={(content) => updateNote({ ...currentNote, content })}
+          onChange={(content) => updateNote({ id: currentNote.id, content })}
           isSaving={false}
         />
       </div>

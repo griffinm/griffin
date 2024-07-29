@@ -13,10 +13,12 @@ export class NoteEntity {
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   title: string;
 
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
   content?: string;
   
   @IsInt()
