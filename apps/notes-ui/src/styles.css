@@ -2,3 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 /* You can add global styles to this file, and also import other style files */
+
+.MuiTiptap-FieldContainer-root {
+  min-height: 500px;
+  border: none;
+}
+
+.MuiCollapse-root {
+  border: none;
+}
