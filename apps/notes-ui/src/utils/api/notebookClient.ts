@@ -35,3 +35,13 @@ export const deleteNotebook = async (
 ): Promise<AxiosResponse<Notebook>> => {
   return baseClient.delete(`${urlBase}/${notebookId}`);
 }
+
+export const createNote = async (
+  notebookId: number,
+): Promise<AxiosResponse<Note>> => {
+  const body = {
+    title: "New Note",
+    content: "",
+  }
+  return baseClient.post(`${urlBase}/${notebookId}/notes`, body);
+}

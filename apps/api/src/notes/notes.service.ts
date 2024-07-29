@@ -25,6 +25,14 @@ export class NoteService {
         notebook: { id: notebookId, user: { id: userId } },
         deletedAt: null,
       },
+      select: {
+        id: true,
+        title: true,
+        content: false, // do not load the content when selecting for the list view
+        createdAt: true,
+        updatedAt: true,
+        notebookId: true,
+      },
     });
   }
 
@@ -46,11 +54,16 @@ export class NoteService {
     });
   }
 
-  // async create(data: CreateDto, userId: number) {
-  //   return await this.prisma.note.create({
-  //     data: {
-  //       ...data,
-  //     },
-  //   });
-  // }
+  async create(data: CreateDto, notebookId: number, userId: number) {
+    return await this.prisma.note.create({
+      data: {
+        ...data,
+        notebook: {
+          connect: {
+            id: notebookId,
+          },
+        },
+      },
+    });
+  }
 }

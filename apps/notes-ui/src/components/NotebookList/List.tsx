@@ -5,34 +5,47 @@ import {
   MoreVert,
   Check,
 } from '@mui/icons-material';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchNotesForNotebook } from "../../utils/api";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Button, Input } from "@mui/material";
+import { Button, Input, Typography } from "@mui/material";
+import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
+import { useCurrentNote } from "../../providers/CurrentNoteProvider";
+import classnames from "classnames";
 
 interface NotebooksProps {
   notebooks: Notebook[],
   onUpdateNotebook: (notebook: Notebook) => void,
   onDeleteNotebook: (notebook: Notebook) => void,
+  onCreateNote: (notebook: Notebook) => void,
+  newNote: Note | null,
 }
 
 interface ListItemProps {
   notebook: Notebook,
   onUpdateNotebook: (notebook: Notebook) => void,
   onDeleteNotebook: (notebook: Notebook) => void,
+  onCreateNote: (notebook: Notebook) => void,
+  newNote: Note | null,
+  open: boolean,
 }
 
 export function ListItem({
   notebook,
   onUpdateNotebook,
   onDeleteNotebook,
+  onCreateNote,
+  newNote,  
+  open,
 }: ListItemProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(open);
   const [notes, setNotes] = useState<Note[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
+  const { note: currentNote } = useCurrentNote();
 
   useEffect(() => {
     if (isOpen) {
@@ -42,7 +55,11 @@ export function ListItem({
     } else {
       setNotes([]);
     }
-  }, [isOpen]);
+  }, [isOpen, newNote, notebook]);
+
+  const orderedNotes = useMemo(() => {
+    return notes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [notes]);
 
   const renderMenu = () => {
     return (
@@ -113,13 +130,36 @@ export function ListItem({
     return <div>{notebook.title || 'New Notebook'}</div>
   }
 
+  const renderNoteListItem = (note: Note) => {
+    const isCurrentNote = note.id === currentNote?.id;
+    const containerClasses = classnames(
+      "text-sm p-1 mb-1 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-all duration-300 ease-in-out",
+      {
+        "bg-gray-100": isCurrentNote,
+      }
+    );
+
+    return (
+      <Link to={`/note/${note.id}`} key={note.id}>
+        <div className={containerClasses}>
+        <Typography variant="h6">
+          {note.title}
+        </Typography>
+        <Typography variant="caption">
+          Edited: {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+          </Typography>
+        </div>
+      </Link>
+    )
+  }
+
   const renderNotes = () => {
     return (
       <>
         {isOpen && !isEditing && (
-          <div className="pl-6 mb-3">
-            {notes.map((note) => (
-              <div key={note.id}>{note.title}</div>
+          <div className="p-1 mb-3">
+            {orderedNotes.map((note) => (
+              renderNoteListItem(note)
             ))}
             {isOpen && notes.length === 0 && (
               <div className="text-gray-500 italic">No notes</div>
@@ -127,6 +167,25 @@ export function ListItem({
           </div>
         )}
       </>
+    )
+  }
+
+  const renderNew = () => {
+    if (!isOpen && !isEditing) {
+      return null;
+    }
+
+    return (
+      <div>
+        <Button 
+          variant="text"
+          size="small"
+          color="primary"
+          onClick={() => onCreateNote(notebook)}
+        >
+          Create a new note
+        </Button>
+      </div>
     )
   }
 
@@ -142,7 +201,7 @@ export function ListItem({
           <div 
             className="flex items-center w-full"
             onClick={() => !isEditing && setIsOpen(!isOpen)}
-          >
+            >
             {renderTitle()}
           </div>
           <div>
@@ -157,7 +216,11 @@ export function ListItem({
         </div>
       </div>
       
+      <div className="text-center">
+        {renderNew()}
+      </div>
       {renderNotes()}
+
     </div>
   );
 }
@@ -166,17 +229,27 @@ export function List({
   notebooks,
   onUpdateNotebook,
   onDeleteNotebook,
+  onCreateNote,
+  newNote,
 }: NotebooksProps) {
+  const { note: currentNote } = useCurrentNote();
   return (
     <div className="p-2">
-      {notebooks.map((notebook) => (
-        <ListItem
-          key={notebook.id}
-          notebook={notebook}
-          onUpdateNotebook={onUpdateNotebook}
-          onDeleteNotebook={onDeleteNotebook}
-        />
-      ))}
+      {notebooks.map((notebook) => {
+        const containsCurrentNote = notebook.id === currentNote?.notebookId;
+        console.log("Contains current note: ", containsCurrentNote);
+        return (
+          <ListItem
+            key={notebook.id}
+            notebook={notebook}
+            onUpdateNotebook={onUpdateNotebook}
+            onDeleteNotebook={onDeleteNotebook}
+            onCreateNote={onCreateNote}
+            newNote={newNote}
+            open={containsCurrentNote}
+          />
+        )
+      })}
     </div>
   );
 }

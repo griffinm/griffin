@@ -1,20 +1,21 @@
-import { Notebook } from "@prisma/client";
+import { Note, Notebook } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { 
   fetchNotebooks, 
   updateNotebook, 
   createNotebook, 
-  deleteNotebook 
+  deleteNotebook,
+  createNote,
 } from "../../utils/api";
 import { List } from "./List";
 import { Button, Typography } from "@mui/material";
 import { ConfirmDialog } from "../ConfirmDialog/ConfirmDialog";
 
-
 export function NotebookList() {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [deleteNotebookDialogOpen, setDeleteNotebookDialogOpen] = useState(false);
   const [notebookForDelete, setNotebookForDelete] = useState<Notebook | null>(null);
+  const [newNote, setNewNote] = useState<Note | null>(null);
 
   useEffect(() => {
     fetchNotebooks().then((resp) => {
@@ -49,6 +50,13 @@ export function NotebookList() {
       })
   }
 
+  const onCreateNote = (notebook: Notebook) => {
+    createNote(notebook.id)
+      .then((resp) => {
+        setNewNote(resp.data);
+      })
+  }
+
   return (
     <div>
       <div>
@@ -68,6 +76,8 @@ export function NotebookList() {
           notebooks={notebooks}
           onUpdateNotebook={onUpdateNotebook}
           onDeleteNotebook={showDeleteNotebookDialog}
+          onCreateNote={onCreateNote}
+          newNote={newNote}
         />
       </div>
       {notebookForDelete && (

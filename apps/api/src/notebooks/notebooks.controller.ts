@@ -18,6 +18,7 @@ import { CreateDto } from './dto/create.dto';
 import { NoteService } from '../notes/notes.service';
 import { NoteEntity } from '../notes/dto/note.entity';
 import { UpdateDto } from './dto/update.dto';
+import { CreateDto as NoteCreateDto } from '../notes/dto/create.dto';
 
 @Controller('notebooks')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -58,8 +59,17 @@ export class NotebooksController {
     return this.notebookService.createNotebook(request.user.id, dto);
   }
 
+  @Post("/:id/notes")
+  async createNote(
+    @Req() request: any,
+    @Param('id') id: number,
+    @Body() dto: NoteCreateDto,
+   ): Promise<NoteEntity> {
+    return this.noteService.create(dto, Number(id), request.user.id);
+  }
+
   @Delete("/:id")
-  async delete(
+  async delete( 
     @Req() request: any,
     @Param('id') id: string,
   ): Promise<NotebookEntity> {

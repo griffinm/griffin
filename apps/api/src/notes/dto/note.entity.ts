@@ -2,6 +2,7 @@ import {
   IsDateString,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -15,17 +16,16 @@ export class NoteEntity {
   title: string;
 
   @IsString()
-  content: string;
+  @IsOptional()
+  content?: string;
   
   @IsInt()
   @IsNotEmpty()
   notebookId: number;
 
   @IsDateString()
-  @IsNotEmpty()
-  createdAt: Date;
+  createdAt?: Date;
 
   @IsDateString()
-  @IsNotEmpty()
-  updatedAt: Date;
+  updatedAt?: Date;
 }
