@@ -5,9 +5,11 @@ import { UpdateDto } from "./dto/update.dto";
 
 @Injectable()
 export class NoteService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+  ) {}
 
-  async findAllForUser(userId: number) {
+  async findAllForUser(userId: string) {
     return await this.prisma.note.findMany({
       where: {
         deletedAt: null,
@@ -19,7 +21,7 @@ export class NoteService {
     });
   }
 
-  async findAllForNotebook(notebookId: number, userId: number) {
+  async findAllForNotebook(notebookId: string, userId: string) {
     return await this.prisma.note.findMany({
       where: {
         notebook: { id: notebookId, user: { id: userId } },
@@ -36,7 +38,7 @@ export class NoteService {
     });
   }
 
-  async findOneForUser(id: number, userId: number) {
+  async findOneForUser(id: string, userId: string) {
     return await this.prisma.note.findFirst({
       where: {
         id,
@@ -47,27 +49,30 @@ export class NoteService {
     })
   }
 
-  async update(id: number, data: UpdateDto, userId: number) {
+  async update(id: string, data: UpdateDto, userId: string) {
     return await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data,
     });
   }
 
-  async create(data: CreateDto, notebookId: number, userId: number) {
+  async create(data: CreateDto, notebookId: string, userId: string) {
+    const notebook = await this.prisma.notebook.findFirst({
+      where: {
+        id: notebookId,
+        user: { id: userId },
+      },
+    });
+    
     return await this.prisma.note.create({
       data: {
         ...data,
-        notebook: {
-          connect: {
-            id: notebookId,
-          },
-        },
+        notebookId: notebook.id,
       },
     });
   }
 
-  async delete(id: number, userId: number) {
+  async delete(id: string, userId: string) {
     return await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data: {

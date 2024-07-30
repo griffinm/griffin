@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Note, Notebook } from "@prisma/client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { 
@@ -20,20 +21,20 @@ interface Props {
 }
 
 interface CurrentNoteProps {
-  createNote: (notebookId: number) => void;
+  createNote: (notebookId: string) => void;
   createNotebook: () => void;
   currentNote: Note | null;
-  deleteNote: (noteId: number) => void;
-  deleteNotebook: (notebookId: number) => void;
+  deleteNote: (noteId: string) => void;
+  deleteNotebook: (notebookId: string) => void;
   fetchNotebooks: () => void;
-  fetchNotesForNotebook: (notebookId: number) => void;
+  fetchNotesForNotebook: (notebookId: string) => void;
   isSaving: boolean,
   notebooks: Notebook[];
   notebooksLoading: boolean;
   noteLoading: boolean;
   notes: Note[];
   notesLoading: boolean;
-  setCurrentNoteId: (noteId: number) => void;
+  setCurrentNoteId: (noteId: string) => void;
   updateNote: (note: NoteUpdateProps) => void;
   updateNotebook: (notebook: Notebook) => void;
 }
@@ -102,7 +103,7 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setNotebooksLoading(false)})
   }
 
-  const createNote = (notebookId: number) => {
+  const createNote = (notebookId: string) => {
     setNoteLoading(true);
     createNoteApi(notebookId)
       .then((resp) => {
@@ -112,7 +113,7 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setNoteLoading(false)})
   }
 
-  const deleteNote = (noteId: number) => {
+  const deleteNote = (noteId: string) => {
     setNoteLoading(true);
     deleteNoteApi(noteId)
       .then(() => {
@@ -123,7 +124,7 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setNoteLoading(false)})
   }
 
-  const deleteNotebook = (notebookId: number) => {
+  const deleteNotebook = (notebookId: string) => {
     setNotebooksLoading(true);
     deleteNotebookApi(notebookId)
       .then(() => {

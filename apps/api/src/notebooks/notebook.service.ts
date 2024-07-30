@@ -8,7 +8,7 @@ import { UpdateDto } from './dto/update.dto';
 export class NotebookService {
   constructor(private prisma: PrismaService) {}
 
-  async getNotebooksForUser(userId: number): Promise<NotebookEntity[]> {
+  async getNotebooksForUser(userId: string): Promise<NotebookEntity[]> {
     return this.prisma.notebook.findMany({
       where: {
         userId,
@@ -18,8 +18,8 @@ export class NotebookService {
   }
 
   async updateNotebook(
-    userId: number,
-    notebookId: number,
+    userId: string,
+    notebookId: string,
     dto: UpdateDto,
   ): Promise<NotebookEntity> {
     return this.prisma.notebook.update({
@@ -33,7 +33,7 @@ export class NotebookService {
     });
   }
 
-  async createNotebook(userId: number, dto: CreateDto): Promise<NotebookEntity> {
+  async createNotebook(userId: string, dto: CreateDto): Promise<NotebookEntity> {
     return this.prisma.notebook.create({
       data: {
         ...dto,
@@ -42,7 +42,7 @@ export class NotebookService {
     });
   }
   
-  async deleteNotebook(userId: number, notebookId: number): Promise<NotebookEntity> {
+  async deleteNotebook(userId: string, notebookId: string): Promise<NotebookEntity> {
     return this.prisma.notebook.update({
       where: {
         id: notebookId,

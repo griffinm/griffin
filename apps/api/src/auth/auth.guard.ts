@@ -13,7 +13,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    request['user'] = await this.usersService.getById(2);
+    request['user'] = await this.usersService.getById('5053f8ff-c261-42b8-8a99-e82fab119004');
 
     return true;
   }

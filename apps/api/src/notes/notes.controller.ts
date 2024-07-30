@@ -30,7 +30,7 @@ export class NotesController {
     @Req() request: any,
     @Param('id') id: string,
   ): Promise<NoteEntity> {
-    return this.noteService.findOneForUser(Number(id), request.user.id);
+    return this.noteService.findOneForUser(id, request.user.id);
   }
 
   // @Post()
@@ -47,7 +47,7 @@ export class NotesController {
     @Param('id') id: string,
     @Body() body: UpdateDto,
   ): Promise<NoteEntity> {
-    return this.noteService.update(Number(id), body, request.user.id);
+    return this.noteService.update(id, body, request.user.id);
   }
 
   @Delete(':id')
@@ -55,6 +55,6 @@ export class NotesController {
     @Req() request: any,
     @Param('id') id: string,
   ): Promise<void> {
-    this.noteService.delete(Number(id), request.user.id);
+    this.noteService.delete(id, request.user.id);
   }
 }

@@ -9,8 +9,7 @@ import { Note as NoteType } from "@prisma/client"
 import { useNavigate } from "react-router-dom";
 
 export function Note() {
-  const { noteId: noteIdParam } = useParams();
-  const noteId = Number(noteIdParam);
+  const { noteId } = useParams();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const navigate = useNavigate();
   const { 

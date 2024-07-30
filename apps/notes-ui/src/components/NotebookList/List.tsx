@@ -143,19 +143,19 @@ export function ListItem({
   }
 
   const renderNotes = () => {
+    if (!isOpen || isEditing) {
+      return null;
+    }
+
     return (
-      <>
-        {isOpen && !isEditing && (
-          <div className="p-1 mb-3">
-            {orderedNotes.map((note) => (
-              renderNoteListItem(note)
-            ))}
-            {isOpen && notes.length === 0 && (
-              <div className="text-gray-500 italic">No notes</div>
-            )}
-          </div>
+      <div className="p-1 mb-3">
+        {orderedNotes.map((note) => (
+          renderNoteListItem(note)
+        ))}
+        {isOpen && notes.length === 0 && (
+          <div className="text-gray-500 italic">No notes</div>
         )}
-      </>
+      </div>
     )
   }
 
@@ -170,7 +170,7 @@ export function ListItem({
           variant="text"
           size="small"
           color="primary"
-          onClick={() => createNote()}
+          onClick={() => createNote(notebook.id)}
         >
           Create a new note
         </Button>

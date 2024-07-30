@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getById(id: number) {
+  async getById(id: string) {
     return this.prisma.user.findFirst({ where: { id } });
   }
 }

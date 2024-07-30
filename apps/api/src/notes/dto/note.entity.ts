@@ -7,9 +7,9 @@ import {
 } from 'class-validator';
 
 export class NoteEntity {
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  id: number;
+  id: string;
 
   @IsString()
   @IsNotEmpty()
@@ -18,12 +18,11 @@ export class NoteEntity {
 
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
   content?: string;
   
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  notebookId: number;
+  notebookId: string;
 
   @IsDateString()
   createdAt?: Date;

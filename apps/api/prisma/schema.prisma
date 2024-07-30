@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(uuid()) @map("id")
   email String @unique @map("email")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -26,9 +26,9 @@ model User {
 }
 
 model Notebook {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(uuid()) @map("id")
   title String? @map("title")
-  userId Int @map("user_id")
+  userId String @map("user_id")
   deletedAt DateTime? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
@@ -42,10 +42,10 @@ model Notebook {
 }
 
 model Note {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(uuid()) @map("id")
   title String? @map("title")
   content String? @map("content")
-  notebookId Int @map("notebook_id")
+  notebookId String @map("notebook_id")
   deletedAt DateTime? @map("deleted_at")
 
   notebook Notebook @relation(fields: [notebookId], references: [id])
@@ -58,10 +58,10 @@ model Note {
 }
 
 model Media {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(uuid()) @map("id")
   type String @map("type")
   url String @map("url")
-  noteId Int @map("note_id")
+  noteId String @map("note_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   note Note @relation(fields: [noteId], references: [id])

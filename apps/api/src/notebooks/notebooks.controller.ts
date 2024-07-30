@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Controller,
   UseGuards,
@@ -39,7 +40,7 @@ export class NotebooksController {
     @Req() request: any,
     @Param('id') id: string,
   ): Promise<NoteEntity[]> {
-    return this.noteService.findAllForNotebook(Number(id), request.user.id);
+    return this.noteService.findAllForNotebook(id, request.user.id);
   }
 
   @Patch("/:id")
@@ -48,7 +49,7 @@ export class NotebooksController {
     @Param('id') id: string,
     @Body() dto: UpdateDto,
   ): Promise<NotebookEntity> {
-    return this.notebookService.updateNotebook(request.user.id, Number(id), dto);
+    return this.notebookService.updateNotebook(request.user.id, id, dto);
   }
 
   @Post()
@@ -59,13 +60,13 @@ export class NotebooksController {
     return this.notebookService.createNotebook(request.user.id, dto);
   }
 
-  @Post("/:id/notes")
+  @Post("/:notebookId/notes")
   async createNote(
     @Req() request: any,
-    @Param('id') id: number,
+    @Param('notebookId') notebookId: string,
     @Body() dto: NoteCreateDto,
    ): Promise<NoteEntity> {
-    return this.noteService.create(dto, Number(id), request.user.id);
+    return this.noteService.create(dto, notebookId, request.user.id);
   }
 
   @Delete("/:id")
@@ -73,6 +74,6 @@ export class NotebooksController {
     @Req() request: any,
     @Param('id') id: string,
   ): Promise<NotebookEntity> {
-    return this.notebookService.deleteNotebook(request.user.id, Number(id));
+    return this.notebookService.deleteNotebook(request.user.id, id);
   }
 }

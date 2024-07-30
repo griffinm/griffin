@@ -6,17 +6,17 @@ import {
 } from 'class-validator';
 
 export class NotebookEntity {
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  id: number;
+  id: string;
 
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  userId: number;
+  userId: string;
 
   @IsDateString()
   createdAt: Date;

@@ -9,13 +9,13 @@ export const fetchNotebooks = async (): Promise<AxiosResponse<Notebook[]>> => {
 }
 
 export const fetchNotesForNotebook = async (
-  notebookId: number,
+  notebookId: string,
 ): Promise<AxiosResponse<Note[]>> => {
   return baseClient.get(`${urlBase}/${notebookId}/notes`);
 }
 
 export const updateNotebook = async (
-  notebookId: number,
+  notebookId: string,
   data: Notebook,
 ): Promise<AxiosResponse<Notebook>> => {
   return baseClient.patch(`${urlBase}/${notebookId}`, data);
@@ -31,13 +31,13 @@ export const createNotebook = async (
 }
 
 export const deleteNotebook = async (
-  notebookId: number,
+  notebookId: string,
 ): Promise<AxiosResponse<Notebook>> => {
   return baseClient.delete(`${urlBase}/${notebookId}`);
 }
 
 export const createNote = async (
-  notebookId: number,
+  notebookId: string,
 ): Promise<AxiosResponse<Note>> => {
   const body = {
     title: "New Note",
