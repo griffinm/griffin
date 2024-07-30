@@ -49,9 +49,22 @@ model Note {
   deletedAt DateTime? @map("deleted_at")
 
   notebook Notebook @relation(fields: [notebookId], references: [id])
+  media Media[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("notes")
+}
+
+model Media {
+  id Int @id @default(autoincrement()) @map("id")
+  type String @map("type")
+  url String @map("url")
+  noteId Int @map("note_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  note Note @relation(fields: [noteId], references: [id])
+
+  @@map("media")
 }
