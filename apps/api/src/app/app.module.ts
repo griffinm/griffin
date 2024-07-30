@@ -7,14 +7,19 @@ import { UsersModule } from '../users/users.module';
 import { NotebookModule } from '../notebooks/notebook.module';
 import { AuthModule } from '../auth/auth.module';
 import { NoteModule } from '../notes/notes.module';
+import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(), 
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env.local',
+    }), 
     UsersModule,
     NotebookModule,
     NoteModule,
     AuthModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -21,6 +21,7 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   notebooks Notebook[]
+  media Media[]
 
   @@map("users")
 }
@@ -59,12 +60,15 @@ model Note {
 
 model Media {
   id String @id @default(uuid()) @map("id")
-  type String @map("type")
-  url String @map("url")
   noteId String @map("note_id")
+  userId String @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
+  key String @map("key")
+  mimeType String @map("mime_type")
+  size Int @map("size")
 
   note Note @relation(fields: [noteId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("media")
 }
