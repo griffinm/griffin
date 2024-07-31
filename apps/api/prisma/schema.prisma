@@ -66,6 +66,7 @@ model Media {
   key String @map("key")
   mimeType String @map("mime_type")
   size Int @map("size")
+  publicUrl String @map("public_url")
 
   note Note @relation(fields: [noteId], references: [id])
   user User @relation(fields: [userId], references: [id])

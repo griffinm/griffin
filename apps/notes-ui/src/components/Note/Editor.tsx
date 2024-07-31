@@ -44,6 +44,7 @@ import {
 import { useCallback, useRef, useState } from "react";
 import { Editor as TiptapEditor } from "@tiptap/core";
 import { useEditor } from "@tiptap/react";
+import { createMedia } from "../../utils/api";
 
 interface Props {
   note: Note,
@@ -129,25 +130,25 @@ export function Editor({
       if (!rteRef.current?.editor) {
         return;
       }
-
-      // For the sake of a demo, we don't have a server to upload the files to,
-      // so we'll instead convert each one to a local "temporary" object URL.
-      // This will not persist properly in a production setting. You should
-      // instead upload the image files to your server, or perhaps convert the
-      // images to bas64 if you would like to encode the image data directly
-      // into the editor content, though that can make the editor content very
-      // large. You will probably want to use the same upload function here as
-      // for the MenuButtonImageUpload `onUploadFiles` prop.
       const attributesForImageFiles = files.map((file) => ({
         src: URL.createObjectURL(file),
         alt: file.name,
       }));
+      const firstFile = files[0]
+      
+      // TODO: allow more than 1 file at a time
+      createMedia({ file: firstFile, noteId: note.id})
+        .then(resp => {
+          insertImages({
+            images: [
+              { src: resp.data.publicUrl, alt: resp.data.id }
+            ],
+            editor: rteRef!.current!.editor,
+            position: insertPosition,
+          });
+        })
 
-      insertImages({
-        images: attributesForImageFiles,
-        editor: rteRef.current.editor,
-        position: insertPosition,
-      });
+      
     },
     [],
   );

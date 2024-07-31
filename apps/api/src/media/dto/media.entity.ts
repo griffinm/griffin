@@ -33,4 +33,8 @@ export class MediaEntity {
   @IsNumber()
   @IsNotEmpty()
   size: number;
+
+  @IsString()
+  @IsNotEmpty()
+  publicUrl: string;
 }

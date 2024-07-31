@@ -27,6 +27,7 @@ export class MediaService {
         userId,
         mimeType: file.mimeType,
         size: file.size,
+        publicUrl: `https://griffin-media.s3.amazonaws.com/${file.Key}`
       },
     });
   }

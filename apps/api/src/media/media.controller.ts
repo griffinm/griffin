@@ -13,20 +13,20 @@ export class MediaController {
     private readonly mediaService: MediaService,
   ) {}
 
-  @Post('upload')
+  @Post()
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File, 
     @Req() request: any,
-    @Body() body: { metadata: { noteId: string }},
+    @Body() body,
   ): Promise<Media> {
     // First upload the file to S3
     const uploadedFile = await this.s3Service.uploadFile(file);
-
+    const noteId = JSON.parse(body.metadata).metadata.noteId
     // Then create a media record in the database
     return this.mediaService.createMediaForNote({
       userId: request.user.id,
-      noteId: body.metadata.noteId,
+      noteId,
       file: uploadedFile,
     });
   }
