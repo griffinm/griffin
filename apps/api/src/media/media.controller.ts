@@ -26,7 +26,7 @@ export class MediaController {
     // Then create a media record in the database
     return this.mediaService.createMediaForNote({
       userId: request.user.id,
-      noteId: body.noteId,
+      noteId: body.metadata.noteId,
       file: uploadedFile,
     });
   }

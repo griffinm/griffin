@@ -7,3 +7,15 @@
   min-height: 500px;
   border: none;
 }
+
+.tiptap.ProseMirror {
+  height: 100%;
+}
+
+.MuiTiptap-FieldContainer-root {
+  height: 95%;
+}
+
+.MuiTiptap-RichTextContent-root {
+  height: 100%;
+}

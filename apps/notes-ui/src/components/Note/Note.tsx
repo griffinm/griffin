@@ -45,7 +45,7 @@ export function Note() {
   }
 
   return (
-    <div className="pr-5 pt-5">
+    <div className="pr-5 pt-5 flex flex-col grow h-[100%]">
       <div className="flex">
         <Input
           sx={{ fontSize: 24 }}
@@ -68,12 +68,14 @@ export function Note() {
           </Button>
         </div>
       </div>
-      <div className="mt-5">
-        <Editor
-          note={currentNote}
-          onChange={(content) => updateNote({ id: currentNote.id, content })}
-          isSaving={false}
-        />
+      <div className="mt-5 flex flex-row grow">
+        <div className="grow">
+          <Editor
+            note={currentNote}
+            onChange={(content) => updateNote({ id: currentNote.id, content })}
+            isSaving={false}
+          />
+        </div>
       </div>
       <ConfirmDialog<NoteType>
         open={openDeleteDialog}
