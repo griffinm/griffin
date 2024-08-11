@@ -8,4 +8,7 @@ export class UserService {
   async getById(id: string) {
     return this.prisma.user.findFirst({ where: { id } });
   }
+  async getByEmail(email: string) {
+    return this.prisma.user.findFirst({ where: { email } });
+  }
 }
