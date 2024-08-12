@@ -4,6 +4,7 @@ import { S3Service } from './s3.service';
 import { UserService } from '../users/user.service';  
 import { PrismaService } from '../prisma.service';
 import { MediaService } from './media.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   controllers: [MediaController],
@@ -11,7 +12,8 @@ import { MediaService } from './media.service';
     MediaService, 
     S3Service, 
     UserService, 
-    PrismaService
+    PrismaService,
   ],
+  imports: [ConfigModule],
 })
 export class MediaModule {}

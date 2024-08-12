@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import * as AWS from 'aws-sdk';
 import Mutler from 'multer';
 import { v4 } from 'uuid';
+import { ConfigService } from '@nestjs/config';
 
 export interface UploadedFileProps extends AWS.S3.ManagedUpload.SendData {
   mimeType: string;
@@ -14,10 +15,12 @@ export class S3Service {
   private bucket = "griffin-media";
   private region = "us-east-1";
 
-  constructor() {
+  constructor(
+    private configService: ConfigService,
+  ) {
     this.s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
+      secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
       region: this.region,
     });
   }

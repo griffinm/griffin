@@ -13,7 +13,7 @@ import { MediaModule } from '../media/media.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env.local',
+      envFilePath: ['.env.local', '.env'],
     }), 
     UsersModule,
     NotebookModule,
