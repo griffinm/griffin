@@ -24,6 +24,10 @@ export class TaskEntity {
 
   @IsDateString()
   @IsOptional()
+  dueDate?: Date;
+
+  @IsDateString()
+  @IsOptional()
   completedAt?: Date;
 
   @IsDateString()

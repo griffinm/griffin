@@ -60,7 +60,7 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
 
 export function NoteProvider({ children }: Props) {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [currentNoteId, setCurrentNoteId] = useState<number | null>(null);
+  const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notebooksLoading, setNotebooksLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

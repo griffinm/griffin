@@ -9,6 +9,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { Layout } from './components/Layout';
 import { Note } from './components/Note';
+import { TaskProvider } from './providers/TaskProvider';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -18,11 +19,13 @@ root.render(
     <BrowserRouter>
       <UserProvider>
         <NoteProvider>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="notes/:noteId" element={<Note />} />
-            </Route>
-          </Routes>
+          <TaskProvider>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route path="notes/:noteId" element={<Note />} />
+              </Route>
+            </Routes>
+          </TaskProvider>
         </NoteProvider>
       </UserProvider>
     </BrowserRouter>
