@@ -4,7 +4,7 @@ import { SideNav } from "../SideNav/SideNav";
 export function Layout() {
   return (
     <div className="flex flex-row">
-      <div className="w-[275px]">
+      <div>
         <SideNav />
       </div>
       <div className="grow">

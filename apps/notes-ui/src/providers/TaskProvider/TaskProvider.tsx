@@ -3,8 +3,11 @@ import { createContext, useState, useEffect } from "react";
 import { 
   fetchAllTasks as fetchAllTasksApi,
   createTask as createTaskApi,
+  updateTask as updateTaskApi,
+  deleteTask as deleteTaskApi,
 } from "../../utils/api";
-
+import { useContext } from "react";
+import { CreateOrUpdateTaskProps } from "../../utils/api";
 interface Props {
   children: React.ReactNode;
 }
@@ -12,9 +15,11 @@ interface Props {
 interface TaskProps {
   loading: boolean;
   tasks: Task[];
-  createTask: (task: Task) => void;
-  updateTask: (task: Task) => void;
+  createTask: (task: CreateOrUpdateTaskProps) => void;
+  updateTask: (task: CreateOrUpdateTaskProps, id: string) => void;
   deleteTask: (taskId: string) => void;
+  currentTask?: Task;
+  setCurrentTask: (task?: Task) => void;
 }
 
 export const TasksContext = createContext<TaskProps>({
@@ -23,11 +28,13 @@ export const TasksContext = createContext<TaskProps>({
   createTask: () => {},
   updateTask: () => {},
   deleteTask: () => {},
+  setCurrentTask: () => {},
 });
 
 export function TaskProvider({ children }: Props) {
   const [loading, setLoading] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
 
   useEffect(() => {
     fetchTasks();
@@ -40,13 +47,13 @@ export function TaskProvider({ children }: Props) {
     setLoading(false);
   };
 
-  const createTask = async (task: Task) => {
+  const createTask = async (task: CreateOrUpdateTaskProps) => {
     const response = await createTaskApi(task);
     setTasks([...tasks, response.data]);
   };
 
-  const updateTask = async (task: Task) => {
-    const response = await updateTaskApi(task);
+  const updateTask = async (task: CreateOrUpdateTaskProps, id: string) => {
+    const response = await updateTaskApi(id, task)
     setTasks(tasks.map((t) => (t.id === task.id ? response.data : t)));
   };
 
@@ -62,8 +69,12 @@ export function TaskProvider({ children }: Props) {
       createTask, 
       updateTask,
       deleteTask,
+      currentTask,
+      setCurrentTask,
     }}>
       {children}
     </TasksContext.Provider>
   );
 }
+
+export const useTasks = () => useContext(TasksContext); 

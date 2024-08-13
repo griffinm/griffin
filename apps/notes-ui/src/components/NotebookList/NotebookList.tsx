@@ -1,4 +1,4 @@
-import { Note, Notebook } from "@prisma/client";
+import { Notebook } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { List } from "./List";
 import { Button, Typography } from "@mui/material";

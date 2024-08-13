@@ -1,0 +1,131 @@
+import { useState, useEffect } from "react"
+import { Task } from "@prisma/client"
+import { TextField, Button } from "@mui/material"
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import { CreateOrUpdateTaskProps } from '../../utils/api';
+
+interface Props {
+  onSubmit: (task: CreateOrUpdateTaskProps) => void,
+  initialValues?: Task,
+}
+
+export function TaskForm({ 
+  onSubmit, 
+  initialValues,
+}: Props) {
+  const [title, setTitle] = useState<string | undefined>(initialValues?.title || "");
+  const [titleError, setTitleError] = useState(false);
+  const [description, setDescription] = useState<string | undefined>(initialValues?.description || "");
+  const [dueDate, setDueDate] = useState<Date | undefined>(initialValues?.dueDate || dayjs().toDate());
+  
+  useEffect(() => {
+    if (initialValues) {
+      setTitle(initialValues.title);
+      setDescription(initialValues.description || undefined);
+      setDueDate(initialValues.dueDate || undefined);
+    } else {
+      setTitle("");
+      setDescription("");
+      setDueDate(dayjs().toDate());
+    }
+  }, [initialValues]);
+
+  const renderDueDate = () => {
+    return (
+      <>
+        <div>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker
+              label="Due Date"
+              value={dayjs(dueDate)}
+              onChange={(newValue) => setDueDate(newValue?.toDate() || dayjs().toDate())}
+            />
+          </LocalizationProvider>
+        </div>
+        <div className="flex justify-center items-center">
+          <Button
+            onClick={() => setDueDate(dayjs().toDate())}
+          >
+            Today
+          </Button>
+          <Button
+            onClick={() => setDueDate(dayjs().add(1, 'day').toDate())}
+          >
+            Tomorrow
+          </Button>
+        </div>
+      </>
+    )
+  }
+
+  const handleSubmit = () => {
+    if (!validate()) {
+      return;
+    }
+
+    onSubmit({
+      title,
+      description,
+      dueDate,
+    });
+  }
+  
+  const validate = () => {
+    let isValid = true;
+
+    if (!title) {
+      setTitleError(true);
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  return (
+    <div>
+      <div className="pb-5">
+        <TextField
+          fullWidth
+          required
+          error={titleError}
+          id="outlined-basic"
+          label="Title"
+          variant="outlined"
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            if (e.target.value) {
+              setTitleError(false);
+            }
+          }}
+        />
+      </div>
+      <div className="pb-5 flex flex-row">
+        {renderDueDate()}
+      </div>
+      <div className="pb-5">
+        <TextField
+          fullWidth
+          multiline
+          rows={5}
+          id="outlined-basic"
+          label="Description"
+          variant="outlined"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="pb-5 text-right">
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+        >
+          Save
+        </Button>
+      </div>
+    </div>
+  )
+}

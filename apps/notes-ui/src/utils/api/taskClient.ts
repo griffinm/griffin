@@ -1,6 +1,7 @@
 import { Task } from "@prisma/client";
 import { baseClient } from "./baseClient";
 import { AxiosResponse } from "axios";
+import { CreateOrUpdateTaskProps } from "./types";
 
 export const fetchTask = async(
   taskId: string,
@@ -15,7 +16,7 @@ export const fetchAllTasks = async(
 
 export const updateTask = async(
   taskId: string,
-  task: Task,
+  task: CreateOrUpdateTaskProps,
 ): Promise<AxiosResponse<Task>> => {
   return baseClient.patch(`/tasks/${taskId}`, task);
 }
@@ -27,7 +28,7 @@ export const deleteTask = async(
 }
 
 export const createTask = async(
-  task: Task,
+  task: CreateOrUpdateTaskProps,
 ): Promise<AxiosResponse<Task>> => {
   return baseClient.post(`/tasks`, task);
 }
