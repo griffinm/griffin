@@ -22,6 +22,7 @@ model User {
 
   notebooks Notebook[]
   media Media[]
+  tasks Task[]
 
   @@map("users")
 }
@@ -72,4 +73,19 @@ model Media {
   user User @relation(fields: [userId], references: [id])
 
   @@map("media")
+}
+
+model Task {
+  id String @id @default(uuid()) @map("id")
+  title String @map("title")
+  description String? @map("description")
+  completedAt DateTime? @map("completed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  userId String @map("user_id")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("tasks")
 }

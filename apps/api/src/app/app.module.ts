@@ -8,7 +8,7 @@ import { NotebookModule } from '../notebooks/notebook.module';
 import { AuthModule } from '../auth/auth.module';
 import { NoteModule } from '../notes/notes.module';
 import { MediaModule } from '../media/media.module';
-
+import { TasksModule } from '../tasks/tasks.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +20,7 @@ import { MediaModule } from '../media/media.module';
     NoteModule,
     AuthModule,
     MediaModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
