@@ -13,26 +13,21 @@ export function NewTaskPage() {
     updateTask,
   } = useTasks();
   const { taskId } = useParams();
-  const [loading, setLoading] = useState(false);
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
 
   useEffect(() => {
     if (taskId) {
-      setLoading(true);
       fetchTask(taskId).then((response) => {
-        setLoading(false);
         setCurrentTask(response.data);
         setCurrentTaskFromProvider(response.data);
       });
     } else {
-      setLoading(false);
       setCurrentTask(undefined);
       setCurrentTaskFromProvider(undefined);
     }
   }, [taskId]);
 
   const renderForm = () => {
-    console.log("TaskID", taskId);
     if (taskId) {
       return <TaskForm onSubmit={(task) => updateTask(task, taskId)} initialValues={currentTask} />
     }

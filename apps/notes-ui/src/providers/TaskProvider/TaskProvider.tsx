@@ -43,7 +43,28 @@ export function TaskProvider({ children }: Props) {
   const fetchTasks = async () => {
     setLoading(true);
     const response = await fetchAllTasksApi();
-    setTasks(response.data);
+
+    const orderedTasks = response.data.sort((a, b) => {
+      const aDate = new Date(a.dueDate || 0);
+      const bDate = new Date(b.dueDate || 0);
+      // First, sort by completion status
+      if (a.completedAt && !b.completedAt) return 1;
+      if (!a.completedAt && b.completedAt) return -1;
+      
+      // If completion status is the same, sort by due date
+      if (aDate && bDate) {
+        return aDate.getTime() - bDate.getTime();
+      }
+      
+      // If one task has a due date and the other doesn't, prioritize the one with a due date
+      if (aDate && !bDate) return -1;
+      if (!aDate && bDate) return 1;
+      
+      // If neither has a due date, maintain original order
+      return 0;
+    });
+
+    setTasks(orderedTasks);
     setLoading(false);
   };
 
@@ -54,7 +75,7 @@ export function TaskProvider({ children }: Props) {
 
   const updateTask = async (task: CreateOrUpdateTaskProps, id: string) => {
     const response = await updateTaskApi(id, task)
-    setTasks(tasks.map((t) => (t.id === task.id ? response.data : t)));
+    setTasks(tasks.map((t) => (t.id === id ? response.data : t)));
   };
 
   const deleteTask = async (taskId: string) => {

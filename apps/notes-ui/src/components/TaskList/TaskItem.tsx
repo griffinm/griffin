@@ -1,18 +1,27 @@
 import { Task } from "@prisma/client";
 import { format, differenceInDays } from "date-fns";
-import { Divider } from "@mui/material";
+import { 
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
+  Checkbox,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
+import classNames from "classnames";
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 interface Props {
   task: Task
+  onToggleComplete: (task: Task) => void
 }
 
 export function TaskItem({
   task,
+  onToggleComplete,
   }: Props) {
   const navigate = useNavigate();
   
-  const renderDueDate = () => {
+  const renderContent = () => {
     if (!task.dueDate) {
       return null;
     }
@@ -31,26 +40,35 @@ export function TaskItem({
     }
 
     return (
-      <div className="flex flex-row justify-between">
-        <div>
-          Due: {formattedDueDate}
-        </div>
-        <div className="italic">
-          {distanceText}
-        </div>
-      </div>
+      <ListItemText
+        onClick={() => navigate(`/tasks/${task.id}`)}
+        primary={
+          <span className={task.completedAt ? "line-through" : ""}>
+            {task.title}
+          </span>
+        }
+        secondary={`${formattedDueDate} (${distanceText})`}
+      />
     )
   }
 
+  const classes = classNames(
+    "cursor-pointer hover:bg-gray-100 transition-all", {
+    "line-through": !!task.completedAt,
+  });
+
   return (
-    <div className="cursor-pointer hover:bg-gray-100 transition-all" onClick={() => navigate(`/tasks/${task.id}`)}>
-      <Divider />
-      <div className="p-1 text-lg">
-        {task.title}
-      </div>
-      <div className="p-1">
-        {renderDueDate()}
-      </div>
-    </div>
+    <ListItemButton sx={{ pl: 3 }}>
+      <ListItemIcon>
+      <Checkbox
+        edge="start"
+        checked={!!task.completedAt}
+        tabIndex={-1}
+        disableRipple
+        onChange={() => onToggleComplete(task)}
+      />
+      </ListItemIcon>
+      {renderContent()}
+    </ListItemButton>
   )
 }

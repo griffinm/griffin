@@ -20,7 +20,8 @@ export class TaskEntity {
   title: string;
 
   @IsString()
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @IsDateString()
   @IsOptional()

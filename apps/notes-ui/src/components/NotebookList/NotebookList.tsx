@@ -1,20 +1,23 @@
 import { Notebook } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { List } from "./List";
-import { Button, Typography } from "@mui/material";
+import { Button, Typography, Divider } from "@mui/material";
 import { ConfirmDialog } from "../ConfirmDialog/ConfirmDialog";
 import { useNotes } from "../../providers/NoteProvider";
+import { 
+  KeyboardArrowRight,
+  KeyboardArrowDown,
+} from '@mui/icons-material';
 
 export function NotebookList() {
   const [deleteNotebookDialogOpen, setDeleteNotebookDialogOpen] = useState(false);
   const [notebookForDelete, setNotebookForDelete] = useState<Notebook | null>(null);
+  const [expanded, setExpanded] = useState<boolean>(true);
+
   const { 
-    createNote,
     createNotebook, 
     deleteNotebook, 
     fetchNotebooks, 
-    notebooks,
-    updateNotebook, 
   } = useNotes();
 
   useEffect(() => {
@@ -29,8 +32,14 @@ export function NotebookList() {
   return (
     <div>
       <div>
-        <div className="p-2 flex items-center justify-between">
-          <Typography variant='body1'>Notebooks</Typography>
+        <div className="p-2 flex items-center justify-between cursor-pointer">
+          <Typography variant='h6' onClick={() => setExpanded(!expanded)}>
+            {expanded ?
+             <KeyboardArrowDown /> :
+             <KeyboardArrowRight />
+            }
+            Notebooks
+          </Typography>
           <Button
             size='small'
             variant='outlined'
@@ -39,14 +48,10 @@ export function NotebookList() {
             New
           </Button>
         </div>
+        <Divider />
       </div>
       <div>
-        <List
-          notebooks={notebooks}
-          onUpdateNotebook={updateNotebook}
-          onDeleteNotebook={showDeleteNotebookDialog}
-          onCreateNote={(notebook) => createNote(notebook.id)}
-        />
+        {expanded && <List onDeleteNotebook={showDeleteNotebookDialog} />} 
       </div>
       {notebookForDelete && (
         <ConfirmDialog<{ notebook: Notebook }>

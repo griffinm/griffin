@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Task } from "@prisma/client"
-import { TextField, Button } from "@mui/material"
+import { TextField, Button, Checkbox, FormControlLabel } from "@mui/material"
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -20,16 +20,19 @@ export function TaskForm({
   const [titleError, setTitleError] = useState(false);
   const [description, setDescription] = useState<string | undefined>(initialValues?.description || "");
   const [dueDate, setDueDate] = useState<Date | undefined>(initialValues?.dueDate || dayjs().toDate());
-  
+  const [completedAt, setCompletedAt] = useState<Date | undefined>(initialValues?.completedAt || undefined);
+
   useEffect(() => {
     if (initialValues) {
       setTitle(initialValues.title);
-      setDescription(initialValues.description || undefined);
+      setDescription(initialValues.description || "");
       setDueDate(initialValues.dueDate || undefined);
+      setCompletedAt(initialValues.completedAt || undefined);
     } else {
       setTitle("");
       setDescription("");
       setDueDate(dayjs().toDate());
+      setCompletedAt(undefined);
     }
   }, [initialValues]);
 
@@ -70,6 +73,7 @@ export function TaskForm({
       title,
       description,
       dueDate,
+      completedAt: completedAt || null,
     });
   }
   
@@ -116,6 +120,23 @@ export function TaskForm({
           variant="outlined"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="pb-5">
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={!!completedAt}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setCompletedAt(new Date());
+                } else {
+                  setCompletedAt(undefined);
+                }
+              }}
+            />
+          }
+          label="Completed"
         />
       </div>
       <div className="pb-5 text-right">

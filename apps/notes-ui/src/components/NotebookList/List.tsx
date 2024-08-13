@@ -14,22 +14,28 @@ import { Link } from "react-router-dom";
 import { useNotes } from "../../providers/NoteProvider";
 import classnames from "classnames";
 import { urls } from "../../utils/urls";
+import ListSubheader from '@mui/material/ListSubheader';
+import MuiList from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 
 interface ListItemProps {
   notebook: Notebook,
   open: boolean,
+  onDeleteNotebook: (notebook: Notebook) => void;
 }
 
 export function ListItem({
   notebook,
   open,
+  onDeleteNotebook,
 }: ListItemProps) {
   const { 
     notes, 
     fetchNotesForNotebook,
     currentNote,
     updateNotebook,
-    deleteNotebook,
     createNote,
   } = useNotes();
   const [isOpen, setIsOpen] = useState(open);
@@ -67,7 +73,7 @@ export function ListItem({
 
         <MenuItem 
           onClick={() => {
-            deleteNotebook(notebook.id)
+            onDeleteNotebook(notebook);
             setAnchorEl(null);
           }}
         >
@@ -214,10 +220,14 @@ export function ListItem({
   );
 }
 
-export function List() {
+export interface ListProps {
+  onDeleteNotebook: (notebook: Notebook) => void;
+}
+
+export function List({ onDeleteNotebook }: ListProps) {
   const { currentNote, notebooks } = useNotes();
   return (
-    <div className="p-2">
+    <div className="p-2 pl-6">
       {notebooks.map((notebook) => {
         const containsCurrentNote = notebook.id === currentNote?.notebookId;
         return (
@@ -225,6 +235,7 @@ export function List() {
             key={notebook.id}
             notebook={notebook}
             open={containsCurrentNote}
+            onDeleteNotebook={onDeleteNotebook}
           />
         )
       })}

@@ -13,8 +13,6 @@ export function SideNav() {
         <NotebookList />
       </div>
 
-      <Divider />
-
       <div>
         <TaskList />
       </div>
