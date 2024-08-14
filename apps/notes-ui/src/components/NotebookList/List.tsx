@@ -1,55 +1,38 @@
-import { Note, Notebook } from "@prisma/client";
+import { Notebook } from "@prisma/client";
 import { 
-  KeyboardArrowRight,
-  KeyboardArrowDown,
   MoreVert,
   Check,
 } from '@mui/icons-material';
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Button, Input, Typography } from "@mui/material";
-import { formatDistanceToNow } from "date-fns";
-import { Link } from "react-router-dom";
+import { 
+  Button,
+  ListItemButton,
+  Input,
+} from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
 import classnames from "classnames";
-import { urls } from "../../utils/urls";
 
 interface ListItemProps {
   notebook: Notebook,
   open: boolean,
+  onDeleteNotebook: (notebook: Notebook) => void;
 }
 
 export function ListItem({
   notebook,
   open,
+  onDeleteNotebook,
 }: ListItemProps) {
   const { 
-    notes, 
-    fetchNotesForNotebook,
-    currentNote,
     updateNotebook,
-    deleteNotebook,
-    createNote,
+    currentNotebook,
   } = useNotes();
-  const [isOpen, setIsOpen] = useState(open);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
-  const notesForNotebook = useMemo(() => {
-    return notes.filter((note) => note.notebookId === notebook.id);
-  }, [notes, notebook]);
-  const orderedNotes = useMemo(() => {
-    return notesForNotebook.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [notesForNotebook]);
   
-  useEffect(() => {
-    if (isOpen) {
-      fetchNotesForNotebook(notebook.id)
-    }
-  }, [isOpen, notebook]);
-
-
   const renderMenu = () => {
     return (
       <Menu
@@ -67,7 +50,7 @@ export function ListItem({
 
         <MenuItem 
           onClick={() => {
-            deleteNotebook(notebook.id)
+            onDeleteNotebook(notebook);
             setAnchorEl(null);
           }}
         >
@@ -119,115 +102,38 @@ export function ListItem({
     return <div>{notebook.title || 'New Notebook'}</div>
   }
 
-  const renderNoteListItem = (note: Note) => {
-    const isCurrentNote = note.id === currentNote?.id;
-    const containerClasses = classnames(
-      "text-sm p-1 mb-1 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-all duration-300 ease-in-out",
-      {
-        "bg-gray-100": isCurrentNote,
-      }
-    );
-
-    return (
-      <Link to={urls.note(note.id)} key={note.id}>
-        <div className={containerClasses}>
-        <Typography variant="h6">
-          {note.title}
-        </Typography>
-        <Typography variant="caption">
-          Edited: {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
-          </Typography>
-        </div>
-      </Link>
-    )
-  }
-
-  const renderNotes = () => {
-    if (!isOpen || isEditing) {
-      return null;
-    }
-
-    return (
-      <div className="p-1 mb-3">
-        {orderedNotes.map((note) => (
-          renderNoteListItem(note)
-        ))}
-        {isOpen && notes.length === 0 && (
-          <div className="text-gray-500 italic">No notes</div>
-        )}
-      </div>
-    )
-  }
-
-  const renderNew = () => {
-    if (!isOpen && !isEditing) {
-      return null;
-    }
-
-    return (
-      <div>
-        <Button 
-          variant="text"
-          size="small"
-          color="primary"
-          onClick={() => createNote(notebook.id)}
-        >
-          Create a new note
-        </Button>
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <div 
-        className="flex py-1 cursor-pointer hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out"
-      >
+    <div className="flex justify-between w-full">
+      {renderTitle()}
+      <div>
         {!isEditing && (
-          isOpen ? <KeyboardArrowDown /> : <KeyboardArrowRight />
+          <MoreVert 
+            fontSize="small" 
+            onClick={(e) => setAnchorEl(e.target as HTMLElement)}
+          />
         )}
-        <div className="flex justify-between w-full">
-          <div 
-            className="flex items-center w-full"
-            onClick={() => !isEditing && setIsOpen(!isOpen)}
-            >
-            {renderTitle()}
-          </div>
-          <div>
-            {!isEditing && (
-              <MoreVert 
-                fontSize="small" 
-                onClick={(e) => setAnchorEl(e.target as HTMLElement)}
-              />
-            )}
-            {renderMenu()}
-          </div>
-        </div>
+        {renderMenu()}
       </div>
-      
-      <div className="text-center">
-        {renderNew()}
-      </div>
-      {renderNotes()}
-
     </div>
   );
 }
 
-export function List() {
-  const { currentNote, notebooks } = useNotes();
+export interface ListProps {
+  onDeleteNotebook: (notebook: Notebook) => void;
+}
+
+export function List({ onDeleteNotebook }: ListProps) {
+  const { notebooks, setCurrentNotebook, currentNotebook } = useNotes();
+
+  
+
   return (
-    <div className="p-2">
-      {notebooks.map((notebook) => {
-        const containsCurrentNote = notebook.id === currentNote?.notebookId;
-        return (
-          <ListItem
-            key={notebook.id}
-            notebook={notebook}
-            open={containsCurrentNote}
-          />
-        )
-      })}
-    </div>
-  );
+    <>
+      {notebooks.map((notebook) => (
+        <ListItemButton key={notebook.id} onClick={() => setCurrentNotebook(notebook)}>
+          <ListItem notebook={notebook} open={true} onDeleteNotebook={onDeleteNotebook} />
+        </ListItemButton>
+      ))}
+    </>
+  )
 }

@@ -37,6 +37,8 @@ interface CurrentNoteProps {
   setCurrentNoteId: (noteId: string) => void;
   updateNote: (note: NoteUpdateProps) => void;
   updateNotebook: (notebook: Notebook) => void;
+  setCurrentNotebook: (notebook?: Notebook) => void;
+  currentNotebook: Notebook | null;
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -56,17 +58,20 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   setCurrentNoteId: () => {},
   updateNote: () => {},
   updateNotebook: () => {},
+  setCurrentNotebook: () => {}, 
+  currentNotebook: null,
 });
 
 export function NoteProvider({ children }: Props) {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [currentNoteId, setCurrentNoteId] = useState<number | null>(null);
+  const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notebooksLoading, setNotebooksLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteLoading, setNoteLoading] = useState(false);
+  const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const navigate = useNavigate();
 
   // Load the note once the current note ID is set
@@ -78,6 +83,14 @@ export function NoteProvider({ children }: Props) {
         .finally(() => setNoteLoading(false));
     }
   }, [currentNoteId]);
+
+  // Load the notes once the current notebook is set
+  useEffect(() => {
+    if (currentNotebook) {
+      setNotes([])
+      fetchNotesForNotebook(currentNotebook.id)
+    }
+  }, [currentNotebook]);
 
   // Load the notebooks once the component mounts
   useEffect(() => {
@@ -109,6 +122,7 @@ export function NoteProvider({ children }: Props) {
       .then((resp) => {
         setCurrentNote(resp.data);
         navigate(urls.note(resp.data.id));
+        setNotes([resp.data, ...notes]);
       })
       .finally(() => {setNoteLoading(false)})
   }
@@ -146,14 +160,11 @@ export function NoteProvider({ children }: Props) {
     }
   }
 
-  const fetchNotesForNotebook = (notebookId: number) => {
+  const fetchNotesForNotebook = (notebookId: string) => {
     setNotesLoading(true);
     fetchNotesForNotebookApi(notebookId)
       .then((resp) => {
-        const newNotes = resp.data
-        // remove all of these notes that belong to this notebook
-        const notesWithOutNew = notes.filter((note) => note.notebookId !== notebookId);
-        setNotes([...notesWithOutNew, ...newNotes]);
+        setNotes(resp.data);
       })
       .finally(() => setNotesLoading(false));
   }
@@ -182,6 +193,8 @@ export function NoteProvider({ children }: Props) {
         setCurrentNoteId,
         updateNote,
         updateNotebook,
+        setCurrentNotebook,
+        currentNotebook,
       }}
     >
       {children}
