@@ -3,9 +3,19 @@
 @tailwind utilities;
 /* You can add global styles to this file, and also import other style files */
 
+#root {
+  background: #fafafa;
+  color: rgb(238, 238, 238);
+  font-weight: 400;
+}
+
 .MuiTiptap-FieldContainer-root {
   min-height: 500px;
   border: none;
+
+  ul, ol {
+    margin-left: 20px;
+  }
 }
 
 .tiptap.ProseMirror {

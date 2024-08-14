@@ -7,12 +7,12 @@ export function SideNav() {
   const { currentNotebook } = useNotes();
   return (
     <div className="flex flex-row">
-      <div className="flex flex-col bg-right w-[250px] border-r border-gray-200 h-[100vh]">
+      <div className="flex flex-col w-[250px] h-[100vh]">
         <NotebookList />
         <TaskList />
       </div>
       {currentNotebook && (
-        <div className="bg-right w-[250px] border-r border-gray-200 h-100vh">
+        <div className="border-l-2 border-slate-700 w-[250px]">
           <NoteList />
         </div>
       )}

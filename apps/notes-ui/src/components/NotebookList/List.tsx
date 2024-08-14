@@ -101,14 +101,9 @@ export function ListItem({
     }
     return <div>{notebook.title || 'New Notebook'}</div>
   }
-  
-  const classes = classnames(
-    "flex justify-between w-full", {
-    "bg-gray-100": currentNotebook?.id === notebook.id,
-  });
 
   return (
-    <div className={classes}>
+    <div className="flex justify-between w-full">
       {renderTitle()}
       <div>
         {!isEditing && (
@@ -128,7 +123,10 @@ export interface ListProps {
 }
 
 export function List({ onDeleteNotebook }: ListProps) {
-  const { notebooks, setCurrentNotebook } = useNotes();
+  const { notebooks, setCurrentNotebook, currentNotebook } = useNotes();
+
+  
+
   return (
     <>
       {notebooks.map((notebook) => (

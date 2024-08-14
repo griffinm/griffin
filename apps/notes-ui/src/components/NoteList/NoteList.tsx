@@ -13,7 +13,7 @@ export function NoteList() {
     currentNote,
   } = useNotes();
   const navigate = useNavigate();
-  const containerClasses = "border-b border-gray-200 p-2"
+  const containerClasses = "border-b border-slate-700 p-2"
 
   if (!currentNotebook) {
     return null;
