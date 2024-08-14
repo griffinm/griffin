@@ -12,6 +12,7 @@ import {
   Input,
 } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
+import classnames from "classnames";
 
 interface ListItemProps {
   notebook: Notebook,
@@ -26,6 +27,7 @@ export function ListItem({
 }: ListItemProps) {
   const { 
     updateNotebook,
+    currentNotebook,
   } = useNotes();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -100,19 +102,24 @@ export function ListItem({
     return <div>{notebook.title || 'New Notebook'}</div>
   }
   
+  const classes = classnames(
+    "flex justify-between w-full", {
+    "bg-gray-100": currentNotebook?.id === notebook.id,
+  });
+
   return (
-        <div className="flex justify-between w-full">
-          {renderTitle()}
-          <div>
-            {!isEditing && (
-              <MoreVert 
-                fontSize="small" 
-                onClick={(e) => setAnchorEl(e.target as HTMLElement)}
-              />
-            )}
-            {renderMenu()}
-          </div>
-        </div>
+    <div className={classes}>
+      {renderTitle()}
+      <div>
+        {!isEditing && (
+          <MoreVert 
+            fontSize="small" 
+            onClick={(e) => setAnchorEl(e.target as HTMLElement)}
+          />
+        )}
+        {renderMenu()}
+      </div>
+    </div>
   );
 }
 

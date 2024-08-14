@@ -22,7 +22,6 @@ export function NotebookList() {
     createNotebook,
     deleteNotebook, 
     fetchNotebooks,
-    currentNotebook,
   } = useNotes();
 
   useEffect(() => {
@@ -35,39 +34,37 @@ export function NotebookList() {
   }
 
   return (
-    <div>
-      <List
-        sx={{ width: '100%' }}
-        component="nav"
-      >
-        <ListItemButton onClick={() => setExpanded(!expanded)}>
+    <List
+      sx={{ width: '100%' }}
+      component="nav"
+    >
+      <ListItemButton onClick={() => setExpanded(!expanded)}>
+        <ListItemIcon>
+          <TextSnippetIcon />
+        </ListItemIcon>
+        <ListItemText primary="Notebooks"  />
+        {expanded ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      <Collapse in={expanded} unmountOnExit timeout="auto">
+        <ListItemButton>
           <ListItemIcon>
-            <TextSnippetIcon />
+            <Add />
           </ListItemIcon>
-          <ListItemText primary="Notebooks"  />
-          {expanded ? <ExpandLess /> : <ExpandMore />}
+          <ListItemText primary="New Notebook" onClick={() => createNotebook()} />
         </ListItemButton>
-        <Collapse in={expanded} unmountOnExit timeout="auto">
-          <ListItemButton>
-            <ListItemIcon>
-              <Add />
-            </ListItemIcon>
-            <ListItemText primary="New Notebook" onClick={() => createNotebook()} />
-          </ListItemButton>
-          <NotebookListComponent onDeleteNotebook={showDeleteNotebookDialog} />
-        </Collapse>
+        <NotebookListComponent onDeleteNotebook={showDeleteNotebookDialog} />
+      </Collapse>
 
-        {notebookForDelete && (
-          <ConfirmDialog<{ notebook: Notebook }>
-            title="Delete Notebook"
-            message={`Are you sure you want to delete "${notebookForDelete.title}"?`}
-            data={{ notebook: notebookForDelete }}
-            open={deleteNotebookDialogOpen}
-            onClose={() => setDeleteNotebookDialogOpen(false)}
-            onConfirm={({ notebook }) => deleteNotebook(notebook.id)}
-          />
-        )}
-      </List>
-    </div>
+      {notebookForDelete && (
+        <ConfirmDialog<{ notebook: Notebook }>
+          title="Delete Notebook"
+          message={`Are you sure you want to delete "${notebookForDelete.title}"?`}
+          data={{ notebook: notebookForDelete }}
+          open={deleteNotebookDialogOpen}
+          onClose={() => setDeleteNotebookDialogOpen(false)}
+          onConfirm={({ notebook }) => deleteNotebook(notebook.id)}
+        />
+      )}
+    </List>
   );
 }

@@ -7,7 +7,6 @@ import {
   Checkbox,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import classNames from "classnames";
 
 interface Props {
   task: Task
@@ -51,13 +50,8 @@ export function TaskItem({
     )
   }
 
-  const classes = classNames(
-    "cursor-pointer hover:bg-gray-100 transition-all", {
-    "line-through": !!task.completedAt,
-  });
-
   return (
-    <ListItemButton sx={{ pl: 3 }}>
+    <ListItemButton sx={{ pl: 2, py: 0 }}>
       <ListItemIcon>
       <Checkbox
         edge="start"
