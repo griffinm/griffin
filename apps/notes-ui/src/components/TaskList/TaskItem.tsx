@@ -8,8 +8,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import classNames from "classnames";
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
 interface Props {
   task: Task
   onToggleComplete: (task: Task) => void

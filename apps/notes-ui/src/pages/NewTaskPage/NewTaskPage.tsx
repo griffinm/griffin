@@ -5,6 +5,7 @@ import { useTasks } from "../../providers/TaskProvider";
 import { useParams } from "react-router-dom";
 import { fetchTask } from "../../utils/api";
 import { Task } from "@prisma/client";
+import { useNotes } from "../../providers/NoteProvider";
 
 export function NewTaskPage() {
   const { 
@@ -14,12 +15,14 @@ export function NewTaskPage() {
   } = useTasks();
   const { taskId } = useParams();
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
+  const { setCurrentNotebook } = useNotes();
 
   useEffect(() => {
     if (taskId) {
       fetchTask(taskId).then((response) => {
         setCurrentTask(response.data);
         setCurrentTaskFromProvider(response.data);
+        setCurrentNotebook();
       });
     } else {
       setCurrentTask(undefined);

@@ -10,14 +10,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { TaskItem } from "./TaskItem";
 import { useTasks } from "../../providers/TaskProvider";
-import TextSnippetIcon from '@mui/icons-material/TextSnippet';
-import { ExpandMore, ExpandLess, Add } from '@mui/icons-material';
+import { ExpandMore, ExpandLess, Add, CheckCircle } from '@mui/icons-material';
 import { Task } from "@prisma/client";
 
 export function TaskList() {
   const navigate = useNavigate();
   const { tasks, updateTask } = useTasks();
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const onToggleComplete = (task: Task) => {
     updateTask({ 
@@ -37,7 +36,7 @@ export function TaskList() {
       >
         <ListItemButton onClick={() => setExpanded(!expanded)}>
           <ListItemIcon>
-            <TextSnippetIcon />
+            <CheckCircle />
           </ListItemIcon>
           <ListItemText primary="Tasks"  />
           {expanded ? <ExpandLess /> : <ExpandMore />}
@@ -53,10 +52,10 @@ export function TaskList() {
             </ListItemButton>
             <Divider component="li" />
             {tasks.map((task) => (
-              <>
+              <div key={task.id}>
                 <TaskItem key={task.id} task={task} onToggleComplete={onToggleComplete} />
                 <Divider component="li" />
-              </>
+              </div>
             ))}
           </List>
         </Collapse>

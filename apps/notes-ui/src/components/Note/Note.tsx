@@ -45,7 +45,7 @@ export function Note() {
   }
 
   return (
-    <div className="pr-5 pt-5 flex flex-col grow h-[100%]">
+    <div className="pr-5 pt-5 pl-4 flex flex-col grow h-[100%]">
       <div className="flex">
         <Input
           sx={{ fontSize: 24 }}
