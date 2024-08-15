@@ -3,7 +3,8 @@ import { PrismaService } from '../prisma.service';
 import { UpdateDto } from './dto/update.dto';
 import * as bcrypt from 'bcrypt';
 import { UserEntity } from './dto/user.entity';
-
+import { CreateDto } from './dto/create.dto';
+import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
@@ -17,8 +18,29 @@ export class UserService {
     return await this.prisma.user.findFirst({ where: { email } });
   }
 
+  async createUser(createDto: CreateDto): Promise<UserEntity> {
+    const hashedPassword = await bcrypt.hash(createDto.password, 10);
+    const userExists = await this.checkIfUserExists(createDto.email);
+    if (userExists) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const user = await this.prisma.user.create({
+      data: {
+        ...createDto,
+        password: hashedPassword
+      }
+    });
+
+    return new UserEntity(user);
+  }
+
   async updateUser(id: string, updateDto: UpdateDto): Promise<UserEntity> {
     const hashedPassword = await bcrypt.hash(updateDto.password, 10);
+    const userExists = await this.checkIfUserExists(updateDto.email, id);
+    if (userExists) {
+      throw new BadRequestException('User already exists');
+    }
 
     const user = await this.prisma.user.update({
       where: { id },
@@ -29,5 +51,19 @@ export class UserService {
     });
 
     return new UserEntity(user);
+  }
+
+  private async checkIfUserExists(email: string, id?: string): Promise<boolean> {
+    let user: UserEntity | null;
+    if (id) {
+      user = await this.prisma.user.findFirst(
+        { 
+          where: { email, id: { not: id } },
+        }
+      );
+    } else {
+      user = await this.prisma.user.findFirst({ where: { email } });
+    }
+    return user !== null;
   }
 }

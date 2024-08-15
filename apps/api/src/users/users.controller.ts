@@ -6,6 +6,7 @@ import {
   UseInterceptors,
   Patch,
   Body,
+  Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UseGuards } from '@nestjs/common';
@@ -13,6 +14,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { UserEntity } from './dto/user.entity';
 import { UpdateDto } from './dto/update.dto';
 import { RequestWithUser } from '@griffin/types';
+import { CreateDto } from './dto/create.dto';
 
 @Controller('users')
 export class UsersController {
@@ -36,7 +38,17 @@ export class UsersController {
     @Req() request: RequestWithUser,
     @Body() updateDto: UpdateDto,
   ) {
-    return this.usersService.updateUser(request.user.id, updateDto);
+    const user = await this.usersService.updateUser(request.user.id, updateDto);
+    return new UserEntity(user);
+  }
+
+  @Post()
+  @UseInterceptors(ClassSerializerInterceptor)
+  async createUser(
+    @Body() createDto: CreateDto,
+  ) {
+    const user = await this.usersService.createUser(createDto);
+    return new UserEntity(user);
   }
 }
   
