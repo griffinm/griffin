@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { 
   Body,
   Controller, 
   Get, 
   Param, 
   Patch, 
-  Post, 
   Req, 
   UseGuards,
   Delete,
@@ -12,8 +12,9 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { NoteService } from './notes.service';
 import { NoteEntity } from './dto/note.entity';
-import { CreateDto } from './dto/create.dto';
 import { UpdateDto } from './dto/update.dto';
+import { Query } from '@nestjs/common';
+import { SearchResult } from '@griffin/types';
 
 @Controller('notes')
 @UseGuards(AuthGuard)
@@ -25,6 +26,14 @@ export class NotesController {
     return this.noteService.findAllForUser(request.user.id);
   }
 
+  @Get('search')
+  async search(
+    @Req() request: any,
+    @Query('query') query: string,
+  ): Promise<SearchResult[]> {
+    return this.noteService.search(query, request.user.id);
+  }
+
   @Get(':id')
   async findOne(
     @Req() request: any,
@@ -33,13 +42,6 @@ export class NotesController {
     return this.noteService.findOneForUser(id, request.user.id);
   }
 
-  // @Post()
-  // async create(
-  //   @Req() request: any,
-  //   @Body() body: CreateDto,
-  // ): Promise<NoteEntity> {
-  //   return this.noteService.create(body, request.user.id);
-  // }
 
   @Patch(':id')
   async update(

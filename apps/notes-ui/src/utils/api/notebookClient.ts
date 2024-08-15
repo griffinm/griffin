@@ -45,3 +45,9 @@ export const createNote = async (
   }
   return baseClient.post(`${urlBase}/${notebookId}/notes`, body);
 }
+
+export const fetchNotebook = async (
+  notebookId: string,
+): Promise<AxiosResponse<Notebook>> => {
+  return baseClient.get(`${urlBase}/${notebookId}`);
+}

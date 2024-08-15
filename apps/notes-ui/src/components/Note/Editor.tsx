@@ -4,9 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import TextAlign from "@tiptap/extension-text-align";
-import Dropcursor from "@tiptap/extension-dropcursor";
 import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
@@ -37,7 +35,6 @@ import {
   MenuButtonAddImage,
   ResizableImage,
   type RichTextEditorRef,
-  useRichTextEditorContext,
   RichTextEditorProvider,
   insertImages
 } from "mui-tiptap";
@@ -68,8 +65,8 @@ const extensions = [
   }),
 ]
 
-const SAVE_TIMEOUT = 1500;
-const MAX_SAVE_INTERVAL = 10_000;
+const SAVE_TIMEOUT = 2000;
+const MAX_SAVE_INTERVAL = 60_000;
 
 export function Editor({ 
   note,
@@ -99,11 +96,11 @@ export function Editor({
     }
 
     // At a min save every MAX_SAVE_INTERVAL
-    const timeSinceLastSaved = new Date().getTime() - (lastSaveAtRef.current ? lastSaveAtRef.current.getTime() : 0);
-    if (timeSinceLastSaved > MAX_SAVE_INTERVAL) {
-      handleUpdate({ editor: rteRef!.current!.editor! });
-      setLastSaveAt(new Date());
-    }
+    // const timeSinceLastSaved = new Date().getTime() - (lastSaveAtRef.current ? lastSaveAtRef.current.getTime() : 0);
+    // if (timeSinceLastSaved > MAX_SAVE_INTERVAL) {
+    //   handleUpdate({ editor: rteRef!.current!.editor! });
+    //   setLastSaveAt(new Date());
+    // }
 
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);

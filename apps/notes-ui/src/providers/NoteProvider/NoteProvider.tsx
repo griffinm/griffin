@@ -12,6 +12,7 @@ import {
   fetchNotesForNotebook as fetchNotesForNotebookApi,
   updateNote as updateNoteApi, 
   updateNotebook as updateNotebookApi, 
+  fetchNotebook as fetchNotebookApi,
 } from "../../utils/api";
 import { useNavigate } from "react-router";
 import { urls } from "../../utils/urls";
@@ -39,6 +40,7 @@ interface CurrentNoteProps {
   updateNotebook: (notebook: Notebook) => void;
   setCurrentNotebook: (notebook?: Notebook) => void;
   currentNotebook: Notebook | null;
+  fetchNotebook: (notebookId: string) => void;
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -60,6 +62,7 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   updateNotebook: () => {},
   setCurrentNotebook: () => {}, 
   currentNotebook: null,
+  fetchNotebook: () => {},
 });
 
 export function NoteProvider({ children }: Props) {
@@ -174,6 +177,15 @@ export function NoteProvider({ children }: Props) {
       .then(() => setNotebooks(notebooks.map((n) => n.id === notebook.id ? notebook : n)))
   }
 
+  const fetchNotebook = (notebookId: string) => {
+    setNotebooksLoading(true);
+    fetchNotebookApi(notebookId)
+      .then((resp) => {
+        setCurrentNotebook(resp.data);
+      })
+      .finally(() => setNotebooksLoading(false));
+  }
+
   return (
     <CurrentNoteContext.Provider
       value={{ 
@@ -195,6 +207,7 @@ export function NoteProvider({ children }: Props) {
         updateNotebook,
         setCurrentNotebook,
         currentNotebook,
+        fetchNotebook,
       }}
     >
       {children}

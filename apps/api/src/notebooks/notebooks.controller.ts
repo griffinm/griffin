@@ -35,6 +35,11 @@ export class NotebooksController {
     return this.notebookService.getNotebooksForUser(request.user.id);
   }
 
+  @Get("/:id")
+  async findOne(@Req() request: any, @Param('id') id: string): Promise<NotebookEntity> {
+    return this.notebookService.getNotebook(id, request.user.id);
+  }
+
   @Get("/:id/notes")
   async findAllForNotebook(
     @Req() request: any,

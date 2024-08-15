@@ -1,6 +1,6 @@
 {
   "name": "@griffin/source",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "scripts": {
     "prisma:seed": "tsx apps/api/prisma/seed.ts",

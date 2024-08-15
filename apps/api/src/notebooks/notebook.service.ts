@@ -8,6 +8,15 @@ import { UpdateDto } from './dto/update.dto';
 export class NotebookService {
   constructor(private prisma: PrismaService) {}
 
+  async getNotebook(notebookId: string, userId: string): Promise<NotebookEntity> {
+    return this.prisma.notebook.findUnique({
+      where: {
+        id: notebookId,
+        userId,
+      },
+    });
+  }
+
   async getNotebooksForUser(userId: string): Promise<NotebookEntity[]> {
     return this.prisma.notebook.findMany({
       where: {

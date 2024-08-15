@@ -4,6 +4,7 @@ import { Button } from "@mui/material"
 import { useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
 import classnames from "classnames";
+import ArrowBack from '@mui/icons-material/ArrowBack';
 
 export function NoteList() {
   const { 
@@ -11,6 +12,7 @@ export function NoteList() {
     currentNotebook,
     createNote,
     currentNote,
+    setCurrentNotebook,
   } = useNotes();
   const navigate = useNavigate();
   const containerClasses = "border-b border-slate-700 p-2"
@@ -20,10 +22,21 @@ export function NoteList() {
   }
   return (
     <div>
+      <div>
+        <Button
+          onClick={() => setCurrentNotebook()}
+          variant="text"
+          sx={{ color: "white" }}
+          startIcon={<ArrowBack />}
+        >
+          Go Back
+        </Button>
+      </div>
       <div className={`${containerClasses} text-center`}>
         <Button
           variant="text"
           startIcon={<Add />}
+          sx={{ color: "white" }}
           onClick={() => createNote(currentNotebook?.id)}
         >
           New Note
@@ -34,7 +47,7 @@ export function NoteList() {
         const classes = classnames(
           containerClasses,
           {
-            "bg-gray-100": isCurrentNote,
+            "bg-dark-2": isCurrentNote,
             "cursor-pointer": true,
           }
         );

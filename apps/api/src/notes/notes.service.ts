@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from '../prisma.service';
 import { CreateDto } from "./dto/create.dto";
 import { UpdateDto } from "./dto/update.dto";
+import { SearchResult, SearchResultQueryResult } from "@griffin/types";
 
 @Injectable()
 export class NoteService {
@@ -19,6 +20,24 @@ export class NoteService {
         },
       },
     });
+  }
+
+  async search(
+    query: string,
+    userId: string,
+  ): Promise<SearchResult[]> {
+    const results = await this.prisma.$queryRaw`SELECT * FROM search_notes(${query}, ${userId})` as SearchResultQueryResult[];
+    const formattedResults = results.map((result) => {
+      return {
+        noteId: result.note_id,
+        noteTitle: result.note_title,
+        notebookTitle: result.notebook_title,
+        notebookId: result.notebook_id,
+        tsRank: result.ts_rank,
+        trigramSimilarity: result.trigram_similarity,
+      }
+    })
+    return formattedResults;
   }
 
   async findAllForNotebook(notebookId: string, userId: string) {
