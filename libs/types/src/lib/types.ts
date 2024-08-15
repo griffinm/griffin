@@ -1,3 +1,13 @@
+import { Request } from '@nestjs/common';
+import { User } from '@prisma/client';
+export interface RequestWithUser extends Request {
+  user: User;
+}
+
+export interface SignInResponse {
+  jwt: string;
+}
+
 export interface SearchResult {
   noteId: string;
   noteTitle: string;
