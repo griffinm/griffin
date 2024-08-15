@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { User } from '@prisma/client';
+import { JwtPayload } from '@griffin/types';
 
 @Injectable()
 export class AuthService {
@@ -9,6 +11,10 @@ export class AuthService {
     private readonly prisma: PrismaService
   ) {}
 
+  async validateJwt(token: string): Promise<User> {
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET) as JwtPayload;
+    return this.prisma.user.findUnique({ where: { id: decoded.userId } });
+  }
 
   async signInWithPassword(
     email: string,
@@ -24,10 +30,12 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    const token = jwt.sign({ 
+    const payload: JwtPayload = {
       userId: user.id,
       email: user.email,
-    }, process.env.JWT_TOKEN_SECRET);
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_TOKEN_SECRET);
 
     return token;
   }

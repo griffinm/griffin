@@ -16,6 +16,7 @@ import {
 } from "../../utils/api";
 import { useNavigate } from "react-router";
 import { urls } from "../../utils/urls";
+import { useUser } from "../UserProvider";
 
 interface Props {
   children: React.ReactNode;
@@ -76,6 +77,7 @@ export function NoteProvider({ children }: Props) {
   const [noteLoading, setNoteLoading] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const navigate = useNavigate();
+  const { user } = useUser();
 
   // Load the note once the current note ID is set
   useEffect(() => {
@@ -97,12 +99,13 @@ export function NoteProvider({ children }: Props) {
 
   // Load the notebooks once the component mounts
   useEffect(() => {
+    if (!user) return;
     setNotebooksLoading(true);
     fetchNotebooksApi().then((resp) => {
       setNotebooks(resp.data)
       setNotebooksLoading(false);
     })
-  }, []);
+  }, [user]);
 
   const fetchNotebooks = () => {
     setNotebooksLoading(true);

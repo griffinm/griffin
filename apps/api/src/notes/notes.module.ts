@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { NotesController } from "./notes.controller";
 import { NoteService } from "./notes.service";
 import { PrismaService } from "../prisma.service";
-import { AuthGuard } from "../auth/auth.guard";
+import { AuthService } from "../auth/auth.service";
 import { UserService } from "../users/user.service";
 
 @Module({
@@ -10,7 +10,7 @@ import { UserService } from "../users/user.service";
   providers: [
     NoteService,
     PrismaService,
-    AuthGuard,
+    AuthService,
     UserService,
   ],
 })

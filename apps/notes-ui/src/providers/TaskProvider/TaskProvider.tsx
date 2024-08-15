@@ -8,6 +8,8 @@ import {
 } from "../../utils/api";
 import { useContext } from "react";
 import { CreateOrUpdateTaskProps } from "../../utils/api";
+import { useUser } from "../UserProvider";
+
 interface Props {
   children: React.ReactNode;
 }
@@ -35,10 +37,13 @@ export function TaskProvider({ children }: Props) {
   const [loading, setLoading] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
+  const { user } = useUser();
 
   useEffect(() => {
+    if (!user) return;
+ 
     fetchTasks();
-  }, []);
+  }, [user]);
 
   const fetchTasks = async () => {
     setLoading(true);

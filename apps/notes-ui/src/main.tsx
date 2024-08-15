@@ -13,8 +13,8 @@ import { TaskProvider } from './providers/TaskProvider';
 import { NewTaskPage } from './pages/NewTaskPage';
 import { Home } from './pages/Home';
 import { ThemeOptions } from '@mui/material/styles';
-import { useTheme } from '@mui/material/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { SignIn } from './pages/SignIn';
 
 export const themeOptions: ThemeOptions = {
   palette: {
@@ -36,6 +36,9 @@ root.render(
     <ThemeProvider theme={createTheme(themeOptions)}>
       <BrowserRouter>
         <UserProvider>
+          <Routes>
+            <Route path="/sign-in" element={<SignIn />} />
+          </Routes>
           <NoteProvider>
             <TaskProvider>
               <Routes>
