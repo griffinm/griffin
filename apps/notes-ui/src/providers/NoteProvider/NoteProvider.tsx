@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Note, Notebook } from "@prisma/client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { 
   NoteUpdateProps,
   createNote as createNoteApi, 
@@ -42,6 +42,7 @@ interface CurrentNoteProps {
   setCurrentNotebook: (notebook?: Notebook) => void;
   currentNotebook: Notebook | null;
   fetchNotebook: (notebookId: string) => void;
+  sortedNotes: Note[];
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -64,6 +65,7 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   setCurrentNotebook: () => {}, 
   currentNotebook: null,
   fetchNotebook: () => {},
+  sortedNotes: [],
 });
 
 export function NoteProvider({ children }: Props) {
@@ -78,6 +80,13 @@ export function NoteProvider({ children }: Props) {
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const navigate = useNavigate();
   const { user } = useUser();
+
+  const sortedNotes = useMemo(() => {
+    const newArray = [...notes]
+    return newArray.sort((a, b) => {
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }, [notes]);
 
   // Load the note once the current note ID is set
   useEffect(() => {
@@ -159,10 +168,16 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setIsSaving(false)})
 
     const updatedNote = notes.find((n) => n.id === note.id);
-    const newNote = {...updatedNote, ...note};
-
+    
+    // Perform an optimistic update to the notes array so that the UI updates immediately
     if (updatedNote) {
-      setNotes(notes.map((n) => n.id === note.id ? newNote as Note : n));
+      const newArray = [...notes]
+      const newNote = { ...updatedNote, ...note, updatedAt: new Date() };
+      setNotes(newArray.map(n => n.id === newNote.id ? newNote : n));
+
+      if (currentNote && currentNote.id === note.id) {
+        setCurrentNote(newNote);
+      }
     }
   }
 
@@ -211,6 +226,7 @@ export function NoteProvider({ children }: Props) {
         setCurrentNotebook,
         currentNotebook,
         fetchNotebook,
+        sortedNotes,
       }}
     >
       {children}

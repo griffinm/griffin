@@ -8,7 +8,7 @@ import ArrowBack from '@mui/icons-material/ArrowBack';
 
 export function NoteList() {
   const { 
-    notes,
+    sortedNotes: notes,
     currentNotebook,
     createNote,
     currentNote,
@@ -21,7 +21,7 @@ export function NoteList() {
     return null;
   }
   return (
-    <div>
+    <div className="grow">
       <div>
         <Button
           onClick={() => setCurrentNotebook()}

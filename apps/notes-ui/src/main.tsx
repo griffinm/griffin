@@ -37,18 +37,16 @@ root.render(
     <ThemeProvider theme={createTheme(themeOptions)}>
       <BrowserRouter>
         <UserProvider>
-          <Routes>
-            <Route path="/sign-in" element={<SignIn />} />
-            <Route path="/sign-up" element={<SignUp />} />
-          </Routes>
           <NoteProvider>
             <TaskProvider>
               <Routes>
+                <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/" element={<Layout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="notes/:noteId" element={<Note />} />
+                  <Route path="/" element={<Home />} />                  
                   <Route path="tasks/new" element={<NewTaskPage />} />
                   <Route path="tasks/:taskId" element={<NewTaskPage />} />
+                  <Route path="notes/:noteId" element={<Note />} />
                 </Route>
               </Routes>
             </TaskProvider>

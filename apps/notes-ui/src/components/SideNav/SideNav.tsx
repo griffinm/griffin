@@ -28,16 +28,14 @@ export function SideNav({ menuExpanded }: Props) {
         <div className="flex flex-row p-3">
           <Search />
         </div>
-        <div className="grow">
-          {!currentNotebook && (
-            <>
-              <NotebookList />
-              <TaskList />
-            </>
+        {!currentNotebook && (
+          <div className="grow">
+            <NotebookList />
+            <TaskList />
+          </div>
           )}
-        </div>
         {currentNotebook && (
-          <div className="border-l-2 border-slate-700 w-[250px]">
+          <div className="border-l-2 border-slate-700 w-[250px] grow">
             <NoteList />
           </div>
         )}
