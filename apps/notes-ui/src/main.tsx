@@ -15,6 +15,7 @@ import { Home } from './pages/Home';
 import { ThemeOptions } from '@mui/material/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { SignIn } from './pages/SignIn';
+import { SignUp } from './pages/SignUp';
 
 export const themeOptions: ThemeOptions = {
   palette: {
@@ -38,6 +39,7 @@ root.render(
         <UserProvider>
           <Routes>
             <Route path="/sign-in" element={<SignIn />} />
+            <Route path="/sign-up" element={<SignUp />} />
           </Routes>
           <NoteProvider>
             <TaskProvider>

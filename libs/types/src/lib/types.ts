@@ -13,6 +13,10 @@ export interface JwtPayload {
   email: string;
 }
 
+export interface CreateUserResponse extends User {
+  jwt: string;
+}
+
 export interface SearchResult {
   noteId: string;
   noteTitle: string;

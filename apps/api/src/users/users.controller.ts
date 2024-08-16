@@ -15,10 +15,15 @@ import { UserEntity } from './dto/user.entity';
 import { UpdateDto } from './dto/update.dto';
 import { RequestWithUser } from '@griffin/types';
 import { CreateDto } from './dto/create.dto';
+import { AuthService } from '../auth/auth.service';
+import { CreateUserResponse } from '@griffin/types';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UserService) {}
+  constructor(
+    private readonly usersService: UserService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Get("current")
   @UseGuards(AuthGuard)
@@ -46,9 +51,17 @@ export class UsersController {
   @UseInterceptors(ClassSerializerInterceptor)
   async createUser(
     @Body() createDto: CreateDto,
-  ) {
-    const user = await this.usersService.createUser(createDto);
-    return new UserEntity(user);
+  ): Promise<CreateUserResponse> {
+    let user = await this.usersService.createUser(createDto);
+    user = new UserEntity(user);
+
+    // Also create a JWT
+    const jwt = await this.authService.signInWithPassword(user.email, createDto.password);
+
+    return {
+      ...user,
+      jwt,
+    };
   }
 }
   
