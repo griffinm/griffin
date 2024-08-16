@@ -70,7 +70,7 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
 
 export function NoteProvider({ children }: Props) {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
+  const [currentNoteId, setCurrentNoteId] = useState<string | null | undefined>(undefined);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notebooksLoading, setNotebooksLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -93,10 +93,17 @@ export function NoteProvider({ children }: Props) {
     setNoteLoading(true);
     if (currentNoteId) {
       fetchNoteApi(currentNoteId)
-        .then((resp) => setCurrentNote(resp.data))
+        .then((resp) => {
+          setCurrentNote(resp.data);
+
+          if (currentNotebook?.id !== resp.data.notebookId) {
+            // also set the current notebook to the note's notebook
+            fetchNotebook(resp.data.notebookId)
+          }
+        })
         .finally(() => setNoteLoading(false));
     }
-  }, [currentNoteId]);
+  }, [currentNoteId, currentNotebook]);
 
   // Load the notes once the current notebook is set
   useEffect(() => {

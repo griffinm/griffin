@@ -11,7 +11,7 @@ export const searchTasks = async(
     const valueString = value ? value.toString() : 'null';
     params.append(key, valueString);
   });
-  console.log(filter);
+
   return baseClient.get(`/tasks?${params.toString()}`);
 }
 

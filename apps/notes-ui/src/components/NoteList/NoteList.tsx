@@ -1,7 +1,7 @@
 import { useNotes } from '../../providers/NoteProvider'
 import { Add } from "@mui/icons-material"
 import { Button, Typography } from "@mui/material"
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
 import classnames from "classnames";
 import ArrowBack from '@mui/icons-material/ArrowBack';
@@ -12,26 +12,33 @@ export function NoteList() {
     currentNotebook,
     createNote,
     currentNote,
+    setCurrentNoteId,
     setCurrentNotebook,
   } = useNotes();
   const navigate = useNavigate();
   const containerClasses = "border-b border-slate-700 p-2"
+
+  const handleGoBack = () => {
+    setCurrentNoteId(null);
+    setCurrentNotebook();
+    navigate(urls.home);
+  }
 
   if (!currentNotebook) {
     return null;
   }
   return (
     <div className="grow">
-      <div>
-        <Button
-          onClick={() => setCurrentNotebook()}
-          variant="text"
-          sx={{ color: "white" }}
-          startIcon={<ArrowBack />}
-          >
-          Go Back
-        </Button>
-      </div>
+      
+      <Button
+        variant="text"
+        startIcon={<ArrowBack />}
+        sx={{ color: "white" }}
+        onClick={handleGoBack}
+      >
+        Go Back
+      </Button>
+
       <div className="p-2 text-center">
         <Typography variant="h6">
           {currentNotebook.title}
