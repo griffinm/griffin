@@ -12,7 +12,6 @@ import {
   Input,
 } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
-import classnames from "classnames";
 
 interface ListItemProps {
   notebook: Notebook,
@@ -22,12 +21,11 @@ interface ListItemProps {
 
 export function ListItem({
   notebook,
-  open,
   onDeleteNotebook,
 }: ListItemProps) {
   const { 
     updateNotebook,
-    currentNotebook,
+    setCurrentNotebook,
   } = useNotes();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -104,7 +102,9 @@ export function ListItem({
 
   return (
     <div className="flex justify-between w-full">
-      {renderTitle()}
+      <div className="grow" onClick={() => setCurrentNotebook(notebook)}>
+        {renderTitle()}
+      </div>
       <div>
         {!isEditing && (
           <MoreVert 
@@ -123,14 +123,12 @@ export interface ListProps {
 }
 
 export function List({ onDeleteNotebook }: ListProps) {
-  const { notebooks, setCurrentNotebook, currentNotebook } = useNotes();
-
-  
+  const { notebooks } = useNotes();
 
   return (
     <>
       {notebooks.map((notebook) => (
-        <ListItemButton key={notebook.id} onClick={() => setCurrentNotebook(notebook)}>
+        <ListItemButton key={notebook.id}>
           <ListItem notebook={notebook} open={true} onDeleteNotebook={onDeleteNotebook} />
         </ListItemButton>
       ))}
