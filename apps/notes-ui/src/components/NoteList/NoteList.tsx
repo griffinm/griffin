@@ -1,6 +1,6 @@
 import { useNotes } from '../../providers/NoteProvider'
 import { Add } from "@mui/icons-material"
-import { Button } from "@mui/material"
+import { Button, Typography } from "@mui/material"
 import { useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
 import classnames from "classnames";
@@ -28,9 +28,14 @@ export function NoteList() {
           variant="text"
           sx={{ color: "white" }}
           startIcon={<ArrowBack />}
-        >
+          >
           Go Back
         </Button>
+      </div>
+      <div className="p-2 text-center">
+        <Typography variant="h6">
+          {currentNotebook.title}
+        </Typography>
       </div>
       <div className={`${containerClasses} text-center`}>
         <Button
