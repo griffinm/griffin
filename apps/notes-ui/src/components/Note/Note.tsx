@@ -24,7 +24,7 @@ export function Note() {
   useEffect(() => {
     if (!noteId) return;
     setCurrentNoteId(noteId);
-  }, [noteId]);
+  }, [noteId, setCurrentNoteId]);
 
   useEffect(() => {
     setNewNoteTitle(currentNote?.title);
@@ -54,6 +54,8 @@ export function Note() {
           value={newNoteTitle || currentNote.title}
           onChange={(e) => {
             setNewNoteTitle(e.target.value);
+          }}
+          onBlur={(e) => {
             updateNote({ id: currentNote.id, title: e.target.value });
           }}
         />

@@ -9,6 +9,10 @@ export interface NoteUpdateProps {
   content?: string,
 }
 
+export const fetchRecentNotes = async(): Promise<AxiosResponse<Note[]>> => {
+  return baseClient.get('/notes/recent');
+}
+
 export const fetchNote = async(
   noteId: string,
 ): Promise<AxiosResponse<Note>> => {

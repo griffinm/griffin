@@ -10,14 +10,15 @@ import {
   Param,
   Patch,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { TasksService } from './tasks.service';
-import { TaskEntity } from './dto/task.entity';
 import { Task } from '@prisma/client';
 import { NewTaskDto } from './dto/new.dto';
 import { UpdateTaskDto } from './dto/update.dto';
-
+import { RequestWithUser } from "@griffin/types";
+import { FilterDto } from './dto/filter.dto';
 @Controller()
 @UseGuards(AuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -28,7 +29,7 @@ export class TasksController {
 
   @Get('tasks/:id')
   async getById(
-    @Req() request: any,
+    @Req() request: RequestWithUser,
     @Param('id') id: string,
   ): Promise<Task> {
     return this.tasksService.getById(id, request.user.id);
@@ -36,14 +37,18 @@ export class TasksController {
 
   @Get('/tasks')
   async getAllForUser(
-    @Req() request: any,
+    @Req() request: RequestWithUser,
+    @Query() filter?: FilterDto,
   ): Promise<Task[]> {
+    if (filter) {
+      return this.tasksService.filter(request.user.id, filter);
+    }
     return this.tasksService.getAllForUser(request.user.id);
   }
   
   @Delete('tasks/:id')
   async deleteById(
-    @Req() request: any,
+    @Req() request: RequestWithUser,
     @Param('id') id: string,
   ): Promise<Task> {
     return this.tasksService.deleteById(id, request.user.id);
@@ -51,7 +56,7 @@ export class TasksController {
 
   @Post('tasks')
   async create(
-    @Req() request: any,
+    @Req() request: RequestWithUser,
     @Body() task: NewTaskDto,
   ): Promise<Task> {
     return this.tasksService.create(request.user.id, task);
@@ -59,7 +64,7 @@ export class TasksController {
 
   @Patch('tasks/:id')
   async update(
-    @Req() request: any,
+    @Req() request: RequestWithUser,
     @Param('id') id: string,
     @Body() task: UpdateTaskDto,
   ): Promise<Task> {

@@ -4,11 +4,29 @@ import { Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateTaskDto } from './dto/update.dto';
 import { NewTaskDto } from './dto/new.dto';
+import { FilterDto } from './dto/filter.dto';
+
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
-  async getById(id: string, userId: string) {
+  async filter(userId: string, filter: FilterDto): Promise<Task[]> {
+    if (filter.completedAt === 'null') {
+      filter.completedAt = null;
+    }
+    
+    const tasks = await this.prisma.task.findMany({
+      where: { 
+        userId, 
+        ...filter,
+        deletedAt: null,
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+    return tasks;
+  }
+
+  async getById(id: string, userId: string): Promise<Task> {
     const task = await this.prisma.task.findUnique({
       where: { id, userId },
     });
@@ -18,7 +36,7 @@ export class TasksService {
     return task;
   }
 
-  async deleteById(id: string, userId: string) {
+  async deleteById(id: string, userId: string): Promise<Task> {
     const task = await this.prisma.task.update({
       where: { id, userId },
       data: { deletedAt: new Date() },
@@ -26,14 +44,14 @@ export class TasksService {
     return task;
   }
 
-  async getAllForUser(userId: string) {
+  async getAllForUser(userId: string): Promise<Task[]> {
     const tasks = await this.prisma.task.findMany({
       where: { userId, deletedAt: null },
     });
     return tasks;
   }
 
-  async update(id: string, userId: string, task: UpdateTaskDto) {
+  async update(id: string, userId: string, task: UpdateTaskDto): Promise<Task> {
     const updatedTask = await this.prisma.task.update({
       where: { id, userId },
       data: task,
@@ -41,7 +59,7 @@ export class TasksService {
     return updatedTask;
   }
 
-  async create(userId: string, task: NewTaskDto) {
+  async create(userId: string, task: NewTaskDto): Promise<Task> {
     const createdTask = await this.prisma.task.create({
       data: { ...task, userId },
     });

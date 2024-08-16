@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Note, Notebook } from "@prisma/client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { 
   NoteUpdateProps,
   createNote as createNoteApi, 
@@ -16,6 +16,7 @@ import {
 } from "../../utils/api";
 import { useNavigate } from "react-router";
 import { urls } from "../../utils/urls";
+import { useUser } from "../UserProvider";
 
 interface Props {
   children: React.ReactNode;
@@ -41,6 +42,7 @@ interface CurrentNoteProps {
   setCurrentNotebook: (notebook?: Notebook) => void;
   currentNotebook: Notebook | null;
   fetchNotebook: (notebookId: string) => void;
+  sortedNotes: Note[];
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -63,11 +65,12 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   setCurrentNotebook: () => {}, 
   currentNotebook: null,
   fetchNotebook: () => {},
+  sortedNotes: [],
 });
 
 export function NoteProvider({ children }: Props) {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
+  const [currentNoteId, setCurrentNoteId] = useState<string | null | undefined>(undefined);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notebooksLoading, setNotebooksLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,16 +79,31 @@ export function NoteProvider({ children }: Props) {
   const [noteLoading, setNoteLoading] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const navigate = useNavigate();
+  const { user } = useUser();
+
+  const sortedNotes = useMemo(() => {
+    const newArray = [...notes]
+    return newArray.sort((a, b) => {
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }, [notes]);
 
   // Load the note once the current note ID is set
   useEffect(() => {
     setNoteLoading(true);
     if (currentNoteId) {
       fetchNoteApi(currentNoteId)
-        .then((resp) => setCurrentNote(resp.data))
+        .then((resp) => {
+          setCurrentNote(resp.data);
+
+          if (currentNotebook?.id !== resp.data.notebookId) {
+            // also set the current notebook to the note's notebook
+            fetchNotebook(resp.data.notebookId)
+          }
+        })
         .finally(() => setNoteLoading(false));
     }
-  }, [currentNoteId]);
+  }, [currentNoteId, currentNotebook]);
 
   // Load the notes once the current notebook is set
   useEffect(() => {
@@ -97,12 +115,13 @@ export function NoteProvider({ children }: Props) {
 
   // Load the notebooks once the component mounts
   useEffect(() => {
+    if (!user) return;
     setNotebooksLoading(true);
     fetchNotebooksApi().then((resp) => {
       setNotebooks(resp.data)
       setNotebooksLoading(false);
     })
-  }, []);
+  }, [user]);
 
   const fetchNotebooks = () => {
     setNotebooksLoading(true);
@@ -156,10 +175,16 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setIsSaving(false)})
 
     const updatedNote = notes.find((n) => n.id === note.id);
-    const newNote = {...updatedNote, ...note};
-
+    
+    // Perform an optimistic update to the notes array so that the UI updates immediately
     if (updatedNote) {
-      setNotes(notes.map((n) => n.id === note.id ? newNote as Note : n));
+      const newArray = [...notes]
+      const newNote = { ...updatedNote, ...note, updatedAt: new Date() };
+      setNotes(newArray.map(n => n.id === newNote.id ? newNote : n));
+
+      if (currentNote && currentNote.id === note.id) {
+        setCurrentNote(newNote);
+      }
     }
   }
 
@@ -208,6 +233,7 @@ export function NoteProvider({ children }: Props) {
         setCurrentNotebook,
         currentNotebook,
         fetchNotebook,
+        sortedNotes,
       }}
     >
       {children}

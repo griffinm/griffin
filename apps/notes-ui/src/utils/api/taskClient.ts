@@ -3,6 +3,18 @@ import { baseClient } from "./baseClient";
 import { AxiosResponse } from "axios";
 import { CreateOrUpdateTaskProps } from "./types";
 
+export const searchTasks = async(
+  filter: Partial<Task>,
+): Promise<AxiosResponse<Task[]>> => {
+  const params = new URLSearchParams();
+  Object.entries(filter).forEach(([key, value]) => {
+    const valueString = value ? value.toString() : 'null';
+    params.append(key, valueString);
+  });
+
+  return baseClient.get(`/tasks?${params.toString()}`);
+}
+
 export const fetchTask = async(
   taskId: string,
 ): Promise<AxiosResponse<Task>> => {

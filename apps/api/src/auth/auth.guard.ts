@@ -2,18 +2,28 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  HttpStatus,
 } from '@nestjs/common';
-import { UserService } from '../users/user.service';
-
+import { AuthService } from '../auth/auth.service';
+import { HttpException } from '@nestjs/common';
 import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private usersService: UserService) {}
+  constructor(private authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    request['user'] = await this.usersService.getByEmail("griffin.mahoney@gmail.com")
+    const cookie = request.cookies['jwt'];
+    if (!cookie) {
+      throw new HttpException("Sign in required", HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      request['user'] = await this.authService.validateJwt(cookie);
+    } catch (error) {
+      throw new HttpException("Invalid token", HttpStatus.UNAUTHORIZED);
+    }
 
     return true;
   }

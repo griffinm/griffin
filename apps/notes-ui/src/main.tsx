@@ -13,8 +13,9 @@ import { TaskProvider } from './providers/TaskProvider';
 import { NewTaskPage } from './pages/NewTaskPage';
 import { Home } from './pages/Home';
 import { ThemeOptions } from '@mui/material/styles';
-import { useTheme } from '@mui/material/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { SignIn } from './pages/SignIn';
+import { SignUp } from './pages/SignUp';
 
 export const themeOptions: ThemeOptions = {
   palette: {
@@ -39,11 +40,13 @@ root.render(
           <NoteProvider>
             <TaskProvider>
               <Routes>
+                <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/" element={<Layout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="notes/:noteId" element={<Note />} />
+                  <Route path="/" element={<Home />} />                  
                   <Route path="tasks/new" element={<NewTaskPage />} />
                   <Route path="tasks/:taskId" element={<NewTaskPage />} />
+                  <Route path="notes/:noteId" element={<Note />} />
                 </Route>
               </Routes>
             </TaskProvider>
