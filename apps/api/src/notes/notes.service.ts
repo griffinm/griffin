@@ -22,6 +22,22 @@ export class NoteService {
     });
   }
 
+  async recentNotes(userId: string) {
+    return await this.prisma.note.findMany({
+      where: {
+        deletedAt: null,
+        notebook: {
+          user: { id: userId },
+          deletedAt: null,
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      take: 5,
+    });
+  }
+
   async search(
     query: string,
     userId: string,
