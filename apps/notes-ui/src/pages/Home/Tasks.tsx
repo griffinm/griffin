@@ -14,7 +14,7 @@ export function Tasks() {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      const response = await searchTasks({});
+      const response = await searchTasks({ completedAt: null });
       setTasks(response.data);
       setLoading(false);
     };
@@ -25,6 +25,11 @@ export function Tasks() {
     <Card>
       <CardHeader title="Tasks" />
       {loading && <Loading />}
+      {!loading && tasks.length === 0 && (
+        <div className="p-3 text-center">
+          <Typography variant="body1">No tasks</Typography>
+        </div>
+      )}
       {tasks.map((task) => (
         <div key={task.id} className="border-t border-slate-700">
           <div className="p-3 flex justify-between">

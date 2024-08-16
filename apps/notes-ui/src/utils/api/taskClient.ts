@@ -8,11 +8,10 @@ export const searchTasks = async(
 ): Promise<AxiosResponse<Task[]>> => {
   const params = new URLSearchParams();
   Object.entries(filter).forEach(([key, value]) => {
-    if (value) {
-      params.append(key, value.toString());
-    }
+    const valueString = value ? value.toString() : 'null';
+    params.append(key, valueString);
   });
-
+  console.log(filter);
   return baseClient.get(`/tasks?${params.toString()}`);
 }
 

@@ -4,11 +4,17 @@ import { Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateTaskDto } from './dto/update.dto';
 import { NewTaskDto } from './dto/new.dto';
+import { FilterDto } from './dto/filter.dto';
+
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
-  async filter(userId: string, filter: Partial<Task>): Promise<Task[]> {
+  async filter(userId: string, filter: FilterDto): Promise<Task[]> {
+    if (filter.completedAt === 'null') {
+      filter.completedAt = null;
+    }
+    
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 

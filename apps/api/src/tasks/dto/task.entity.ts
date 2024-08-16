@@ -3,8 +3,8 @@ import {
   IsNotEmpty,
   IsDateString,
   IsOptional,
+  ValidateIf,
 } from 'class-validator';
-
 
 export class TaskEntity {
   @IsString()
@@ -27,9 +27,10 @@ export class TaskEntity {
   @IsOptional()
   dueDate?: Date;
 
+  @ValidateIf(o => o.completedAt)
   @IsDateString()
   @IsOptional()
-  completedAt?: Date;
+  completedAt?: Date | null;
 
   @IsDateString()
   createdAt: Date;
