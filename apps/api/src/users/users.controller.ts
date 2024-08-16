@@ -53,6 +53,7 @@ export class UsersController {
     @Body() createDto: CreateDto,
   ): Promise<CreateUserResponse> {
     let user = await this.usersService.createUser(createDto);
+    
     user = new UserEntity(user);
 
     // Also create a JWT

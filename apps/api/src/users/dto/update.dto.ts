@@ -6,6 +6,7 @@ export class UpdateDto extends PickType(
   UserEntity, 
   [
     'email',
+    'firstName',
   ]
 ) {
   @IsString()

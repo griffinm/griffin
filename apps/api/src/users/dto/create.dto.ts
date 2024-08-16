@@ -6,6 +6,7 @@ export class CreateDto extends PickType(
   UserEntity, 
   [
     'email',
+    'firstName',
   ]
 ) {
   @IsString()

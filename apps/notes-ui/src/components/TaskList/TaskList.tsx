@@ -29,37 +29,31 @@ export function TaskList() {
 
   return (
     <div>
-      <List
-        sx={{ width: '100%' }}
-        component="nav"
-
-      >
-        <ListItemButton onClick={() => setExpanded(!expanded)}>
-          <ListItemIcon>
-            <CheckCircle />
-          </ListItemIcon>
-          <ListItemText primary="Tasks"  />
-          {expanded ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-        
-        <Collapse in={expanded} unmountOnExit timeout="auto">
-          <List disablePadding sx={{ pl: 3 }}>
-            <ListItemButton sx={{ pl: 3 }} onClick={() => navigate('/tasks/new')}>
-              <ListItemIcon>
-                <Add />
-              </ListItemIcon>
-              <ListItemText primary="New Task" />
-            </ListItemButton>
-            <Divider component="li" />
-            {tasks.map((task) => (
-              <div key={task.id}>
-                <TaskItem key={task.id} task={task} onToggleComplete={onToggleComplete} />
-                <Divider component="li" />
-              </div>
-            ))}
-          </List>
-        </Collapse>
-      </List>
+      <ListItemButton onClick={() => setExpanded(!expanded)}>
+        <ListItemIcon>
+          <CheckCircle />
+        </ListItemIcon>
+        <ListItemText primary="Tasks"  />
+        {expanded ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      
+      <Collapse in={expanded} unmountOnExit timeout="auto">
+        <List disablePadding sx={{ pl: 3 }}>
+          <ListItemButton sx={{ pl: 3 }} onClick={() => navigate('/tasks/new')}>
+            <ListItemIcon>
+              <Add />
+            </ListItemIcon>
+            <ListItemText primary="New Task" />
+          </ListItemButton>
+          <Divider component="li" />
+          {tasks.map((task) => (
+            <div key={task.id}>
+              <TaskItem key={task.id} task={task} onToggleComplete={onToggleComplete} />
+              <Divider component="li" />
+            </div>
+          ))}
+        </List>
+      </Collapse>
     </div>
   )
 }

@@ -5,8 +5,12 @@ import { NoteList } from '../NoteList'
 import { Search } from '../Search'
 import classnames from 'classnames'
 import { useUser } from '../../providers/UserProvider'
-import { Button } from '@mui/material'
+import { Button, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
 import LogoutIcon from '@mui/icons-material/Logout';
+import HomeIcon from '@mui/icons-material/Home';
+import { Link } from 'react-router-dom';
+import { urls } from '../../utils/urls';
+
 interface Props {
   menuExpanded: boolean;
 }
@@ -21,6 +25,32 @@ export function SideNav({ menuExpanded }: Props) {
     },
   );
 
+  const renderRootNav = () => {
+    if (currentNotebook) {
+      return null
+    }
+
+    return (
+      <List
+        sx={{ width: '100%', flexGrow: 1 }}
+        component="nav"
+      >
+        <Link to={urls.home}>
+          <ListItemButton>
+            <ListItemIcon>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Home" />
+          </ListItemButton>
+        </Link>
+
+        <NotebookList />
+        <TaskList />
+
+      </List>
+    )
+  }
+
   const { currentNotebook } = useNotes();
   return (
     <div className={menuClasses}>
@@ -28,12 +58,7 @@ export function SideNav({ menuExpanded }: Props) {
         <div className="flex flex-row p-3">
           <Search />
         </div>
-        {!currentNotebook && (
-          <div className="grow">
-            <NotebookList />
-            <TaskList />
-          </div>
-          )}
+        {renderRootNav()}
         {currentNotebook && (
           <div className="border-l-2 border-slate-700 w-[250px] grow">
             <NoteList />

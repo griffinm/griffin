@@ -19,7 +19,7 @@ interface UserContextProps {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   errors: string[];
-  createUser: (email: string, password: string) => Promise<void>;
+  createUser: (email: string, password: string, firstName: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextProps>({
@@ -85,9 +85,9 @@ export function UserProvider({ children }: Props) {
       });
   }
 
-  const createUser = async (email: string, password: string) => {
+  const createUser = async (email: string, password: string, firstName: string) => {
     setErrors([]);
-    createUserApi(email, password)
+    createUserApi(email, password, firstName)
       .then(response => {
         const { jwt } = response.data;
         const cookie = new cookies();

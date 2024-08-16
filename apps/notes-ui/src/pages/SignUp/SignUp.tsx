@@ -16,10 +16,11 @@ export function SignUp() {
   const { errors, createUser } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    createUser(email, password);
+    createUser(email, password, firstName);
   }
 
   return (
@@ -36,6 +37,13 @@ export function SignUp() {
             <ErrorDisplay errors={errors} />
 
             <form onSubmit={handleSubmit}>
+              <TextField
+                label="First Name"
+                fullWidth
+                margin="normal"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
               <TextField
                 label="Email"
                 type="email"

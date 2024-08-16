@@ -2,6 +2,7 @@ import {
   IsString,
   IsNotEmpty,
   IsDate,
+  IsOptional,
 } from "class-validator";
 import { Exclude } from "class-transformer";
 
@@ -26,6 +27,10 @@ export class UserEntity {
   @IsNotEmpty()
   @Exclude()
   password: string;
+
+  @IsString()
+  @IsOptional()
+  firstName: string;
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
