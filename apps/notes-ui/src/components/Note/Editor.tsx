@@ -38,10 +38,12 @@ import {
   RichTextEditorProvider,
   insertImages
 } from "mui-tiptap";
+import { TaskMenuItem } from "./plugins/Task/MenuItem";
 import { useCallback, useRef, useState } from "react";
 import { Editor as TiptapEditor } from "@tiptap/core";
 import { useEditor } from "@tiptap/react";
 import { createMedia } from "../../utils/api";
+import { TaskExtension } from "./plugins/Task/Extension";
 
 interface Props {
   note: Note,
@@ -63,10 +65,10 @@ const extensions = [
   TableImproved.configure({
     resizable: true,
   }),
+  TaskExtension,
 ]
 
 const SAVE_TIMEOUT = 2000;
-const MAX_SAVE_INTERVAL = 60_000;
 
 export function Editor({ 
   note,
@@ -74,7 +76,7 @@ export function Editor({
   isSaving,
 }: Props) {
   const rteRef = useRef<RichTextEditorRef>(null);
-  const [updateTimeout, setUpdateTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [updateTimeout] = useState<NodeJS.Timeout | null>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   updateTimeoutRef.current = updateTimeout;
   const [lastSaveAt, setLastSaveAt] = useState<Date | null>(null);
@@ -95,13 +97,6 @@ export function Editor({
       return;
     }
 
-    // At a min save every MAX_SAVE_INTERVAL
-    // const timeSinceLastSaved = new Date().getTime() - (lastSaveAtRef.current ? lastSaveAtRef.current.getTime() : 0);
-    // if (timeSinceLastSaved > MAX_SAVE_INTERVAL) {
-    //   handleUpdate({ editor: rteRef!.current!.editor! });
-    //   setLastSaveAt(new Date());
-    // }
-
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
     }
@@ -112,6 +107,8 @@ export function Editor({
     }, SAVE_TIMEOUT);
   }, [])
 
+  // editor?.chain().focus().insertContent('<react-component>dasd</react-component>')
+  
   const fileListToImageFiles = (fileList: FileList): File[] => {
     // You may want to use a package like attr-accept
     // (https://www.npmjs.com/package/attr-accept) to restrict to certain file
@@ -127,10 +124,7 @@ export function Editor({
       if (!rteRef.current?.editor) {
         return;
       }
-      const attributesForImageFiles = files.map((file) => ({
-        src: URL.createObjectURL(file),
-        alt: file.name,
-      }));
+
       const firstFile = files[0]
       
       // TODO: allow more than 1 file at a time
@@ -175,7 +169,7 @@ export function Editor({
       },
       [handleNewImageFiles],
     );
-
+  
   const handleDrop: NonNullable<EditorOptions["editorProps"]["handleDrop"]> =
     useCallback(
       (view, event, _slice, _moved) => {
@@ -223,6 +217,8 @@ export function Editor({
             <MenuDivider />
             <MenuButtonUndo />
             <MenuButtonRedo />
+            <MenuDivider />
+            <TaskMenuItem />
             <MenuDivider />
             <MenuButtonBulletedList />
             <MenuButtonOrderedList />
