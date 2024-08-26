@@ -1,12 +1,13 @@
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button, CircularProgress, Input } from "@mui/material";
 import { Editor } from './Editor'
 import { useNotes } from "../../providers/NoteProvider";
-import { Delete } from '@mui/icons-material';
+import { Delete, OpenInNew } from '@mui/icons-material';
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Note as NoteType } from "@prisma/client"
 import { useNavigate } from "react-router-dom";
+import classNames from "classnames";
 
 export function Note() {
   const { noteId } = useParams();
@@ -20,6 +21,8 @@ export function Note() {
     setCurrentNoteId,
   } = useNotes();
   const [newNoteTitle, setNewNoteTitle] = useState(currentNote?.title);
+  const [searchParams] = useSearchParams();
+  const isFullScreen = searchParams.get('fs') === 'true';
 
   useEffect(() => {
     if (!noteId) return;
@@ -44,8 +47,16 @@ export function Note() {
     navigate("/");
   }
 
+  const containerClasses = classNames(
+    "pr-5 pt-5 pl-4 flex flex-col grow h-[100%]",
+    {
+      "h-[100vh]": isFullScreen,
+      "max-w-[1000px]": !isFullScreen,
+    },
+  );
+
   return (
-    <div className="pr-5 pt-5 pl-4 flex flex-col grow h-[100%] max-w-[1000px]">
+    <div className={containerClasses}>
       <div className="flex">
         <Input
           sx={{ fontSize: 24 }}
@@ -62,11 +73,21 @@ export function Note() {
         <div className="p-2">
           <Button
             variant="outlined"
+            size="small"
+          >
+          <a href={`/notes/${currentNote.id}?fs=true`} target="_blank">
+            <OpenInNew />
+          </a>
+          </Button>
+        </div>
+        <div className="p-2">
+          <Button
+            variant="outlined"
             color="error"
             onClick={() => setOpenDeleteDialog(true)}
             size="small"
           >
-            <Delete />
+              <Delete />
           </Button>
         </div>
       </div>
