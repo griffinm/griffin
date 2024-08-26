@@ -37,7 +37,6 @@
 
 .tiptap.ProseMirror {
   height: 95% !important;
-  min-height: 300px;
 }
 
 .MuiTiptap-FieldContainer-root {
