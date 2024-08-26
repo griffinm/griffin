@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Checkbox, TextField } from '@mui/material'
-import { NodeViewContent, NodeViewWrapper, useEditor } from '@tiptap/react'
+import { NodeViewWrapper } from '@tiptap/react'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -17,19 +17,31 @@ export function Component(props: any) {
   const [isSelected, setIsSelected] = useState(false);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
+  const [completed, setCompleted] = useState(false);
   const [description, setDescription] = useState('');
-  const [fetched, setFetched] = useState(false);
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (props.node.attrs.taskId && !fetched) {
+    if (props.node.attrs.taskId && !fetchedRef.current) {
+      fetchedRef.current = true;
       fetchTask(props.node.attrs.taskId).then((resp) => {
         setTitle(resp.data.title);
         setDueDate(resp.data.dueDate || new Date());
         setDescription(resp.data.description || '');
+        setCompleted(resp.data.completedAt !== null);
       })
-      setFetched(true);
     }
-  }, [fetched, props.node.attrs.taskId])
+  }, [props.node.attrs.taskId])
+
+  const handleToggleCompleted = () => {
+    setCompleted(!completed);
+    updateTask(props.node.attrs.taskId, {
+      completedAt: completed ? null : new Date(),
+      dueDate: dueDate,
+      title: title,
+      description: description,
+    })
+  }
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -95,13 +107,15 @@ export function Component(props: any) {
             </LocalizationProvider>
             <Button
               variant="text"
-              sx={{ color: 'white'}}
+              sx={{ color: 'white'}} 
+              onClick={() => setDueDate(dayjs().toDate())}
             >
               Today
             </Button>
             <Button
               variant="text"
               sx={{ color: 'white'}}
+              onClick={() => setDueDate(dayjs().add(1, 'day').toDate())}
             >
               Tomorrow
             </Button>
@@ -129,15 +143,17 @@ export function Component(props: any) {
   }
 
   const renderShow = () => {
+    const titleClasses = classNames('grow', {
+      'line-through': completed,
+    });
+
     return (
-      <div
-        onClick={() => setIsSelected(true)}
-        className="flex justify-between items-center"
-      >
+      <div className="flex justify-between items-center">
         <Checkbox
-          checked={false}
+          checked={completed}
+          onChange={handleToggleCompleted}
         />
-        <div className="grow">
+        <div className={titleClasses} onClick={() => setIsSelected(true)}>
           {title || 'Task'}
         </div>
         <div className="pr-3 text-right">
@@ -158,8 +174,6 @@ export function Component(props: any) {
       >
         {isSelected ? renderEdit() : renderShow()}
     </div>
-
-      {/* <NodeViewContent className="content" /> */}
     </NodeViewWrapper>
   )
 }
