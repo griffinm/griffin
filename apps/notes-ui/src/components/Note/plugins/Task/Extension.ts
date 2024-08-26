@@ -10,7 +10,11 @@ export const TaskExtension = Node.create({
   atom: true,
 
   addAttributes() {
-    return {}
+    return {
+      taskId: {
+        default: "",
+      },
+    }
   },
 
   parseHTML() {

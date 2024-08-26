@@ -52,8 +52,6 @@ model Note {
   content String? @map("content")
   notebookId String @map("notebook_id")
   deletedAt DateTime? @map("deleted_at")
-  contentSearchVector Unsupported("tsvector")? @map("content_search_vector")
-  contentSearchText String? @map("content_search_text") @ignore
 
   notebook Notebook @relation(fields: [notebookId], references: [id])
   media Media[]

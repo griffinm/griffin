@@ -45,7 +45,7 @@ export function Note() {
   }
 
   return (
-    <div className="pr-5 pt-5 pl-4 flex flex-col grow h-[100%]">
+    <div className="pr-5 pt-5 pl-4 flex flex-col grow h-[100%] max-w-[1000px]">
       <div className="flex">
         <Input
           sx={{ fontSize: 24 }}
@@ -70,7 +70,7 @@ export function Note() {
           </Button>
         </div>
       </div>
-      <div className="mt-5 flex flex-row grow">
+      <div className="mt-5 flex flex-row max-h-[90vh]">
         <div className="grow">
           <Editor
             note={currentNote}
