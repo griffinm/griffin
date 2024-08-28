@@ -34,5 +34,23 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('react')) {
+            return 'react';
+          } else if (id.includes('@mui')) {
+            return 'mui';
+          } else if (id.includes('date-fns')) {
+            return 'date-fns';
+          } else if (id.includes('tiptap') || id.includes('prosemirror')) {
+            return 'tiptap';
+          } else if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
+  
 });

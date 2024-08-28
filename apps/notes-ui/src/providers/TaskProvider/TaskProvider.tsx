@@ -22,6 +22,7 @@ interface TaskProps {
   deleteTask: (taskId: string) => void;
   currentTask?: Task;
   setCurrentTask: (task?: Task) => void;
+  fetchTasks: () => void;
 }
 
 export const TasksContext = createContext<TaskProps>({
@@ -31,6 +32,7 @@ export const TasksContext = createContext<TaskProps>({
   updateTask: () => {},
   deleteTask: () => {},
   setCurrentTask: () => {},
+  fetchTasks: () => {},
 });
 
 export function TaskProvider({ children }: Props) {
@@ -97,6 +99,7 @@ export function TaskProvider({ children }: Props) {
       deleteTask,
       currentTask,
       setCurrentTask,
+      fetchTasks,
     }}>
       {children}
     </TasksContext.Provider>
