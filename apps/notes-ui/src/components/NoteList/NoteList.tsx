@@ -4,7 +4,7 @@ import { Button, Typography } from "@mui/material"
 import { Link, useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
 import classnames from "classnames";
-import ArrowBack from '@mui/icons-material/ArrowBack';
+import { Close } from '@mui/icons-material';
 
 export function NoteList() {
   const { 
@@ -29,15 +29,16 @@ export function NoteList() {
   }
   return (
     <div className="grow">
-      
-      <Button
-        variant="text"
-        startIcon={<ArrowBack />}
-        sx={{ color: "white" }}
-        onClick={handleGoBack}
-      >
-        Go Back
-      </Button>
+      <div className="p-2 text-center border-b border-slate-700">
+        <Button
+          variant="text"
+          startIcon={<Close />}
+          sx={{ color: "white" }}
+          onClick={handleGoBack}
+        >
+          Close Notebook
+        </Button>
+      </div>
 
       <div className="p-2 text-center">
         <Typography variant="h6">

@@ -27,7 +27,7 @@ export function Layout() {
         </div>
       )}
 
-      <div>
+      <div className="grow">
         <div className="flex flex-row grow">
           {!isFullScreen && (
             <div className="bg-dark-1 text-white">
