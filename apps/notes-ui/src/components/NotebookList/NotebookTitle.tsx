@@ -31,7 +31,6 @@ export function NotebookTitle({
   const [moveAnchorEl, setMoveAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
-  const [open, setOpen] = useState(false);
 
   const renderMenu = () => {
     return (

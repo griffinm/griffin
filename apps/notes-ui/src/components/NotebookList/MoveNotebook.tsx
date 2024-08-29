@@ -25,7 +25,6 @@ export function MoveNotebook({
     return filtered;
   }, [notebooks, filterTerm]);
 
-
   return (
     <Menu
       anchorEl={anchorEl}
