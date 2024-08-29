@@ -19,7 +19,7 @@ interface Props {
 export function SideNav({ menuExpanded }: Props) {
   const { user, signOut } = useUser();
   const containerClasses = classnames(
-    "flex flex-row",
+    "flex flex-row min-h-[500px] overflow-auto",
   );
   const {
     currentNotebook,

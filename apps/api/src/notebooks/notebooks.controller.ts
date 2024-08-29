@@ -55,7 +55,6 @@ export class NotebooksController {
     @Param('id') id: string,
     @Body() dto: UpdateDto,
   ): Promise<NotebookEntity> {
-    console.log(dto)
     return this.notebookService.updateNotebook(request.user.id, id, dto);
   }
 

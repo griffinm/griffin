@@ -121,7 +121,6 @@ export function NoteProvider({ children }: Props) {
   useEffect(() => {
     setNoteLoading(true);
     if (currentNoteId) {
-      console.log('currentNoteId', currentNoteId);
       fetchNoteApi(currentNoteId)
         .then((resp) => {
           setCurrentNote(resp.data);

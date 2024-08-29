@@ -18,7 +18,7 @@ export const baseClient = axios.create({
 baseClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log(error)
+    console.error(error)
     if (error.response.status === 401) {
       window.location.href = urls.signIn;
     }
