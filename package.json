@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "prisma:seed": "tsx apps/api/prisma/seed.ts",
-    "dev": "npx run-many -t serve --configuration=development"
+    "dev": "NODE_ENV=development npx run-many -t serve --configuration=development"
   },
   "private": true,
   "dependencies": {

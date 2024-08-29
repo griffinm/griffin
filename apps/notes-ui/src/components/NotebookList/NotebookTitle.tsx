@@ -10,19 +10,20 @@ import {
   Button,
   ListItemButton,
   Input,
+  Collapse,
+  ListItemText,
 } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
 
-interface ListItemProps {
+interface NotebookTitleProps {
   notebook: Notebook,
-  open: boolean,
   onDeleteNotebook: (notebook: Notebook) => void;
 }
 
-export function ListItem({
+export function NotebookTitle({
   notebook,
   onDeleteNotebook,
-}: ListItemProps) {
+}: NotebookTitleProps) {
   const { 
     updateNotebook,
     setCurrentNotebook,
@@ -30,7 +31,8 @@ export function ListItem({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
-  
+  const [open, setOpen] = useState(false);
+
   const renderMenu = () => {
     return (
       <Menu
@@ -97,7 +99,7 @@ export function ListItem({
         </div>
       )
     }
-    return <div>{notebook.title || 'New Notebook'}</div>
+    return <ListItemText primary={notebook.title || 'New Notebook'} />
   }
 
   return (
@@ -106,7 +108,7 @@ export function ListItem({
         {renderTitle()}
       </div>
       <div>
-        {!isEditing && (
+        {!isEditing && !notebook.isDefault && (
           <MoreVert 
             fontSize="small" 
             onClick={(e) => setAnchorEl(e.target as HTMLElement)}
@@ -116,22 +118,4 @@ export function ListItem({
       </div>
     </div>
   );
-}
-
-export interface ListProps {
-  onDeleteNotebook: (notebook: Notebook) => void;
-}
-
-export function List({ onDeleteNotebook }: ListProps) {
-  const { notebooks } = useNotes();
-
-  return (
-    <>
-      {notebooks.map((notebook) => (
-        <ListItemButton key={notebook.id}>
-          <ListItem notebook={notebook} open={true} onDeleteNotebook={onDeleteNotebook} />
-        </ListItemButton>
-      ))}
-    </>
-  )
 }

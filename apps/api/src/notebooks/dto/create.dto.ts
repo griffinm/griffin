@@ -5,5 +5,6 @@ export class CreateDto extends PickType(
   NotebookEntity,
   [
     'title',
+    'parentId',
   ] as const,
 ) {}

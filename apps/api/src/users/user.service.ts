@@ -27,12 +27,23 @@ export class UserService {
       throw new BadRequestException('User already exists');
     }
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         ...createDto,
         password: hashedPassword
       }
     });
+
+    // Create default notebook
+    await this.prisma.notebook.create({
+      data: {
+        title: 'General',
+        userId: user.id,
+        isDefault: true
+      }
+    });
+
+    return user;
   }
 
   async updateUser(id: string, updateDto: UpdateDto): Promise<UserEntity> {

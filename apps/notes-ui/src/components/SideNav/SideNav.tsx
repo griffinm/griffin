@@ -10,6 +10,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom';
 import { urls } from '../../utils/urls';
+import { Add } from '@mui/icons-material'
 
 interface Props {
   menuExpanded: boolean;
@@ -20,7 +21,12 @@ export function SideNav({ menuExpanded }: Props) {
   const containerClasses = classnames(
     "flex flex-row",
   );
-  const { currentNotebook } = useNotes();
+  const {
+    currentNotebook,
+    createNotebook,
+    createNote,
+    defaultNotebook,
+  } = useNotes();
   
   const renderSearch = () => {
     return (
@@ -78,10 +84,29 @@ export function SideNav({ menuExpanded }: Props) {
     )
   }
 
+  const renderActions = () => {
+    if (!defaultNotebook) return null;
+
+    return (
+      <div className="m-3 flex flex-row">
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={() => createNote(defaultNotebook.id)}
+          fullWidth
+        >
+          Note
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className={containerClasses}>
       <div className="flex flex-col h-[100vh] w-[250px]">
         {renderSearch()}
+
+        {renderActions()}
 
         {renderContentLists()}
         

@@ -1,7 +1,7 @@
 import { useNotes } from '../../providers/NoteProvider'
 import { Add } from "@mui/icons-material"
 import { Button, Typography } from "@mui/material"
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
 import classnames from "classnames";
 import { Close } from '@mui/icons-material';

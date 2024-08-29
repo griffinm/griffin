@@ -43,6 +43,8 @@ interface CurrentNoteProps {
   currentNotebook: Notebook | null;
   fetchNotebook: (notebookId: string) => void;
   sortedNotes: Note[];
+  allNotebooks: Notebook[];
+  defaultNotebook: Notebook | undefined;
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -66,6 +68,8 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   currentNotebook: null,
   fetchNotebook: () => {},
   sortedNotes: [],
+  allNotebooks: [],
+  defaultNotebook: undefined,
 });
 
 export function NoteProvider({ children }: Props) {
@@ -83,15 +87,40 @@ export function NoteProvider({ children }: Props) {
 
   const sortedNotes = useMemo(() => {
     const newArray = [...notes]
+
     return newArray.sort((a, b) => {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
   }, [notes]);
 
+  const defaultNotebook = useMemo<Notebook | undefined>(() => {
+    return notebooks.find((notebook) => notebook.isDefault);
+  }, [notebooks]);
+
+  const sortedNotebooks = useMemo<Notebook[]>(() => {
+    if (notebooks.length === 0) return [];
+
+    // The default notebook should always be at the top
+    const defaultNotebook: Notebook | undefined = notebooks.find((notebook) => notebook.isDefault);
+    const notebookArray: Notebook[] = notebooks.filter((notebook) => !notebook.isDefault)
+    if (defaultNotebook) {
+      notebookArray.unshift(defaultNotebook);
+    }
+
+    // Add all of the children to the top level notebooks
+    const topLevelNotebooks = notebookArray.filter((notebook) => !notebook.parentId);
+    topLevelNotebooks.forEach((notebook) => {
+      notebook.children = notebooks.filter((n) => n.parentId === notebook.id);
+    });
+
+    return topLevelNotebooks;
+  }, [notebooks]);
+
   // Load the note once the current note ID is set
   useEffect(() => {
     setNoteLoading(true);
     if (currentNoteId) {
+      console.log('currentNoteId', currentNoteId);
       fetchNoteApi(currentNoteId)
         .then((resp) => {
           setCurrentNote(resp.data);
@@ -103,7 +132,7 @@ export function NoteProvider({ children }: Props) {
         })
         .finally(() => setNoteLoading(false));
     }
-  }, [currentNoteId, currentNotebook]);
+  }, [currentNoteId]);
 
   // Load the notes once the current notebook is set
   useEffect(() => {
@@ -116,9 +145,11 @@ export function NoteProvider({ children }: Props) {
   // Load the notebooks once the component mounts
   useEffect(() => {
     if (!user) return;
+
     setNotebooksLoading(true);
     fetchNotebooksApi().then((resp) => {
-      setNotebooks(resp.data)
+      const notebooks = resp.data;
+      setNotebooks(notebooks)
       setNotebooksLoading(false);
     })
   }, [user]);
@@ -222,7 +253,8 @@ export function NoteProvider({ children }: Props) {
         fetchNotebooks,
         fetchNotesForNotebook,
         isSaving, 
-        notebooks,
+        notebooks: sortedNotebooks,
+        allNotebooks: notebooks,
         notebooksLoading,
         noteLoading,
         notes,
@@ -234,6 +266,7 @@ export function NoteProvider({ children }: Props) {
         currentNotebook,
         fetchNotebook,
         sortedNotes,
+        defaultNotebook,
       }}
     >
       {children}

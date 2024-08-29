@@ -5,5 +5,6 @@ export class UpdateDto extends PickType(
   NotebookEntity,
   [
     'title',
+    'parentId',
   ] as const,
 ) {}

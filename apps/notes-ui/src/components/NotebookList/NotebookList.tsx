@@ -1,17 +1,20 @@
+import React from "react";
+import { NotebookListItem } from "./NotebookListItem";
 import { Notebook } from "@prisma/client";
 import { useEffect, useState } from "react";
-import { List as NotebookListComponent } from "./List";
 import { 
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Collapse,
+  Button,
 } from "@mui/material";
 import { ConfirmDialog } from "../ConfirmDialog/ConfirmDialog";
 import { useNotes } from "../../providers/NoteProvider";
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { ExpandMore, ExpandLess, Add } from '@mui/icons-material';
+import { findChildrenForParent } from "./utils";
 
 export function NotebookList() {
   const [deleteNotebookDialogOpen, setDeleteNotebookDialogOpen] = useState(false);
@@ -22,6 +25,8 @@ export function NotebookList() {
     createNotebook,
     deleteNotebook, 
     fetchNotebooks,
+    notebooks,
+    allNotebooks,
   } = useNotes();
 
   useEffect(() => {
@@ -31,6 +36,20 @@ export function NotebookList() {
   const showDeleteNotebookDialog = (notebook: Notebook) => {
     setNotebookForDelete(notebook);
     setDeleteNotebookDialogOpen(true);
+  }
+
+  const renderNotebookList = () => {
+    return notebooks.map((notebook) => {
+      const children = findChildrenForParent(notebook, allNotebooks);
+      return (
+        <NotebookListItem
+          key={notebook.id}
+          notebook={notebook}
+          showNotebookDeleteDialog={showDeleteNotebookDialog}
+          allNotebooks={allNotebooks}
+        />
+      )
+    })
   }
 
   return (
@@ -46,13 +65,14 @@ export function NotebookList() {
         {expanded ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={expanded} unmountOnExit timeout="auto">
-        <ListItemButton>
-          <ListItemIcon>
-            <Add />
-          </ListItemIcon>
-          <ListItemText primary="New Notebook" onClick={() => createNotebook()} />
-        </ListItemButton>
-        <NotebookListComponent onDeleteNotebook={showDeleteNotebookDialog} />
+        <div className="text-center">
+          <Button onClick={() => createNotebook()} variant="text" sx={{ color: '#FFF'}} startIcon={<Add />}>
+            Create Notebook
+          </Button>
+        </div>
+        <List component="div" disablePadding>
+          {renderNotebookList()}
+        </List>
       </Collapse>
 
       {notebookForDelete && (
