@@ -9,6 +9,7 @@ import {
 import React, { useState } from "react";
 import { NotebookTitle } from "./NotebookTitle";
 import { findChildrenForParent } from "./utils";
+import { useNotes } from "../../providers/NoteProvider/NoteProvider";
 
 interface Props {
   notebook: Notebook;
@@ -23,10 +24,18 @@ export function NotebookListItem({
 }: Props) {
   const children = findChildrenForParent(notebook, allNotebooks);
   const [expanded, setExpanded] = useState(false);
+  const { currentNotebook } = useNotes();
+  const isParentCurrent = currentNotebook?.id === notebook.id;
 
   return (
     <>
-      <ListItemButton key={notebook.id} onClick={() => setExpanded(!expanded)}>
+      <ListItemButton
+        key={notebook.id}
+        onClick={() => setExpanded(!expanded)}
+        sx={{
+          backgroundColor: isParentCurrent ? 'rgb(38, 50, 69)' : 'inherit',
+        }}
+      >
         <NotebookTitle
           notebook={notebook}
           onDeleteNotebook={showNotebookDeleteDialog}
@@ -35,14 +44,23 @@ export function NotebookListItem({
       {children.length > 0 && (
         <Collapse in={expanded} unmountOnExit timeout="auto">
           <List component="div">
-            {children.map((child) => (
-              <ListItemButton key={child.id} sx={{ pl: 4 }}>
-                <NotebookTitle
-                  notebook={child}
-                  onDeleteNotebook={showNotebookDeleteDialog}
-                />
-              </ListItemButton>
-            ))}
+            {children.map((child) => {
+              const isChildCurrent = currentNotebook?.id === child.id;
+              return (
+                <ListItemButton
+                  key={child.id}
+                  sx={{
+                    pl: 4,
+                    backgroundColor: isChildCurrent ? 'rgb(38, 50, 69)' : 'inherit',
+                  }}
+                >
+                  <NotebookTitle
+                    notebook={child}
+                    onDeleteNotebook={showNotebookDeleteDialog}
+                  />
+                </ListItemButton>
+              )
+            })}
           </List>
         </Collapse>
       )}
