@@ -165,7 +165,10 @@ export function NoteProvider({ children }: Props) {
   const createNotebook = () => {
     setNotebooksLoading(true);
     createNotebookApi("New Notebook")
-      .then((resp) => {setNotebooks([...notebooks, resp.data])})
+      .then((resp) => {
+        setNotebooks([...notebooks, resp.data])
+        setCurrentNotebook(resp.data)
+      })
       .finally(() => {setNotebooksLoading(false)})
   }
 

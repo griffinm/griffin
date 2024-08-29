@@ -34,6 +34,8 @@ export function NotebookListItem({
         onClick={() => setExpanded(!expanded)}
         sx={{
           backgroundColor: isParentCurrent ? 'rgb(38, 50, 69)' : 'inherit',
+          pl: 4,
+          py: '1px',
         }}
       >
         <NotebookTitle
@@ -50,7 +52,8 @@ export function NotebookListItem({
                 <ListItemButton
                   key={child.id}
                   sx={{
-                    pl: 4,
+                    pl: 6,
+                    py: '1px',
                     backgroundColor: isChildCurrent ? 'rgb(38, 50, 69)' : 'inherit',
                   }}
                 >

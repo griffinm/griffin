@@ -31,6 +31,7 @@ export class NotebookService {
     notebookId: string,
     dto: UpdateDto,
   ): Promise<NotebookEntity> {
+    console.log(dto)
     return this.prisma.notebook.update({
       where: {
         id: notebookId,

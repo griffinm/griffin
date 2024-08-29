@@ -7,6 +7,7 @@ export interface NoteUpdateProps {
   id: string,
   title?: string,
   content?: string,
+  parentId?: string,
 }
 
 export const fetchRecentNotes = async(): Promise<AxiosResponse<Note[]>> => {

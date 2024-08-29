@@ -8,12 +8,11 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { 
   Button,
-  ListItemButton,
   Input,
-  Collapse,
   ListItemText,
 } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
+import { MoveNotebook } from "./MoveNotebook";
 
 interface NotebookTitleProps {
   notebook: Notebook,
@@ -29,6 +28,7 @@ export function NotebookTitle({
     setCurrentNotebook,
   } = useNotes();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [moveAnchorEl, setMoveAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
   const [open, setOpen] = useState(false);
@@ -47,6 +47,16 @@ export function NotebookTitle({
           setIsEditing(true);
           setAnchorEl(null);
         }}>Edit Name</MenuItem>
+
+        {notebook.parentId && (
+          <MenuItem 
+            onClick={(e) => {
+              setMoveAnchorEl(e.target as HTMLElement);
+            }}
+          >
+            Move
+          </MenuItem>
+        )}
 
         <MenuItem 
           onClick={() => {
@@ -115,6 +125,11 @@ export function NotebookTitle({
           />
         )}
         {renderMenu()}
+        <MoveNotebook 
+          notebook={notebook}
+          anchorEl={moveAnchorEl}
+          onClose={() => setMoveAnchorEl(null)}
+        />
       </div>
     </div>
   );
