@@ -11,6 +11,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom';
 import { urls } from '../../utils/urls';
 import { Add } from '@mui/icons-material'
+import { useTasks } from '../../providers/TaskProvider';
 
 interface Props {
   menuExpanded: boolean;
@@ -27,6 +28,10 @@ export function SideNav({ menuExpanded }: Props) {
     createNote,
     defaultNotebook,
   } = useNotes();
+  const { 
+    createTask,
+    showNewTaskModal,
+  } = useTasks();
   
   const renderSearch = () => {
     return (
@@ -88,7 +93,7 @@ export function SideNav({ menuExpanded }: Props) {
     if (!defaultNotebook) return null;
 
     return (
-      <div className="m-3 flex flex-row">
+      <div className="m-3 flex flex-row gap-4">
         <Button
           variant="outlined"
           startIcon={<Add />}
@@ -96,6 +101,14 @@ export function SideNav({ menuExpanded }: Props) {
           fullWidth
         >
           Note
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={showNewTaskModal}
+          fullWidth
+        >
+          Task
         </Button>
       </div>
     )
