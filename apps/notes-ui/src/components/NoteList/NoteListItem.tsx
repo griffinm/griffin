@@ -8,6 +8,7 @@ import { useState, useMemo } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Input, Typography } from "@mui/material";
+import { useToast } from "../../providers/ToastProvider";
 
 interface Props {
   note: Note;
@@ -23,7 +24,8 @@ export function NoteListItem({
   const isCurrentNote = note.id === currentNote?.id;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [filterTerm, setFilterTerm] = useState('');
-  
+  const { showMessage } = useToast();
+
   const filteredNotebooks = useMemo(() => {
     if (filterTerm) {
       return allNotebooks.filter((notebook) => notebook.title?.toLowerCase().includes(filterTerm.toLowerCase()));
@@ -76,6 +78,7 @@ export function NoteListItem({
                     notebookId: notebook.id,
                   })
                   onMoveNote(note);
+                  showMessage(`Note moved successfully to ${notebook.title}`);
                 }}
               >
                 {notebook.title}

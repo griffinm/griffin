@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsNumber, IsOptional, Max, Min } from "class-validator";
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { Transform } from "class-transformer";
 
 export enum SortBy {
@@ -28,6 +28,10 @@ export class FilterDto {
   @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 
 

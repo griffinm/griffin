@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { urls } from '../../utils/urls';
 import { Add } from '@mui/icons-material'
 import { useTasks } from '../../providers/TaskProvider';
+import { useToast } from '../../providers/ToastProvider';
 
 interface Props {
   menuExpanded: boolean;
@@ -19,6 +20,7 @@ interface Props {
 
 export function SideNav({ menuExpanded }: Props) {
   const { user, signOut } = useUser();
+  const { showMessage } = useToast();
   const containerClasses = classnames(
     "flex flex-row min-h-[500px] overflow-auto",
   );
@@ -29,7 +31,6 @@ export function SideNav({ menuExpanded }: Props) {
     defaultNotebook,
   } = useNotes();
   const { 
-    createTask,
     showNewTaskModal,
   } = useTasks();
   
@@ -97,7 +98,10 @@ export function SideNav({ menuExpanded }: Props) {
         <Button
           variant="outlined"
           startIcon={<Add />}
-          onClick={() => createNote(defaultNotebook.id)}
+          onClick={() => {
+            createNote(defaultNotebook.id);
+            showMessage('Note created');
+          }}
           fullWidth
         >
           Note
@@ -105,7 +109,7 @@ export function SideNav({ menuExpanded }: Props) {
         <Button
           variant="outlined"
           startIcon={<Add />}
-          onClick={showNewTaskModal}
+          onClick={() => showNewTaskModal()}
           fullWidth
         >
           Task

@@ -8,7 +8,7 @@ type ToastContextType = {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>();
 
   const showMessage = (message: string) => {
     setMessage(message);
@@ -21,6 +21,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         open={!!message}
         message={message}
         onClose={() => setMessage(null)}
+        autoHideDuration={3000} 
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </ToastContext.Provider>
   )

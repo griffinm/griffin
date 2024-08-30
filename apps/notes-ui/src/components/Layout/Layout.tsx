@@ -6,12 +6,25 @@ import classnames from 'classnames'
 import { useSearchParams } from 'react-router-dom';
 import { useTasks } from '../../providers/TaskProvider';
 import { TaskModal } from '../TaskModal';
+import { CreateOrUpdateTaskProps } from '../../utils/api';
 
 export function Layout() {
   const [menuExpanded, setMenuExpanded] = useState(false);
   const [searchParams] = useSearchParams();
   const isFullScreen = searchParams.get('fs') === 'true';
-  const { modalOpen, onModalClose, createTask } = useTasks();
+  const { modalOpen, onModalClose, createTask, updateTask, taskToEdit } = useTasks();
+
+  const handleTaskSubmit = (task: CreateOrUpdateTaskProps, isNew: boolean) => {
+    console.log('isNew', isNew);
+    if (isNew) {
+      createTask(task);
+    } else {
+      if (taskToEdit?.id) {
+        updateTask(task, taskToEdit.id);
+      }
+    }
+    onModalClose();
+  }
 
   const outletClasses = classnames(
     "grow bg-dark-2 md:block",
@@ -43,7 +56,7 @@ export function Layout() {
         </div>
       </div>
 
-      <TaskModal open={modalOpen} onClose={onModalClose} onSubmit={createTask} />
+      <TaskModal open={modalOpen} onClose={onModalClose} onSubmit={handleTaskSubmit} />
     </div>
   )
 }

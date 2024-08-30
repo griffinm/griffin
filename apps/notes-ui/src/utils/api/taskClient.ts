@@ -8,14 +8,31 @@ export interface FetchTasksProps {
   page?: number;
   resultsPerPage?: number;
   sortBy?: 'dueDate' | 'createdAt';
+  search?: string;
 }
 
-export const searchTasks = async(
-  filter: FetchTasksProps,
-): Promise<AxiosResponse<Task[]>> => {
+export interface TaskListResponse {
+  data: Task[];
+  page: number;
+  resultsPerPage: number;
+  totalPages: number;
+  totalRecords: number;
+}
+
+export const searchTasks = async({
+  page,
+  resultsPerPage,
+  sortBy,
+  search,
+}: FetchTasksProps): Promise<AxiosResponse<TaskListResponse>> => {
   const params = new URLSearchParams();
 
-  Object.entries(filter).forEach(([key, value]) => {
+  Object.entries({
+    page,
+    resultsPerPage,
+    sortBy,
+    search,
+  }).forEach(([key, value]) => {
     if (value !== undefined) {
       params.append(key, value.toString());
     }
@@ -32,9 +49,9 @@ export const fetchTask = async(
 }
 
 export const fetchAllTasks = async(
-  page?: number,
-  resultsPerPage?: number,
-): Promise<AxiosResponse<Task[]>> => {
+  page: number = 1,
+  resultsPerPage: number = 50,
+): Promise<AxiosResponse<TaskListResponse>> => {
   const params = new URLSearchParams();
   if (page) params.append('page', page.toString());
   if (resultsPerPage) params.append('resultsPerPage', resultsPerPage.toString());

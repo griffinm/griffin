@@ -26,20 +26,6 @@ export function TaskForm({
   const [dueDate, setDueDate] = useState<Date | undefined>(initialValues?.dueDate || dayjs().toDate());
   const [completedAt, setCompletedAt] = useState<Date | undefined>(initialValues?.completedAt || undefined);
 
-  useEffect(() => {
-    if (initialValues) {
-      setTitle(initialValues.title);
-      setDescription(initialValues.description || "");
-      setDueDate(initialValues.dueDate || undefined);
-      setCompletedAt(initialValues.completedAt || undefined);
-    } else {
-      setTitle("");
-      setDescription("");
-      setDueDate(dayjs().toDate());
-      setCompletedAt(undefined);
-    }
-  }, [initialValues]);
-
   const renderDueDate = () => {
     return (
       <div className="flex flex-col gap-4 grow">
@@ -75,7 +61,7 @@ export function TaskForm({
     if (!validate()) {
       return;
     }
-
+    
     onSubmit({
       title,
       description,
@@ -134,6 +120,7 @@ export function TaskForm({
           <FormControlLabel
             control={
             <Checkbox
+              value={!!completedAt}
               checked={!!completedAt}
               onChange={(e) => {
                 if (e.target.checked) {

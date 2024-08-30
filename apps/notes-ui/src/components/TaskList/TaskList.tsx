@@ -14,8 +14,8 @@ import { Task } from "@prisma/client";
 
 export function TaskList() {
   const { 
-    tasks, 
     updateTask,
+    sidebarTasks: tasks,
   } = useTasks();
   const [expanded, setExpanded] = useState(false);
 

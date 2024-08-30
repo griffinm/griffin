@@ -19,6 +19,9 @@ import { NewTaskDto } from './dto/new.dto';
 import { UpdateTaskDto } from './dto/update.dto';
 import { RequestWithUser } from "@griffin/types";
 import { FilterDto } from './dto/filter.dto';
+import { TaskEntity } from './dto/task.entity';
+import { PagedTaskList } from './dto/paged.entity';
+
 @Controller()
 @UseGuards(AuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -39,11 +42,22 @@ export class TasksController {
   async getAllForUser(
     @Req() request: RequestWithUser,
     @Query() query?: FilterDto,
-  ): Promise<Task[]> {
+  ): Promise<PagedTaskList> {
+    let tasks: TaskEntity[];
     if (query) {
-      return this.tasksService.filter(request.user.id, query);
+      tasks = await this.tasksService.filter(request.user.id, query);
+    } else {
+      tasks = await this.tasksService.getAllForUser(request.user.id);
     }
-    return this.tasksService.getAllForUser(request.user.id);
+    
+    const totalRecords = await this.tasksService.getCountForUser(request.user.id);
+    const pagedTasks = new PagedTaskList();
+    pagedTasks.data = tasks;
+    pagedTasks.page = query?.page || 1;
+    pagedTasks.resultsPerPage = query?.resultsPerPage || 10;
+    pagedTasks.totalPages = Math.ceil(totalRecords / pagedTasks.resultsPerPage);
+    pagedTasks.totalRecords = totalRecords;
+    return pagedTasks;
   }
   
   @Delete('tasks/:id')
