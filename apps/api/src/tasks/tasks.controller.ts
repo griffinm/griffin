@@ -38,10 +38,11 @@ export class TasksController {
   @Get('/tasks')
   async getAllForUser(
     @Req() request: RequestWithUser,
-    @Query() filter?: FilterDto,
+    @Query() query?: FilterDto,
   ): Promise<Task[]> {
-    if (filter) {
-      return this.tasksService.filter(request.user.id, filter);
+    console.log('filter', query);
+    if (query) {
+      return this.tasksService.filter(request.user.id, query);
     }
     return this.tasksService.getAllForUser(request.user.id);
   }

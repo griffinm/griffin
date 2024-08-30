@@ -23,6 +23,9 @@ interface TaskProps {
   currentTask?: Task;
   setCurrentTask: (task?: Task) => void;
   fetchTasks: () => void;
+  showNewTaskModal: () => void;
+  onModalClose: () => void;
+  modalOpen: boolean;
 }
 
 export const TasksContext = createContext<TaskProps>({
@@ -33,6 +36,9 @@ export const TasksContext = createContext<TaskProps>({
   deleteTask: () => {},
   setCurrentTask: () => {},
   fetchTasks: () => {},
+  showNewTaskModal: () => {},
+  onModalClose: () => {},
+  modalOpen: false,
 });
 
 export function TaskProvider({ children }: Props) {
@@ -40,16 +46,17 @@ export function TaskProvider({ children }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const { user } = useUser();
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
  
-    fetchTasks();
+    fetchTasks(1, 10);
   }, [user]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (page?: number, resultsPerPage?: number) => {
     setLoading(true);
-    const response = await fetchAllTasksApi();
+    const response = await fetchAllTasksApi(page, resultsPerPage);
 
     const orderedTasks = response.data.sort((a, b) => {
       const aDate = new Date(a.dueDate || 0);
@@ -76,6 +83,7 @@ export function TaskProvider({ children }: Props) {
   };
 
   const createTask = async (task: CreateOrUpdateTaskProps) => {
+    setModalOpen(false);
     const response = await createTaskApi(task);
     setTasks([...tasks, response.data]);
   };
@@ -100,7 +108,11 @@ export function TaskProvider({ children }: Props) {
       currentTask,
       setCurrentTask,
       fetchTasks,
+      showNewTaskModal: () => setModalOpen(true),
+      onModalClose: () => setModalOpen(false),
+      modalOpen,
     }}>
+      
       {children}
     </TasksContext.Provider>
   );

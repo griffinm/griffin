@@ -18,12 +18,18 @@ export const searchTasks = async(
 export const fetchTask = async(
   taskId: string,
 ): Promise<AxiosResponse<Task>> => {
-  return baseClient.get(`/tasks/${taskId}`);
+  const params = new URLSearchParams();
+  return baseClient.get(`/tasks/${taskId}?${params.toString()}`);
 }
 
 export const fetchAllTasks = async(
+  page?: number,
+  resultsPerPage?: number,
 ): Promise<AxiosResponse<Task[]>> => {
-  return baseClient.get(`/tasks`);
+  const params = new URLSearchParams();
+  if (page) params.append('page', page.toString());
+  if (resultsPerPage) params.append('resultsPerPage', resultsPerPage.toString());
+  return baseClient.get(`/tasks?${params.toString()}`);
 }
 
 export const updateTask = async(

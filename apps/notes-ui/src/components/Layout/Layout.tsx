@@ -4,12 +4,15 @@ import { SideNav } from "../SideNav/SideNav";
 import MenuIcon from '@mui/icons-material/Menu';
 import classnames from 'classnames'
 import { useSearchParams } from 'react-router-dom';
+import { useTasks } from '../../providers/TaskProvider';
+import { TaskModal } from '../TaskModal';
 
 export function Layout() {
   const [menuExpanded, setMenuExpanded] = useState(false);
   const [searchParams] = useSearchParams();
   const isFullScreen = searchParams.get('fs') === 'true';
-  
+  const { modalOpen, onModalClose, createTask } = useTasks();
+
   const outletClasses = classnames(
     "grow bg-dark-2 md:block",
     {
@@ -39,6 +42,8 @@ export function Layout() {
           </div>
         </div>
       </div>
+
+      <TaskModal open={modalOpen} onClose={onModalClose} onSubmit={createTask} />
     </div>
   )
 }

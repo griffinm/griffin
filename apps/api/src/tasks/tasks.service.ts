@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
@@ -8,20 +8,37 @@ import { FilterDto } from './dto/filter.dto';
 
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+  
   constructor(private prisma: PrismaService) {}
 
   async filter(userId: string, filter: FilterDto): Promise<Task[]> {
+    this.logger.debug(`Filtering tasks for user ${userId} with filter: ${JSON.stringify(filter)}`);
+    let whereClause = {
+      deletedAt: null,
+      completedAt: null,
+    };
+
     if (filter.completedAt === 'null') {
-      filter.completedAt = null;
+      whereClause.completedAt = null;
+    }
+
+    if (!filter.page) {
+      filter.page = 1;
+    }
+
+    if (!filter.resultsPerPage) {
+      filter.resultsPerPage = 100;
     }
     
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 
-        ...filter,
-        deletedAt: null,
+        ...whereClause,
       },
       orderBy: { dueDate: 'asc' },
+      take: filter.resultsPerPage,
+      skip: (filter.page - 1) * filter.resultsPerPage,
     });
     return tasks;
   }

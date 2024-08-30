@@ -15,7 +15,11 @@ import { Task } from "@prisma/client";
 
 export function TaskList() {
   const navigate = useNavigate();
-  const { tasks, updateTask } = useTasks();
+  const { 
+    tasks, 
+    updateTask,
+    showNewTaskModal,
+  } = useTasks();
   const [expanded, setExpanded] = useState(false);
 
   const onToggleComplete = (task: Task) => {
@@ -39,7 +43,7 @@ export function TaskList() {
       
       <Collapse in={expanded} unmountOnExit timeout="auto">
         <List disablePadding sx={{ pl: 3 }}>
-          <ListItemButton sx={{ pl: 3 }} onClick={() => navigate('/tasks/new')}>
+          <ListItemButton sx={{ pl: 3 }} onClick={showNewTaskModal}>
             <ListItemIcon>
               <Add />
             </ListItemIcon>
