@@ -1,15 +1,12 @@
 import { StrictMode } from 'react';
-import * as ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { UserProvider } from './providers/UserProvider';
-import { NoteProvider } from './providers/NoteProvider';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { Layout } from './components/Layout';
 import { Note } from './components/Note';
-import { TaskProvider } from './providers/TaskProvider';
 import { Home } from './pages/Home';
 import { ThemeOptions } from '@mui/material/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -17,6 +14,7 @@ import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 import { TaskPage } from './pages/Tasks';
 import { Providers } from './providers/Providers';
+
 export const themeOptions: ThemeOptions = {
   palette: {
     mode: 'dark',

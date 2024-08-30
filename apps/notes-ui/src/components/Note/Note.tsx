@@ -1,8 +1,8 @@
 import { useParams, useSearchParams } from "react-router-dom";
-import { lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, CircularProgress, Input } from "@mui/material";
-// import { Editor } from './Editor'
-const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
+import { Editor } from './Editor'
+// const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
 import { useNotes } from "../../providers/NoteProvider";
 import { ContactSupport, Delete, OpenInNew } from '@mui/icons-material';
 import { ConfirmDialog } from "../ConfirmDialog";

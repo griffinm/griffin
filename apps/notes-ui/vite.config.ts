@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig({
   root: __dirname,
@@ -20,6 +21,7 @@ export default defineConfig({
   plugins: [
     react(), 
     nxViteTsPaths(), 
+    viteCompression(),
   ],
 
   // Uncomment this if you are using workers.
@@ -41,10 +43,8 @@ export default defineConfig({
             return 'react';
           } else if (id.includes('@mui')) {
             return 'mui';
-          } else if (id.includes('date-fns')) {
-            return 'date-fns';
-          } else if (id.includes('tiptap') || id.includes('prosemirror')) {
-            return 'tiptap';
+          } if (id.includes('tiptap') || id.includes('prosemirror')) {
+            return 'editor';
           } else if (id.includes('node_modules')) {
             return 'vendor';
           }
