@@ -13,6 +13,7 @@ import {
   updateNote as updateNoteApi, 
   updateNotebook as updateNotebookApi, 
   fetchNotebook as fetchNotebookApi,
+  CreateNotebookProps,
 } from "../../utils/api";
 import { useNavigate } from "react-router";
 import { urls } from "../../utils/urls";
@@ -25,7 +26,7 @@ interface Props {
 
 interface CurrentNoteProps {
   createNote: (notebookId: string) => void;
-  createNotebook: () => void;
+  createNotebook: (props: CreateNotebookProps) => void;
   currentNote: Note | null;
   deleteNote: (noteId: string) => void;
   deleteNotebook: (notebookId: string) => void;
@@ -162,9 +163,9 @@ export function NoteProvider({ children }: Props) {
     })
   }
 
-  const createNotebook = () => {
+  const createNotebook = ({ title, parentId }: CreateNotebookProps) => {
     setNotebooksLoading(true);
-    createNotebookApi("New Notebook")
+    createNotebookApi({ title: title || 'New Notebook', parentId })
       .then((resp) => {
         setNotebooks([...notebooks, resp.data])
         setCurrentNotebook(resp.data)

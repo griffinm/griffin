@@ -32,6 +32,7 @@ export function NotebookTitle({
   const { 
     updateNotebook,
     setCurrentNotebook,
+    createNotebook,
   } = useNotes();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [moveAnchorEl, setMoveAnchorEl] = useState<null | HTMLElement>(null);
@@ -71,7 +72,7 @@ export function NotebookTitle({
             </ListItemIcon>
             <ListItemText>
               Move
-            </ListItemText>
+            </ListItemText>  
           </MenuItem>
         )}
 
@@ -79,6 +80,10 @@ export function NotebookTitle({
           <MenuItem 
             onClick={() => {
               setAnchorEl(null);
+              createNotebook({
+                title: 'New Notebook',
+                parentId: notebook.id,
+              });
             }}
           >
             <ListItemIcon>

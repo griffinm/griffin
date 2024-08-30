@@ -66,7 +66,12 @@ export function NotebookList() {
       </ListItemButton>
       <Collapse in={expanded} unmountOnExit timeout="auto">
         <div className="text-center">
-          <Button onClick={() => createNotebook()} variant="text" sx={{ color: '#FFF'}} startIcon={<Add />}>
+          <Button
+            onClick={() => createNotebook({ title: 'New Notebook' })}
+            variant="text"
+            sx={{ color: '#FFF'}}
+            startIcon={<Add />}
+          >
             Create Notebook
           </Button>
         </div>
