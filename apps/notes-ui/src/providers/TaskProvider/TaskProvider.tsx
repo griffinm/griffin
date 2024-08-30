@@ -20,7 +20,6 @@ interface TaskProps {
   loading: boolean;
   createTask: (task: CreateOrUpdateTaskProps) => void;
   updateTask: (task: CreateOrUpdateTaskProps, id: string) => void;
-  deleteTask: (taskId: string) => void;
   fetchTasks: () => void;
   showNewTaskModal: (task?: Task) => void;
   onModalClose: () => void;
@@ -35,7 +34,6 @@ export const TasksContext = createContext<TaskProps>({
   loading: false,
   createTask: () => {},
   updateTask: () => {},
-  deleteTask: () => {},
   fetchTasks: () => {},
   showNewTaskModal: () => {},
   onModalClose: () => {},
@@ -137,21 +135,11 @@ export function TaskProvider({ children }: Props) {
       setSidebarTasks(sidebarTasks.map((t) => (t.id === id ? response.data : t)));
     }
 
-    if (taskPageTasks.some((t) => t.id === id)) {
-      setTaskPageTasks(taskPageTasks.map((t) => (t.id === id ? response.data : t)));
-    }
-  };
-
-  const deleteTask = async (taskId: string) => {
-    const response = await deleteTaskApi(taskId);
-    setTasks(tasks.filter((t) => t.id !== taskId));
-
-    if (sidebarTasks.some((t) => t.id === taskId)) {
-      setSidebarTasks(sidebarTasks.filter((t) => t.id !== taskId));
-    }
-
-    if (taskPageTasks.some((t) => t.id === taskId)) {
-      setTaskPageTasks(taskPageTasks.filter((t) => t.id !== taskId));
+    if (taskPageTasks.data.some((t) => t.id === id)) {
+      setTaskPageTasks({
+        ...taskPageTasks,
+        data: taskPageTasks.data.map((t) => (t.id === id ? response.data : t)),
+      });
     }
   };
 
@@ -160,7 +148,6 @@ export function TaskProvider({ children }: Props) {
       loading, 
       createTask, 
       updateTask,
-      deleteTask,
       fetchTasks,
       showNewTaskModal: (task?: Task) => {
         if (task?.id) {

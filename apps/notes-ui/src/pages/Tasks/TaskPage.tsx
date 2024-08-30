@@ -19,7 +19,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Task } from "@prisma/client";
 import classnames from "classnames";
-import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { ArrowBackIos, ArrowForwardIos, Delete, Edit } from "@mui/icons-material";
 
 const INITIAL_PAGE = 1;
 const INITIAL_RESULTS_PER_PAGE = 20;
@@ -34,6 +34,8 @@ export function TaskPage() {
   const { 
     taskPageTasks, 
     fetchTasksForTaskPage,
+    updateTask,
+    showNewTaskModal,
   } = useTasks();
   const tasks = taskPageTasks.data;
 
@@ -70,7 +72,16 @@ export function TaskPage() {
     return (
       <TableRow key={task.id}>
         <TableCell>
-          <Checkbox checked={!!task.completedAt} />
+          <Checkbox
+            checked={!!task.completedAt}
+            onChange={(e) => {
+              if (e.target.checked) {
+                updateTask({ completedAt: new Date() }, task.id);
+              } else {
+                updateTask({ completedAt: null }, task.id);
+              }
+            }}
+          />
         </TableCell>
         <TableCell>
           <span className={titleClasses}>
@@ -90,7 +101,14 @@ export function TaskPage() {
               </div>
             </>
           )}
-          
+          </TableCell>
+          <TableCell>
+            <Button size="small" onClick={() => showNewTaskModal(task)}>
+              <Edit />
+            </Button>
+            <Button size="small">
+              <Delete />
+            </Button>
           </TableCell>
       </TableRow>
     );
@@ -103,7 +121,7 @@ export function TaskPage() {
           <div className="flex py-4 justify-between">
             <div>
               <Input
-                placeholder="Search"
+                placeholder="Search by title"
                 size="small"
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)}
@@ -173,6 +191,7 @@ export function TaskPage() {
             <TableCell></TableCell>
             <TableCell>Title</TableCell>
             <TableCell>Due</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
