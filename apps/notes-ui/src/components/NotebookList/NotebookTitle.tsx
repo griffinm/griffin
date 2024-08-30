@@ -2,13 +2,19 @@ import { Notebook } from "@prisma/client";
 import { 
   MoreVert,
   Check,
+  Add,
+  Edit,
+  Delete,
+  MoveDown,
 } from '@mui/icons-material';
 import { useState } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { 
   Button,
+  Divider,
   Input,
+  ListItemIcon,
   ListItemText,
 } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
@@ -45,7 +51,14 @@ export function NotebookTitle({
         <MenuItem onClick={() => {
           setIsEditing(true);
           setAnchorEl(null);
-        }}>Edit Name</MenuItem>
+        }}>
+          <ListItemIcon>
+            <Edit />
+          </ListItemIcon>
+          <ListItemText>
+            Edit Name
+          </ListItemText>
+        </MenuItem>
 
         {notebook.parentId && (
           <MenuItem 
@@ -53,9 +66,31 @@ export function NotebookTitle({
               setMoveAnchorEl(e.target as HTMLElement);
             }}
           >
-            Move
+            <ListItemIcon>
+              <MoveDown />
+            </ListItemIcon>
+            <ListItemText>
+              Move
+            </ListItemText>
           </MenuItem>
         )}
+
+        {!notebook.parentId && (
+          <MenuItem 
+            onClick={() => {
+              setAnchorEl(null);
+            }}
+          >
+            <ListItemIcon>
+              <Add />
+            </ListItemIcon>
+            <ListItemText>
+              Create Child Notebook
+            </ListItemText>
+          </MenuItem>
+        )}
+
+        <Divider />
 
         <MenuItem 
           onClick={() => {
@@ -63,7 +98,12 @@ export function NotebookTitle({
             setAnchorEl(null);
           }}
         >
-          Delete
+          <ListItemIcon>
+            <Delete />
+          </ListItemIcon>
+          <ListItemText>
+            Delete
+          </ListItemText>
         </MenuItem>
       </Menu>
     )
