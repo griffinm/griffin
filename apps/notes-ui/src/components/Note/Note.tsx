@@ -4,7 +4,7 @@ import { Button, CircularProgress, Input } from "@mui/material";
 // import { Editor } from './Editor'
 const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
 import { useNotes } from "../../providers/NoteProvider";
-import { Delete, OpenInNew } from '@mui/icons-material';
+import { ContactSupport, Delete, OpenInNew } from '@mui/icons-material';
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Note as NoteType } from "@prisma/client"
 import { useNavigate } from "react-router-dom";

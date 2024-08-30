@@ -14,6 +14,7 @@ export const searchTasks = async(
   filter: FetchTasksProps,
 ): Promise<AxiosResponse<Task[]>> => {
   const params = new URLSearchParams();
+
   Object.entries(filter).forEach(([key, value]) => {
     if (value !== undefined) {
       params.append(key, value.toString());

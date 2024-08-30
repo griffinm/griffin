@@ -40,7 +40,6 @@ export class TasksController {
     @Req() request: RequestWithUser,
     @Query() query?: FilterDto,
   ): Promise<Task[]> {
-    console.log('filter', query);
     if (query) {
       return this.tasksService.filter(request.user.id, query);
     }

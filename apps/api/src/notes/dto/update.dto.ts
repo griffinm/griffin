@@ -6,6 +6,5 @@ export class UpdateDto extends PickType(
   [
     'title',
     'content',
-    'notebookId',
   ]
 ) {}
