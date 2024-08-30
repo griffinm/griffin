@@ -16,7 +16,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 import { TaskPage } from './pages/Tasks';
-
+import { Providers } from './providers/Providers';
 export const themeOptions: ThemeOptions = {
   palette: {
     mode: 'dark',
@@ -36,21 +36,17 @@ root.render(
   <StrictMode>
     <ThemeProvider theme={createTheme(themeOptions)}>
       <BrowserRouter>
-        <UserProvider>
-          <NoteProvider>
-            <TaskProvider>
-              <Routes>
-                <Route path="/sign-in" element={<SignIn />} />
-                <Route path="/sign-up" element={<SignUp />} />
-                <Route path="/" element={<Layout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/tasks" element={<TaskPage />} />
-                  <Route path="notes/:noteId" element={<Note />} />
-                </Route>
-              </Routes>
-            </TaskProvider>
-          </NoteProvider>
-        </UserProvider>
+        <Providers>
+          <Routes>
+            <Route path="/sign-in" element={<SignIn />} />
+            <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/" element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/tasks" element={<TaskPage />} />
+              <Route path="notes/:noteId" element={<Note />} />
+            </Route>
+          </Routes>
+        </Providers>
       </BrowserRouter>
     </ThemeProvider>
   </StrictMode>
