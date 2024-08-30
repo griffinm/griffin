@@ -10,7 +10,6 @@ import '@fontsource/roboto/700.css';
 import { Layout } from './components/Layout';
 import { Note } from './components/Note';
 import { TaskProvider } from './providers/TaskProvider';
-import { NewTaskPage } from './pages/NewTaskPage';
 import { Home } from './pages/Home';
 import { ThemeOptions } from '@mui/material/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -46,8 +45,6 @@ root.render(
                 <Route path="/" element={<Layout />}>
                   <Route path="/" element={<Home />} />
                   <Route path="/tasks" element={<TaskPage />} />
-                  <Route path="tasks/new" element={<NewTaskPage />} />
-                  <Route path="tasks/:taskId" element={<NewTaskPage />} />
                   <Route path="notes/:noteId" element={<Note />} />
                 </Route>
               </Routes>

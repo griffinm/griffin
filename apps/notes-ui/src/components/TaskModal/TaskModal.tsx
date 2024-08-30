@@ -5,6 +5,8 @@ import {
 } from "@mui/material";
 import { TaskForm } from "../TaskForm";
 import { CreateOrUpdateTaskProps } from "../../utils/api";
+import { Task } from "@prisma/client";
+import { useTasks } from "../../providers/TaskProvider/TaskProvider";
 
 interface Props {
   open: boolean;
@@ -24,14 +26,21 @@ const modalContainerStyles = {
   py: 2,
 };
 
-export function TaskModal({ open, onClose, onSubmit }: Props) {
+export function TaskModal({ 
+  open, 
+  onClose, 
+  onSubmit,
+}: Props) {
+  const { taskToEdit } = useTasks();
+  const editMode = !!taskToEdit;
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalContainerStyles}>
         <div className="text-white pb-5">
           <div className="text-center">
             <Typography variant="h5">
-              Create Task
+              {editMode ? 'Edit ' : 'Create '} Task
             </Typography>
           </div>
         </div>
@@ -40,6 +49,7 @@ export function TaskModal({ open, onClose, onSubmit }: Props) {
             onSubmit={onSubmit}
             onCancel={onClose}
             showComplete={false}
+            initialValues={taskToEdit}
           />
         </div>
       </Box>

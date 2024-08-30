@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsNumber, IsOptional, Max, Min } from "class-validator";
+import { IsBoolean, IsEnum, IsNumber, IsOptional, Max, Min } from "class-validator";
 import { Transform } from "class-transformer";
 
 export enum SortBy {
@@ -8,8 +8,9 @@ export enum SortBy {
 
 export class FilterDto {
   @IsOptional()
-  @IsDateString()
-  completedAt?: Date | string | null;
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  completed?: boolean;
 
   @IsOptional()
   @IsNumber()
@@ -28,4 +29,5 @@ export class FilterDto {
   @IsEnum(SortBy)
   sortBy?: SortBy;
 }
+
 

@@ -19,8 +19,10 @@ export class TasksService {
       completedAt: null,
     };
 
-    if (filter.completedAt === 'null') {
+    if (filter.completed === false) {
       whereClause.completedAt = null;
+    } else if (filter.completed === true || !filter.completed) {
+      whereClause.completedAt = { not: null };
     }
 
     if (!filter.page) {

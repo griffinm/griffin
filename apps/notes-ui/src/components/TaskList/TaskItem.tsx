@@ -6,7 +6,7 @@ import {
   ListItemIcon,
   Checkbox,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useTasks } from "../../providers/TaskProvider/TaskProvider";
 
 interface Props {
   task: Task
@@ -17,7 +17,7 @@ export function TaskItem({
   task,
   onToggleComplete,
   }: Props) {
-  const navigate = useNavigate();
+  const { showNewTaskModal } = useTasks();
   
   const renderContent = () => {
     if (!task.dueDate) {
@@ -39,7 +39,7 @@ export function TaskItem({
 
     return (
       <ListItemText
-        onClick={() => navigate(`/tasks/${task.id}`)}
+        onClick={() => showNewTaskModal(task)}
         primary={
           <span className={task.completedAt ? "line-through" : ""}>
             {task.title}

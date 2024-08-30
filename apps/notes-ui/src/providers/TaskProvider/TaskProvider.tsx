@@ -23,9 +23,10 @@ interface TaskProps {
   currentTask?: Task;
   setCurrentTask: (task?: Task) => void;
   fetchTasks: () => void;
-  showNewTaskModal: () => void;
+  showNewTaskModal: (task?: Task) => void;
   onModalClose: () => void;
   modalOpen: boolean;
+  taskToEdit?: Task;
 }
 
 export const TasksContext = createContext<TaskProps>({
@@ -39,6 +40,7 @@ export const TasksContext = createContext<TaskProps>({
   showNewTaskModal: () => {},
   onModalClose: () => {},
   modalOpen: false,
+  taskToEdit: undefined,
 });
 
 export function TaskProvider({ children }: Props) {
@@ -47,6 +49,7 @@ export function TaskProvider({ children }: Props) {
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const { user } = useUser();
   const [modalOpen, setModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | undefined>(undefined);
 
   useEffect(() => {
     if (!user) return;
@@ -108,9 +111,16 @@ export function TaskProvider({ children }: Props) {
       currentTask,
       setCurrentTask,
       fetchTasks,
-      showNewTaskModal: () => setModalOpen(true),
-      onModalClose: () => setModalOpen(false),
+      showNewTaskModal: (task?: Task) => {
+        setTaskToEdit(task);
+        setModalOpen(true);
+      },
+      onModalClose: () => {
+        setTaskToEdit(undefined);
+        setModalOpen(false);
+      },
       modalOpen,
+      taskToEdit,
     }}>
       
       {children}
