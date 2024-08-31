@@ -9,12 +9,16 @@ import { CreateOrUpdateTaskProps } from '../../utils/api';
 
 interface Props {
   onSubmit: (task: CreateOrUpdateTaskProps) => void,
+  onCancel: () => void,
   initialValues?: Task,
+  showComplete?: boolean,
 }
 
 export function TaskForm({ 
   onSubmit, 
+  onCancel,
   initialValues,
+  showComplete = true,
 }: Props) {
   const [title, setTitle] = useState<string | undefined>(initialValues?.title || "");
   const [titleError, setTitleError] = useState(false);
@@ -22,45 +26,34 @@ export function TaskForm({
   const [dueDate, setDueDate] = useState<Date | undefined>(initialValues?.dueDate || dayjs().toDate());
   const [completedAt, setCompletedAt] = useState<Date | undefined>(initialValues?.completedAt || undefined);
 
-  useEffect(() => {
-    if (initialValues) {
-      setTitle(initialValues.title);
-      setDescription(initialValues.description || "");
-      setDueDate(initialValues.dueDate || undefined);
-      setCompletedAt(initialValues.completedAt || undefined);
-    } else {
-      setTitle("");
-      setDescription("");
-      setDueDate(dayjs().toDate());
-      setCompletedAt(undefined);
-    }
-  }, [initialValues]);
-
   const renderDueDate = () => {
     return (
-      <>
+      <div className="flex flex-col gap-4 grow">
         <div>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateTimePicker
+              sx={{ width: '100%' }}
               label="Due Date"
               value={dayjs(dueDate)}
               onChange={(newValue) => setDueDate(newValue?.toDate() || dayjs().toDate())}
             />
           </LocalizationProvider>
         </div>
-        <div className="flex justify-center items-center">
-          <Button
-            onClick={() => setDueDate(dayjs().toDate())}
-          >
+        <div className="flex justify-center items-center gap-2">
+          <Button size="small" variant="outlined" onClick={() => setDueDate(dayjs().toDate())}>
             Today
           </Button>
-          <Button
-            onClick={() => setDueDate(dayjs().add(1, 'day').toDate())}
-          >
+          <Button size="small" variant="outlined" onClick={() => setDueDate(dayjs().add(1, 'day').toDate())}>
             Tomorrow
           </Button>
+          <Button size="small" variant="outlined" onClick={() => setDueDate(dayjs().add(2, 'day').toDate())}>
+            2 Days
+          </Button>
+          <Button size="small" variant="outlined" onClick={() => setDueDate(dayjs().add(5, 'day').toDate())}>
+            5 Days
+          </Button>
         </div>
-      </>
+      </div>
     )
   }
 
@@ -68,7 +61,7 @@ export function TaskForm({
     if (!validate()) {
       return;
     }
-
+    
     onSubmit({
       title,
       description,
@@ -89,7 +82,7 @@ export function TaskForm({
   }
 
   return (
-    <div>
+    <form onSubmit={handleSubmit}>
       <div className="pb-5">
         <TextField
           fullWidth
@@ -122,10 +115,12 @@ export function TaskForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <div className="pb-5">
-        <FormControlLabel
-          control={
+      {showComplete && (
+        <div className="pb-5">
+          <FormControlLabel
+            control={
             <Checkbox
+              value={!!completedAt}
               checked={!!completedAt}
               onChange={(e) => {
                 if (e.target.checked) {
@@ -137,16 +132,23 @@ export function TaskForm({
             />
           }
           label="Completed"
-        />
-      </div>
-      <div className="pb-5 text-right">
+          />
+        </div>
+      )}
+      <div className="pb-5 flex flex-row justify-end gap-4">
+        <Button
+          variant="outlined"
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
         <Button
           variant="contained"
-          onClick={handleSubmit}
+          type="submit"
         >
           Save
         </Button>
       </div>
-    </div>
+    </form>
   )
 }

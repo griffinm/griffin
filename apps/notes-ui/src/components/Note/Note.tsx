@@ -2,8 +2,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button, CircularProgress, Input } from "@mui/material";
 import { Editor } from './Editor'
+// const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
 import { useNotes } from "../../providers/NoteProvider";
-import { Delete, OpenInNew } from '@mui/icons-material';
+import { ContactSupport, Delete, OpenInNew } from '@mui/icons-material';
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Note as NoteType } from "@prisma/client"
 import { useNavigate } from "react-router-dom";
@@ -75,7 +76,15 @@ export function Note() {
             variant="outlined"
             size="small"
           >
-          <a href={`/notes/${currentNote.id}?fs=true`} target="_blank">
+          <a 
+            href={"#"} 
+            className="flex items-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              window.open(`/notes/${currentNote.id}?fs=true`, `${currentNote.title}`, 'width=1000,height=800');
+            }}
+          >
             <OpenInNew />
           </a>
           </Button>

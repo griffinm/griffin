@@ -4,12 +4,28 @@ import { SideNav } from "../SideNav/SideNav";
 import MenuIcon from '@mui/icons-material/Menu';
 import classnames from 'classnames'
 import { useSearchParams } from 'react-router-dom';
+import { useTasks } from '../../providers/TaskProvider';
+import { TaskModal } from '../TaskModal';
+import { CreateOrUpdateTaskProps } from '../../utils/api';
 
 export function Layout() {
   const [menuExpanded, setMenuExpanded] = useState(false);
   const [searchParams] = useSearchParams();
   const isFullScreen = searchParams.get('fs') === 'true';
-  
+  const { modalOpen, onModalClose, createTask, updateTask, taskToEdit } = useTasks();
+
+  const handleTaskSubmit = (task: CreateOrUpdateTaskProps, isNew: boolean) => {
+    console.log('isNew', isNew);
+    if (isNew) {
+      createTask(task);
+    } else {
+      if (taskToEdit?.id) {
+        updateTask(task, taskToEdit.id);
+      }
+    }
+    onModalClose();
+  }
+
   const outletClasses = classnames(
     "grow bg-dark-2 md:block",
     {
@@ -27,7 +43,7 @@ export function Layout() {
         </div>
       )}
 
-      <div>
+      <div className="grow">
         <div className="flex flex-row grow">
           {!isFullScreen && (
             <div className="bg-dark-1 text-white">
@@ -39,6 +55,8 @@ export function Layout() {
           </div>
         </div>
       </div>
+
+      <TaskModal open={modalOpen} onClose={onModalClose} onSubmit={handleTaskSubmit} />
     </div>
   )
 }

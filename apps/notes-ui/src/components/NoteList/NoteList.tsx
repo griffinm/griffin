@@ -1,10 +1,12 @@
 import { useNotes } from '../../providers/NoteProvider'
 import { Add } from "@mui/icons-material"
 import { Button, Typography } from "@mui/material"
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
-import classnames from "classnames";
-import ArrowBack from '@mui/icons-material/ArrowBack';
+import { Close } from '@mui/icons-material';
+import { NoteListItem } from './NoteListItem';
+import { useState, useEffect } from 'react'
+import { Note } from '@prisma/client';
 
 export function NoteList() {
   const { 
@@ -17,6 +19,26 @@ export function NoteList() {
   } = useNotes();
   const navigate = useNavigate();
   const containerClasses = "border-b border-slate-700 p-2"
+  const [movedNotes, setMNovedNotes] = useState<string[]>([]);
+
+  useEffect(() => {
+    setMNovedNotes([]);
+  }, [currentNotebook]);
+
+  const filteredNotes = (): Note[] => {
+    if (!notes || notes.length === 0) {
+      return [];
+    }
+
+    if (movedNotes.length) {
+      return notes.filter((note) => !movedNotes.includes(note.id));
+    }
+    return notes;
+  }
+
+  const handleMoveNote = (note: Note):void => {
+    setMNovedNotes([...movedNotes, note.id]);
+  }
 
   const handleGoBack = () => {
     setCurrentNoteId(null);
@@ -29,15 +51,16 @@ export function NoteList() {
   }
   return (
     <div className="grow">
-      
-      <Button
-        variant="text"
-        startIcon={<ArrowBack />}
-        sx={{ color: "white" }}
-        onClick={handleGoBack}
-      >
-        Go Back
-      </Button>
+      <div className="p-2 text-center border-b border-slate-700">
+        <Button
+          variant="text"
+          startIcon={<Close />}
+          sx={{ color: "white" }}
+          onClick={handleGoBack}
+        >
+          Close Notebook
+        </Button>
+      </div>
 
       <div className="p-2 text-center">
         <Typography variant="h6">
@@ -54,25 +77,13 @@ export function NoteList() {
           New Note
         </Button>
       </div>
-      {notes.map((note) => {
-        const isCurrentNote = note.id === currentNote?.id;
-        const classes = classnames(
-          containerClasses,
-          {
-            "bg-dark-2": isCurrentNote,
-            "cursor-pointer": true,
-          }
-        );
-        return (
-          <div 
-            key={note.id}
-            className={classes}
-            onClick={() => navigate(urls.note(note.id))}
-          >
-            {note.title}
-          </div>
-        )
-      })}
+      {filteredNotes().map((note) => (
+        <NoteListItem
+          key={note.id}
+          note={note}
+          onMoveNote={handleMoveNote}
+        />
+      ))}
     </div>
   )
 }

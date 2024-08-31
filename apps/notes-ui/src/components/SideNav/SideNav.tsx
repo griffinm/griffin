@@ -10,6 +10,9 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom';
 import { urls } from '../../utils/urls';
+import { Add } from '@mui/icons-material'
+import { useTasks } from '../../providers/TaskProvider';
+import { useToast } from '../../providers/ToastProvider';
 
 interface Props {
   menuExpanded: boolean;
@@ -17,67 +20,122 @@ interface Props {
 
 export function SideNav({ menuExpanded }: Props) {
   const { user, signOut } = useUser();
-  const menuClasses = classnames(
-    "flex flex-row md:w-[250px] h-[100vh] md:block",
-    {
-      "hidden": !menuExpanded,
-      "w-[250px]": menuExpanded,
-    },
+  const { showMessage } = useToast();
+  const containerClasses = classnames(
+    "flex flex-row min-h-[500px] overflow-auto",
   );
-
-  const renderRootNav = () => {
-    if (currentNotebook) {
-      return null
-    }
-
+  const {
+    currentNotebook,
+    createNotebook,
+    createNote,
+    defaultNotebook,
+  } = useNotes();
+  const { 
+    showNewTaskModal,
+  } = useTasks();
+  
+  const renderSearch = () => {
     return (
-      <List
-        sx={{ width: '100%', flexGrow: 1 }}
-        component="nav"
-      >
-        <Link to={urls.home}>
-          <ListItemButton>
-            <ListItemIcon>
-              <HomeIcon />
-            </ListItemIcon>
-            <ListItemText primary="Home" />
-          </ListItemButton>
-        </Link>
-
-        <NotebookList />
-        <TaskList />
-
-      </List>
+      <div className="flex flex-row p-3">
+        <Search />
+      </div>
     )
   }
 
-  const { currentNotebook } = useNotes();
-  return (
-    <div className={menuClasses}>
-      <div className="flex flex-col h-[100vh]">
-        <div className="flex flex-row p-3">
-          <Search />
+  const renderHomeButton = () => {
+    return (
+      <Link to={urls.home}>
+        <ListItemButton>
+          <ListItemIcon>
+            <HomeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Home" />
+        </ListItemButton>
+      </Link>
+    )
+  }
+
+  const renderAccountButton = () => {
+    return (
+      <div className="flex flex-col justify-end">
+        <div className="p-3 border-b border-slate-700">
+          Signed in as:
+          <div className="pb-3">
+            {user?.email}
+          </div>
         </div>
-        {renderRootNav()}
-        {currentNotebook && (
-          <div className="border-l-2 border-slate-700 w-[250px] grow">
-            <NoteList />
-          </div>
-        )}
-        <div className="flex flex-col justify-end">
-          <div className="p-3 border-b border-slate-700">
-            Signed in as:
-            <div className="pb-3">
-              {user?.email}
-            </div>
-          </div>
-          <div className="p-5 text-center">
-            <Button sx={{ color: 'white' }} onClick={signOut} startIcon={<LogoutIcon />}>
-              Sign Out
-            </Button>
-          </div>
+        <div className="p-5 text-center">
+          <Button sx={{ color: 'white' }} onClick={signOut} startIcon={<LogoutIcon />}>
+            Sign Out
+          </Button>
         </div>
       </div>
+    )
+  }
+
+  const renderContentLists = () => {
+    return (
+      <div className="flex flex-col grow bg-dark-1">
+        <List
+          sx={{ width: '100%', flexGrow: 1 }}
+          component="nav"
+        >
+          {renderHomeButton()}
+          <div className="flex grow">
+            <NotebookList />
+          </div>
+          <TaskList />
+        </List>
+      </div>
+    )
+  }
+
+  const renderActions = () => {
+    if (!defaultNotebook) return null;
+
+    return (
+      <div className="m-3 flex flex-row gap-4">
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={() => {
+            createNote(defaultNotebook.id);
+            showMessage('Note created');
+          }}
+          fullWidth
+        >
+          Note
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={() => showNewTaskModal()}
+          fullWidth
+        >
+          Task
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={containerClasses}>
+      <div className="flex flex-col h-[100vh] w-[250px]">
+        {renderSearch()}
+
+        {renderActions()}
+
+        {renderContentLists()}
+        
+        {renderAccountButton()}
+        
+      </div>
+
+      {currentNotebook && (
+        <div className="border-l-2 border-slate-700 w-[225px]">
+          <NoteList />
+        </div>
+      )}
     </div>
   )
 }

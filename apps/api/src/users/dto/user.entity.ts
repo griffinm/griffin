@@ -4,9 +4,13 @@ import {
   IsDate,
   IsOptional,
 } from "class-validator";
-import { Exclude } from "class-transformer";
+import { Exclude, Expose } from "class-transformer";
 
+@Exclude()
 export class UserEntity {
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
   @IsString()
   @IsNotEmpty()
   id: string;
@@ -30,6 +34,7 @@ export class UserEntity {
 
   @IsString()
   @IsOptional()
+  @Expose()
   firstName: string;
 
   constructor(partial: Partial<UserEntity>) {

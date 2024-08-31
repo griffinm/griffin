@@ -1,29 +1,61 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateTaskDto } from './dto/update.dto';
 import { NewTaskDto } from './dto/new.dto';
 import { FilterDto } from './dto/filter.dto';
+import { TaskEntity } from './dto/task.entity';
 
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+  
   constructor(private prisma: PrismaService) {}
 
-  async filter(userId: string, filter: FilterDto): Promise<Task[]> {
-    if (filter.completedAt === 'null') {
-      filter.completedAt = null;
+  async filter(userId: string, filter: FilterDto): Promise<TaskEntity[]> {
+    this.logger.debug(`Filtering tasks for user ${userId} with filter: ${JSON.stringify(filter)}`);
+    let whereClause = {
+      deletedAt: null,
+      completedAt: null,
+    };
+
+    if (filter.completed === false) {
+      whereClause.completedAt = null;
     }
-    
+
+    if (!filter.page) {
+      filter.page = 1;
+    }
+
+    if (!filter.resultsPerPage) {
+      filter.resultsPerPage = 100;
+    }
+
+    let searchClauses = [];
+    if (filter.search) {
+      searchClauses = [
+        { title: { contains: filter.search, mode: 'insensitive' } },
+        { description: { contains: filter.search, mode: 'insensitive' } },
+      ];
+    }
+
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 
-        ...filter,
-        deletedAt: null,
+        ...whereClause,
+        ...(searchClauses.length > 0 && { OR: searchClauses }),
       },
       orderBy: { dueDate: 'asc' },
+      take: filter.resultsPerPage,
+      skip: (filter.page - 1) * filter.resultsPerPage,
     });
-    return tasks;
+    
+    const objs = tasks.map((task) => {
+      return new TaskEntity(task);
+    });
+
+    return objs;
   }
 
   async getById(id: string, userId: string): Promise<Task> {
@@ -49,6 +81,13 @@ export class TasksService {
       where: { userId, deletedAt: null },
     });
     return tasks;
+  }
+
+  async getCountForUser(userId: string): Promise<number> {
+    const count = await this.prisma.task.count({
+      where: { userId, deletedAt: null },
+    });
+    return count;
   }
 
   async update(id: string, userId: string, task: UpdateTaskDto): Promise<Task> {

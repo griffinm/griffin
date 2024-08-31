@@ -5,8 +5,10 @@ import { SearchResult } from "@griffin/types";
 
 export interface NoteUpdateProps {
   id: string,
-  title?: string,
-  content?: string,
+  title?: string | null,
+  content?: string | null,
+  parentId?: string | null,
+  notebookId?: string | null,
 }
 
 export const fetchRecentNotes = async(): Promise<AxiosResponse<Note[]>> => {
@@ -23,10 +25,12 @@ export const updateNote = async({
   id,
   title,
   content,
+  notebookId,
 }: NoteUpdateProps): Promise<AxiosResponse<Note>> => {
   return baseClient.patch(`/notes/${id}`, {
     content,
     title,
+    notebookId,
   });
 }
 

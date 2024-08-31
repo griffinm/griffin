@@ -4,6 +4,11 @@ import { AxiosResponse } from "axios";
 
 const urlBase = "/notebooks";
 
+export interface CreateNotebookProps {
+  title: string;
+  parentId?: string;
+}
+
 export const fetchNotebooks = async (): Promise<AxiosResponse<Notebook[]>> => {
   return baseClient.get(`${urlBase}`);
 }
@@ -21,11 +26,13 @@ export const updateNotebook = async (
   return baseClient.patch(`${urlBase}/${notebookId}`, data);
 }
 
-export const createNotebook = async (
-  title: string,
-): Promise<AxiosResponse<Notebook>> => {
+export const createNotebook = async ({
+  title,
+  parentId,
+}: CreateNotebookProps): Promise<AxiosResponse<Notebook>> => {
   const body = {
     title,
+    parentId,
   }
   return baseClient.post(`${urlBase}`, body);
 }

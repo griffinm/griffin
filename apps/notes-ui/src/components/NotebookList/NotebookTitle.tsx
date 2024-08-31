@@ -2,35 +2,43 @@ import { Notebook } from "@prisma/client";
 import { 
   MoreVert,
   Check,
+  Add,
+  Edit,
+  Delete,
+  MoveDown,
 } from '@mui/icons-material';
 import { useState } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { 
   Button,
-  ListItemButton,
+  Divider,
   Input,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
+import { MoveNotebook } from "./MoveNotebook";
 
-interface ListItemProps {
+interface NotebookTitleProps {
   notebook: Notebook,
-  open: boolean,
   onDeleteNotebook: (notebook: Notebook) => void;
 }
 
-export function ListItem({
+export function NotebookTitle({
   notebook,
   onDeleteNotebook,
-}: ListItemProps) {
+}: NotebookTitleProps) {
   const { 
     updateNotebook,
     setCurrentNotebook,
+    createNotebook,
   } = useNotes();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [moveAnchorEl, setMoveAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newNotebookTitle, setNewNotebookTitle] = useState(notebook.title || "");
-  
+
   const renderMenu = () => {
     return (
       <Menu
@@ -44,7 +52,50 @@ export function ListItem({
         <MenuItem onClick={() => {
           setIsEditing(true);
           setAnchorEl(null);
-        }}>Edit Name</MenuItem>
+        }}>
+          <ListItemIcon>
+            <Edit />
+          </ListItemIcon>
+          <ListItemText>
+            Edit Name
+          </ListItemText>
+        </MenuItem>
+
+        {notebook.parentId && (
+          <MenuItem 
+            onClick={(e) => {
+              setMoveAnchorEl(e.target as HTMLElement);
+            }}
+          >
+            <ListItemIcon>
+              <MoveDown />
+            </ListItemIcon>
+            <ListItemText>
+              Move
+            </ListItemText>  
+          </MenuItem>
+        )}
+
+        {!notebook.parentId && (
+          <MenuItem 
+            onClick={() => {
+              setAnchorEl(null);
+              createNotebook({
+                title: 'New Notebook',
+                parentId: notebook.id,
+              });
+            }}
+          >
+            <ListItemIcon>
+              <Add />
+            </ListItemIcon>
+            <ListItemText>
+              Create Child Notebook
+            </ListItemText>
+          </MenuItem>
+        )}
+
+        <Divider />
 
         <MenuItem 
           onClick={() => {
@@ -52,7 +103,12 @@ export function ListItem({
             setAnchorEl(null);
           }}
         >
-          Delete
+          <ListItemIcon>
+            <Delete />
+          </ListItemIcon>
+          <ListItemText>
+            Delete
+          </ListItemText>
         </MenuItem>
       </Menu>
     )
@@ -97,7 +153,7 @@ export function ListItem({
         </div>
       )
     }
-    return <div>{notebook.title || 'New Notebook'}</div>
+    return <ListItemText primary={notebook.title || 'New Notebook'} />
   }
 
   return (
@@ -106,32 +162,19 @@ export function ListItem({
         {renderTitle()}
       </div>
       <div>
-        {!isEditing && (
+        {!isEditing && !notebook.isDefault && (
           <MoreVert 
             fontSize="small" 
             onClick={(e) => setAnchorEl(e.target as HTMLElement)}
           />
         )}
         {renderMenu()}
+        <MoveNotebook 
+          notebook={notebook}
+          anchorEl={moveAnchorEl}
+          onClose={() => setMoveAnchorEl(null)}
+        />
       </div>
     </div>
   );
-}
-
-export interface ListProps {
-  onDeleteNotebook: (notebook: Notebook) => void;
-}
-
-export function List({ onDeleteNotebook }: ListProps) {
-  const { notebooks } = useNotes();
-
-  return (
-    <>
-      {notebooks.map((notebook) => (
-        <ListItemButton key={notebook.id}>
-          <ListItem notebook={notebook} open={true} onDeleteNotebook={onDeleteNotebook} />
-        </ListItemButton>
-      ))}
-    </>
-  )
 }

@@ -13,10 +13,12 @@ import {
   updateNote as updateNoteApi, 
   updateNotebook as updateNotebookApi, 
   fetchNotebook as fetchNotebookApi,
+  CreateNotebookProps,
 } from "../../utils/api";
 import { useNavigate } from "react-router";
 import { urls } from "../../utils/urls";
 import { useUser } from "../UserProvider";
+import { AxiosResponse } from "axios";
 
 interface Props {
   children: React.ReactNode;
@@ -24,7 +26,7 @@ interface Props {
 
 interface CurrentNoteProps {
   createNote: (notebookId: string) => void;
-  createNotebook: () => void;
+  createNotebook: (props: CreateNotebookProps) => void;
   currentNote: Note | null;
   deleteNote: (noteId: string) => void;
   deleteNotebook: (notebookId: string) => void;
@@ -43,6 +45,8 @@ interface CurrentNoteProps {
   currentNotebook: Notebook | null;
   fetchNotebook: (notebookId: string) => void;
   sortedNotes: Note[];
+  allNotebooks: Notebook[];
+  defaultNotebook: Notebook | undefined;
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -66,6 +70,8 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   currentNotebook: null,
   fetchNotebook: () => {},
   sortedNotes: [],
+  allNotebooks: [],
+  defaultNotebook: undefined,
 });
 
 export function NoteProvider({ children }: Props) {
@@ -83,10 +89,34 @@ export function NoteProvider({ children }: Props) {
 
   const sortedNotes = useMemo(() => {
     const newArray = [...notes]
+
     return newArray.sort((a, b) => {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
   }, [notes]);
+
+  const defaultNotebook = useMemo<Notebook | undefined>(() => {
+    return notebooks.find((notebook) => notebook.isDefault);
+  }, [notebooks]);
+
+  const sortedNotebooks = useMemo<Notebook[]>(() => {
+    if (notebooks.length === 0) return [];
+
+    // The default notebook should always be at the top
+    const defaultNotebook: Notebook | undefined = notebooks.find((notebook) => notebook.isDefault);
+    const notebookArray: Notebook[] = notebooks.filter((notebook) => !notebook.isDefault)
+    if (defaultNotebook) {
+      notebookArray.unshift(defaultNotebook);
+    }
+
+    // Add all of the children to the top level notebooks
+    const topLevelNotebooks = notebookArray.filter((notebook) => !notebook.parentId);
+    topLevelNotebooks.forEach((notebook) => {
+      notebook.children = notebooks.filter((n) => n.parentId === notebook.id);
+    });
+
+    return topLevelNotebooks;
+  }, [notebooks]);
 
   // Load the note once the current note ID is set
   useEffect(() => {
@@ -103,7 +133,7 @@ export function NoteProvider({ children }: Props) {
         })
         .finally(() => setNoteLoading(false));
     }
-  }, [currentNoteId, currentNotebook]);
+  }, [currentNoteId]);
 
   // Load the notes once the current notebook is set
   useEffect(() => {
@@ -116,9 +146,11 @@ export function NoteProvider({ children }: Props) {
   // Load the notebooks once the component mounts
   useEffect(() => {
     if (!user) return;
+
     setNotebooksLoading(true);
     fetchNotebooksApi().then((resp) => {
-      setNotebooks(resp.data)
+      const notebooks = resp.data;
+      setNotebooks(notebooks)
       setNotebooksLoading(false);
     })
   }, [user]);
@@ -131,10 +163,13 @@ export function NoteProvider({ children }: Props) {
     })
   }
 
-  const createNotebook = () => {
+  const createNotebook = ({ title, parentId }: CreateNotebookProps) => {
     setNotebooksLoading(true);
-    createNotebookApi("New Notebook")
-      .then((resp) => {setNotebooks([...notebooks, resp.data])})
+    createNotebookApi({ title: title || 'New Notebook', parentId })
+      .then((resp) => {
+        setNotebooks([...notebooks, resp.data])
+        setCurrentNotebook(resp.data)
+      })
       .finally(() => {setNotebooksLoading(false)})
   }
 
@@ -169,23 +204,25 @@ export function NoteProvider({ children }: Props) {
       .finally(() => {setNotebooksLoading(false)})
   }
 
-  const updateNote = (note: NoteUpdateProps) => {
-    setIsSaving(true);
-    updateNoteApi(note)
-      .finally(() => {setIsSaving(false)})
-
+  const updateNote = async (
+    note: NoteUpdateProps
+  ): Promise<AxiosResponse<Note>> => {
     const updatedNote = notes.find((n) => n.id === note.id);
     
     // Perform an optimistic update to the notes array so that the UI updates immediately
     if (updatedNote) {
       const newArray = [...notes]
-      const newNote = { ...updatedNote, ...note, updatedAt: new Date() };
-      setNotes(newArray.map(n => n.id === newNote.id ? newNote : n));
+      const newNote = { ...note, ...updatedNote, updatedAt: new Date() };
+      const newNoteArray = newArray.map(n => n.id === newNote.id ? newNote : n);
+      setNotes([...newNoteArray]);
 
       if (currentNote && currentNote.id === note.id) {
         setCurrentNote(newNote);
       }
     }
+
+    // Now actually perform an update
+    return updateNoteApi(note)
   }
 
   const fetchNotesForNotebook = (notebookId: string) => {
@@ -222,7 +259,8 @@ export function NoteProvider({ children }: Props) {
         fetchNotebooks,
         fetchNotesForNotebook,
         isSaving, 
-        notebooks,
+        notebooks: sortedNotebooks,
+        allNotebooks: notebooks,
         notebooksLoading,
         noteLoading,
         notes,
@@ -234,6 +272,7 @@ export function NoteProvider({ children }: Props) {
         currentNotebook,
         fetchNotebook,
         sortedNotes,
+        defaultNotebook,
       }}
     >
       {children}

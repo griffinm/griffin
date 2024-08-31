@@ -35,13 +35,16 @@ model Notebook {
   title String? @map("title")
   userId String @map("user_id")
   deletedAt DateTime? @map("deleted_at")
+  parentId String? @map("parent_id")
+  isDefault Boolean @default(false) @map("is_default")
 
   user User @relation(fields: [userId], references: [id])
+  parent Notebook? @relation("NotebookChildren", fields: [parentId], references: [id])
+  children Notebook[] @relation("NotebookChildren")
+  notes Note[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-
-  notes Note[]
 
   @@map("notebooks")
 }

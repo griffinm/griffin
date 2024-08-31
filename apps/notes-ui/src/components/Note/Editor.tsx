@@ -68,7 +68,7 @@ const extensions = [
   TaskExtension,
 ]
 
-const SAVE_TIMEOUT = 2000;
+const SAVE_TIMEOUT = 1000;
 
 export function Editor({ 
   note,
@@ -106,8 +106,6 @@ export function Editor({
       }
     }, SAVE_TIMEOUT);
   }, [])
-
-  // editor?.chain().focus().insertContent('<react-component>dasd</react-component>')
   
   const fileListToImageFiles = (fileList: FileList): File[] => {
     // You may want to use a package like attr-accept
@@ -138,8 +136,6 @@ export function Editor({
             position: insertPosition,
           });
         })
-
-      
     },
     [],
   );

@@ -5,16 +5,16 @@ import { Task } from "@prisma/client";
 import { Loading } from "../../components/Loading";
 import { Typography } from "@mui/material";
 import { formatDistanceStrict } from "date-fns";
-import { Link } from "react-router-dom";
-import { urls } from "../../utils/urls";
+import { useTasks } from "../../providers/TaskProvider";
 
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showNewTaskModal } = useTasks();
 
   useEffect(() => {
     const fetchTasks = async () => {
-      const response = await searchTasks({ completedAt: null });
+      const response = await searchTasks({ completed: false, page: 1, resultsPerPage: 10 });
       setTasks(response.data);
       setLoading(false);
     };
@@ -41,7 +41,7 @@ export function Tasks() {
                 </Typography>
               )}
             </div>
-            <Button component={Link} to={urls.task(task.id)}>
+            <Button onClick={() => showNewTaskModal(task)}>
               View
             </Button>
           </div>
