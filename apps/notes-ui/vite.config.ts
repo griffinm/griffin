@@ -39,13 +39,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('react')) {
-            return 'react';
-          } else if (id.includes('@mui')) {
-            return 'mui';
-          } if (id.includes('tiptap') || id.includes('prosemirror')) {
-            return 'editor';
-          } else if (id.includes('node_modules')) {
+          if (id.includes('node_modules')) {
             return 'vendor';
           }
         },
