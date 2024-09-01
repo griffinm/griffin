@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDto } from "./dto/create.dto";
 import { UpdateDto } from "./dto/update.dto";
-import { SearchResult, SearchResultQueryResult } from "@griffin/types";
 import { SearchService } from "../search/search.service";
 
 @Injectable()
@@ -71,21 +70,22 @@ export class NoteService {
   }
 
   async update(id: string, data: UpdateDto, userId: string) {
-    this.logger.debug(`Updating note ${id} for user ${userId}`);
+    this.logger.debug(`Updating note ${id.substring(0, 7)} for user ${userId.substring(0, 7)}`);
 
     const updatedNote = await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data,
     });
 
-    await this.searchService.addNote(updatedNote, userId);
+    this.searchService.addNote(updatedNote, userId);
 
     return updatedNote;
   }
 
   async create(data: CreateDto, notebookId: string, userId: string) {
-    this.logger.debug(`Creating note for user ${userId}`);
+    this.logger.debug(`Creating note for user ${userId.substring(0, 7)}`);
 
+    this.logger.debug(`Locating notebook ${notebookId.substring(0, 7)} for user ${userId.substring(0, 7)}`);
     const notebook = await this.prisma.notebook.findFirst({
       where: {
         id: notebookId,
@@ -93,16 +93,23 @@ export class NoteService {
       },
     });
     
-    return await this.prisma.note.create({
+    const note =  await this.prisma.note.create({
       data: {
         ...data,
         notebookId: notebook.id,
       },
     });
+
+    this.searchService.addNote(note, userId);
+    this.logger.debug(`Note ${note.id.substring(0, 7)} created`);
+
+    return note;
   }
 
   async delete(id: string, userId: string) {
-    this.logger.debug(`Deleting note ${id} for user ${userId}`);
+    this.logger.debug(`Deleting note ${id.substring(0, 7)} for user ${userId.substring(0, 7)}`);
+
+    this.searchService.removeNote(id);
 
     return await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },

@@ -9,7 +9,8 @@ export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private typesenseClient;
 
-  constructor() {
+  async onModuleInit() {
+    this.logger.log('Initializing search service');
     this.typesenseClient = new Typesense.Client({
       nodes: [{
         host: "localhost",
@@ -20,10 +21,6 @@ export class SearchService implements OnModuleInit {
     });
 
     this.createCollections();
-  }
-
-  async onModuleInit() {
-    this.logger.log('Initializing search service');
   }
 
   private async createCollections() {
@@ -48,8 +45,7 @@ export class SearchService implements OnModuleInit {
   }
   
   async search(query: string, userId: string): Promise<SearchResultsDto> {
-    this.logger.debug(`Searching for ${query}`);
-
+    
     const searchParams = {
       q: query,
       query_by: 'title, content',
@@ -60,6 +56,7 @@ export class SearchService implements OnModuleInit {
       highlight_affix_num_tokens: 4,
       
     }
+    this.logger.debug(`Searching for ${JSON.stringify(searchParams)}`);
 
     const result = await this.typesenseClient.collections(["notes"]).documents().search(searchParams);
 
@@ -80,8 +77,14 @@ export class SearchService implements OnModuleInit {
     return searchResults;
   }
 
+  async removeNote(noteId: string) {
+    this.logger.debug(`Removing note ${noteId.substring(0, 7)} from search index`);
+
+    this.typesenseClient.collections("notes").documents().delete(noteId);
+  }
+
   async addNote(note: Note, userId: string) {
-    this.logger.debug(`Adding note ${note.id} to search index`);
+    this.logger.debug(`Adding note ${note.id.substring(0, 7)} to search index`);
 
     this.typesenseClient.collections("notes").documents().upsert({
       title: note.title,
