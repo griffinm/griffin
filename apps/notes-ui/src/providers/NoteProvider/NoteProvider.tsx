@@ -207,22 +207,11 @@ export function NoteProvider({ children }: Props) {
   const updateNote = async (
     note: NoteUpdateProps
   ): Promise<AxiosResponse<Note>> => {
-    const updatedNote = notes.find((n) => n.id === note.id);
-    
-    // Perform an optimistic update to the notes array so that the UI updates immediately
-    if (updatedNote) {
-      const newArray = [...notes]
-      const newNote = { ...note, ...updatedNote, updatedAt: new Date() };
-      const newNoteArray = newArray.map(n => n.id === newNote.id ? newNote : n);
-      setNotes([...newNoteArray]);
-
-      if (currentNote && currentNote.id === note.id) {
-        setCurrentNote(newNote);
-      }
-    }
-
-    // Now actually perform an update
     return updateNoteApi(note)
+      .then((resp) => {
+        setNotes(notes.map((n) => n.id === resp.data.id ? resp.data : n));
+        setCurrentNote(resp.data);
+      })
   }
 
   const fetchNotesForNotebook = (notebookId: string) => {
