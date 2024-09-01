@@ -1,17 +1,18 @@
 import { Module } from "@nestjs/common";
 import { TasksController } from "./tasks.controller";
 import { TasksService } from "./tasks.service";
-import { PrismaService } from "../prisma.service";
 import { AuthService } from "../auth/auth.service";
 import { UserService } from "../users/user.service";
+import { PrismaModule } from "../prisma/prisma.module";
 
 @Module({
   controllers: [TasksController],
   providers: [
     TasksService,
-    PrismaService,
     AuthService,
     UserService,
   ],
+  exports: [TasksService],
+  imports: [PrismaModule],
 })
 export class TasksModule {}

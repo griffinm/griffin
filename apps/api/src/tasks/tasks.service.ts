@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateTaskDto } from './dto/update.dto';

@@ -15,7 +15,7 @@ export function Tasks() {
   useEffect(() => {
     const fetchTasks = async () => {
       const response = await searchTasks({ completed: false, page: 1, resultsPerPage: 10 });
-      setTasks(response.data);
+      setTasks(response.data.data);
       setLoading(false);
     };
     fetchTasks();

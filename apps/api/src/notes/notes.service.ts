@@ -1,13 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from '../prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateDto } from "./dto/create.dto";
 import { UpdateDto } from "./dto/update.dto";
 import { SearchResult, SearchResultQueryResult } from "@griffin/types";
+import { SearchService } from "../search/search.service";
 
 @Injectable()
 export class NoteService {
+  private readonly logger = new Logger(NoteService.name);
+
   constructor(
     private prisma: PrismaService,
+    private searchService: SearchService,
   ) {}
 
   async findAllForUser(userId: string) {
@@ -85,13 +89,21 @@ export class NoteService {
   }
 
   async update(id: string, data: UpdateDto, userId: string) {
-    return await this.prisma.note.update({
+    this.logger.debug(`Updating note ${id} for user ${userId}`);
+
+    const updatedNote = await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data,
     });
+
+    await this.searchService.addNote(updatedNote, userId);
+
+    return updatedNote;
   }
 
   async create(data: CreateDto, notebookId: string, userId: string) {
+    this.logger.debug(`Creating note for user ${userId}`);
+
     const notebook = await this.prisma.notebook.findFirst({
       where: {
         id: notebookId,
@@ -108,6 +120,8 @@ export class NoteService {
   }
 
   async delete(id: string, userId: string) {
+    this.logger.debug(`Deleting note ${id} for user ${userId}`);
+
     return await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data: {
