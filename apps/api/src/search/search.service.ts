@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import Typesense from "typesense";
 import { noteSchema, taskSchema } from "./schemas";
 import { Note } from "@prisma/client";
+import { SearchResultsDto } from "./dto/search-results.dto";
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -46,7 +47,7 @@ export class SearchService implements OnModuleInit {
     }
   }
   
-  async search(query: string, userId: string) {
+  async search(query: string, userId: string): Promise<SearchResultsDto> {
     this.logger.debug(`Searching for ${query}`);
 
     const searchParams = {
@@ -56,11 +57,27 @@ export class SearchService implements OnModuleInit {
       typo_tokens_threshold: 1,
       per_page: 10,
       filter_by: `userId:${userId}`,
+      highlight_affix_num_tokens: 4,
+      
     }
-    this.logger.debug(`Search params: ${JSON.stringify(searchParams)}`);
-    const result = await this.typesenseClient.collections("notes").documents().search(searchParams);
 
-    return result;
+    const result = await this.typesenseClient.collections(["notes"]).documents().search(searchParams);
+
+    const searchResults = new SearchResultsDto();
+    searchResults.query = query;
+    searchResults.hits = result.hits.length;
+    searchResults.noteResults = result.hits.map((hit) => {
+      console.log(hit);
+      return {
+        id: hit.document.id,
+        title: hit.document.title,
+        matchedTokens: hit.matched_tokens,
+        snippet: hit.highlights[0]?.snippet,
+        matchedField: hit.highlights[0]?.field,
+      }
+    });
+
+    return searchResults;
   }
 
   async addNote(note: Note, userId: string) {
@@ -68,7 +85,12 @@ export class SearchService implements OnModuleInit {
 
     this.typesenseClient.collections("notes").documents().upsert({
       title: note.title,
-      content: note.content.replace(/<[^>]*>?/gm, ''),
+      content: note.content
+        .replace(/<p>/gm, ' ')
+        .replace(/<br>/gm, ' ')
+        .replace(/<[^>]*>?/gm, '')
+        .replace(/&nbsp;/gm, ' '),
+
       id: note.id,
       userId: userId,
     });
