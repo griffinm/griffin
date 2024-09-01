@@ -80,7 +80,7 @@ export class SearchService implements OnModuleInit {
   async removeNote(noteId: string) {
     this.logger.debug(`Removing note ${noteId.substring(0, 7)} from search index`);
 
-    this.typesenseClient.collections("notes").documents().delete(noteId);
+    this.typesenseClient.collections("notes").documents(noteId).delete();
   }
 
   async addNote(note: Note, userId: string) {
