@@ -135,6 +135,13 @@ export function NoteProvider({ children }: Props) {
     }
   }, [currentNoteId]);
 
+  // If the current note ID is set to null, set the current note to null
+  useEffect(() => {
+    if (currentNoteId === null) {
+      setCurrentNote(null);
+    }
+  }, [currentNoteId]);
+
   // Load the notes once the current notebook is set
   useEffect(() => {
     if (currentNotebook) {

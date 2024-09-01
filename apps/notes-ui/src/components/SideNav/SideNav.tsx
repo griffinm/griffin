@@ -22,7 +22,7 @@ export function SideNav({ menuExpanded }: Props) {
   const { user, signOut } = useUser();
   const { showMessage } = useToast();
   const containerClasses = classnames(
-    "flex flex-row min-h-[500px] overflow-auto",
+    "flex flex-row md:min-h-[500px]",
   );
   const {
     currentNotebook,
@@ -33,10 +33,10 @@ export function SideNav({ menuExpanded }: Props) {
   const { 
     showNewTaskModal,
   } = useTasks();
-  
+
   const renderSearch = () => {
     return (
-      <div className="flex flex-row p-3">
+      <div className="flex flex-row p-2 md:p-3">
         <Search />
       </div>
     )
@@ -94,7 +94,7 @@ export function SideNav({ menuExpanded }: Props) {
     if (!defaultNotebook) return null;
 
     return (
-      <div className="m-3 flex flex-row gap-4">
+      <div className="m-3 flex flex-col md:flex-row gap-2 md:gap-4">
         <Button
           variant="outlined"
           startIcon={<Add />}
@@ -120,7 +120,7 @@ export function SideNav({ menuExpanded }: Props) {
 
   return (
     <div className={containerClasses}>
-      <div className="flex flex-col h-[100vh] w-[250px]">
+      <div className="flex flex-col h-screen md:min-w-[250px]">
         {renderSearch()}
 
         {renderActions()}
@@ -132,7 +132,7 @@ export function SideNav({ menuExpanded }: Props) {
       </div>
 
       {currentNotebook && (
-        <div className="border-l-2 border-slate-700 w-[225px]">
+        <div className="border-l-2 border-slate-700 md:w-[225px]">
           <NoteList />
         </div>
       )}
