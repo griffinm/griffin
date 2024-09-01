@@ -13,6 +13,7 @@ export class AppLoggerMiddleware implements NestMiddleware {
       const { statusCode } = response;
       const contentLength = response.get('content-length');
       const duration = Date.now() - startTime;
+
       this.logger.log(
         `${method} ${url} ${statusCode} CL:${contentLength} IP:${ip} DUR:${duration}ms`
       );

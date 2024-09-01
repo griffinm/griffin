@@ -1,13 +1,16 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from '../prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateDto } from "./dto/create.dto";
 import { UpdateDto } from "./dto/update.dto";
-import { SearchResult, SearchResultQueryResult } from "@griffin/types";
+import { SearchService } from "../search/search.service";
 
 @Injectable()
 export class NoteService {
+  private readonly logger = new Logger(NoteService.name);
+
   constructor(
     private prisma: PrismaService,
+    private searchService: SearchService,
   ) {}
 
   async findAllForUser(userId: string) {
@@ -37,25 +40,7 @@ export class NoteService {
       take: 5,
     });
   }
-
-  async search(
-    query: string,
-    userId: string,
-  ): Promise<SearchResult[]> {
-    const results = await this.prisma.$queryRaw`SELECT * FROM search_notes(${query}, ${userId})` as SearchResultQueryResult[];
-    const formattedResults = results.map((result) => {
-      return {
-        noteId: result.note_id,
-        noteTitle: result.note_title,
-        notebookTitle: result.notebook_title,
-        notebookId: result.notebook_id,
-        tsRank: result.ts_rank,
-        trigramSimilarity: result.trigram_similarity,
-      }
-    })
-    return formattedResults;
-  }
-
+  
   async findAllForNotebook(notebookId: string, userId: string) {
     return await this.prisma.note.findMany({
       where: {
@@ -85,13 +70,22 @@ export class NoteService {
   }
 
   async update(id: string, data: UpdateDto, userId: string) {
-    return await this.prisma.note.update({
+    this.logger.debug(`Updating note ${id.substring(0, 7)} for user ${userId.substring(0, 7)}`);
+
+    const updatedNote = await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data,
     });
+
+    this.searchService.addNote(updatedNote, userId);
+
+    return updatedNote;
   }
 
   async create(data: CreateDto, notebookId: string, userId: string) {
+    this.logger.debug(`Creating note for user ${userId.substring(0, 7)}`);
+
+    this.logger.debug(`Locating notebook ${notebookId.substring(0, 7)} for user ${userId.substring(0, 7)}`);
     const notebook = await this.prisma.notebook.findFirst({
       where: {
         id: notebookId,
@@ -99,15 +93,24 @@ export class NoteService {
       },
     });
     
-    return await this.prisma.note.create({
+    const note =  await this.prisma.note.create({
       data: {
         ...data,
         notebookId: notebook.id,
       },
     });
+
+    this.searchService.addNote(note, userId);
+    this.logger.debug(`Note ${note.id.substring(0, 7)} created`);
+
+    return note;
   }
 
   async delete(id: string, userId: string) {
+    this.logger.debug(`Deleting note ${id.substring(0, 7)} for user ${userId.substring(0, 7)}`);
+
+    this.searchService.removeNote(id);
+
     return await this.prisma.note.update({
       where: { id, notebook: { user: { id: userId } } },
       data: {

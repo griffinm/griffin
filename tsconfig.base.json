@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@griffin/types": ["libs/types/src/index.ts"]
+      "@griffin/types": ["libs/types/src/index.ts"],
+      "@griffin/api/*": ["apps/api/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

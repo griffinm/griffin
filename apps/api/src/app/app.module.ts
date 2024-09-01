@@ -10,6 +10,7 @@ import { NoteModule } from '../notes/notes.module';
 import { MediaModule } from '../media/media.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { AppLoggerMiddleware } from './AppLogger.middleware';
+import { SearchModule } from '../search/search.module';
 
 @Module({
   imports: [

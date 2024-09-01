@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { TextField } from '@mui/material';
-import { SearchResult } from '@griffin/types'
-import { searchNotes } from '../../utils/api/noteClient'
+import { SearchResultsDto } from '@griffin/api/search/dto/search-results.dto'
+import { fetchSearchResults } from '../../utils/api/searchClient'
 import { useNotes } from '../../providers/NoteProvider'
 import { useNavigate } from 'react-router-dom'
 import { urls } from '../../utils/urls'
@@ -10,12 +10,10 @@ const SEARCH_TIMEOUT = 300;
 
 export function Search() {
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResultsDto | undefined>();
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
-  const { 
-    fetchNotebook,
-  } = useNotes();
+  const { setCurrentNoteId } = useNotes();
   const debouncedSearch = useCallback(() => {
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
@@ -28,7 +26,7 @@ export function Search() {
   }, [searchTerm]);
 
   const handleSearch = async (searchTerm: string) => {
-    const response = await searchNotes(searchTerm);
+    const response = await fetchSearchResults({ query: searchTerm });
     setSearchResults(response.data);
   }
 
@@ -41,24 +39,24 @@ export function Search() {
       return null
     }
 
-    if (searchResults.length === 0) {
+    if (searchResults.noteResults?.length === 0) {
       return <div>No results</div>
     }
 
-    return searchResults.map((result) => {
+    return searchResults.noteResults?.map((result) => {
       return (
         <div
-          key={result.noteId}
+          key={result.id}
           className="flex flex-col p-2 cursor-pointer hover:bg-dark-1 transition-colors"
           onClick={() => {
             setSearchTerm('');
-            setSearchResults([]);
-            fetchNotebook(result.notebookId);
-            navigate(urls.note(result.noteId));
+            setSearchResults(undefined);
+            setCurrentNoteId(result.id);
+            navigate(urls.note(result.id));
           }}
         >
-          <div>{result.noteTitle}</div>
-          <div className="text-sm text-slate-400 italic">{result.notebookTitle}</div>
+          <div>{result.title}</div>
+          <div className="text-sm text-slate-400 italic" dangerouslySetInnerHTML={{ __html: result.snippet || '' }} />
         </div>
       )
     })

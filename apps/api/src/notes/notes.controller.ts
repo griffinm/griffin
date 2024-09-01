@@ -30,14 +30,6 @@ export class NotesController {
     return this.noteService.recentNotes(request.user.id);
   }
 
-  @Get('search')
-  async search(
-    @Req() request: RequestWithUser,
-    @Query('query') query: string,
-  ): Promise<SearchResult[]> {
-    return this.noteService.search(query, request.user.id);
-  }
-
   @Get(':id')
   async findOne(
     @Req() request: RequestWithUser,
