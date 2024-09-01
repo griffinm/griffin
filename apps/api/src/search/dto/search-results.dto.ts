@@ -5,6 +5,7 @@ export interface NoteResult {
   title: string;
   matchedTokens: string[];
   snippet?: string;
+  matchedField?: 'content' | 'title',
 }
 
 export class SearchResultsDto {
@@ -13,5 +14,5 @@ export class SearchResultsDto {
 
   @IsOptional()
   @IsArray()
-  results?: NoteResult[];
+  noteResults?: NoteResult[];
 }

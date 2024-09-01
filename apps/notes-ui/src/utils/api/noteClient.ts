@@ -37,7 +37,3 @@ export const updateNote = async({
 export const deleteNote = async(noteId: string): Promise<AxiosResponse<void>> => {
   return baseClient.delete(`/notes/${noteId}`);
 }
-
-export const searchNotes = async(query: string): Promise<AxiosResponse<SearchResult[]>> => {
-  return baseClient.get(`/notes/search?query=${query}`);
-}

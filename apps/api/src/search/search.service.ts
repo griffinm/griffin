@@ -67,7 +67,7 @@ export class SearchService implements OnModuleInit {
     searchResults.query = query;
     searchResults.hits = result.hits.length;
     searchResults.noteResults = result.hits.map((hit) => {
-      console.log(hit);
+
       return {
         id: hit.document.id,
         title: hit.document.title,

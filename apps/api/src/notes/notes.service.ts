@@ -41,25 +41,7 @@ export class NoteService {
       take: 5,
     });
   }
-
-  async search(
-    query: string,
-    userId: string,
-  ): Promise<SearchResult[]> {
-    const results = await this.prisma.$queryRaw`SELECT * FROM search_notes(${query}, ${userId})` as SearchResultQueryResult[];
-    const formattedResults = results.map((result) => {
-      return {
-        noteId: result.note_id,
-        noteTitle: result.note_title,
-        notebookTitle: result.notebook_title,
-        notebookId: result.notebook_id,
-        tsRank: result.ts_rank,
-        trigramSimilarity: result.trigram_similarity,
-      }
-    })
-    return formattedResults;
-  }
-
+  
   async findAllForNotebook(notebookId: string, userId: string) {
     return await this.prisma.note.findMany({
       where: {
