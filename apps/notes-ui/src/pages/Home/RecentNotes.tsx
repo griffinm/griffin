@@ -11,11 +11,13 @@ import {
 import { Link } from "react-router-dom";
 import { formatDistance } from "date-fns";
 import { urls } from "../../utils/urls";
+import { useNotes } from "../../providers/NoteProvider";
 
 export function RecentNotes() {
   const [recentNotes, setRecentNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { createNote, defaultNotebook } = useNotes();
+  
   useEffect(() => {
     fetchRecentNotes().then((res) => {
       setRecentNotes(res.data);
@@ -25,7 +27,12 @@ export function RecentNotes() {
 
   return (
     <Card>
-      <CardHeader title="Recent Notes" />
+      <CardHeader
+        title="Recent Notes"
+        action={
+          <Button variant="outlined" onClick={() => createNote(defaultNotebook!.id)}>Add Note</Button>
+        }
+      />
 
         {loading && <Loading />}
         {recentNotes.map((note) => (

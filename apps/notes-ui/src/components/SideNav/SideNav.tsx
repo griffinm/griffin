@@ -26,7 +26,6 @@ export function SideNav({ menuExpanded }: Props) {
   );
   const {
     currentNotebook,
-    createNotebook,
     createNote,
     defaultNotebook,
   } = useNotes();
