@@ -17,6 +17,8 @@ export const TaskExtension = Node.create({
     }
   },
 
+  draggable: true,
+
   parseHTML() {
     return [
       {

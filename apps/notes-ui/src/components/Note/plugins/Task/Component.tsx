@@ -175,6 +175,7 @@ export function Component(props: any) {
       <div 
         className={containerClasses} 
         contentEditable={false}
+        data-drag-handle
       >
         {isSelected ? renderEdit() : renderShow()}
     </div>
