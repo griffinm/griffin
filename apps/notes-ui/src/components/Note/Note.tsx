@@ -100,7 +100,7 @@ export function Note() {
           </Button>
         </div>
       </div>
-      <div className="mt-5 flex flex-row h-[85vh]">
+      <div className="mt-5 flex flex-row grow max-h-[calc(100vh-150px)]">
         <div className="grow">
           <Editor
             note={currentNote}

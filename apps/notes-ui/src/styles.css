@@ -36,7 +36,8 @@
 }
 
 .tiptap.ProseMirror {
-  height: 95% !important;
+  height: 100% !important;
+  overflow: auto !important;
 }
 
 .MuiTiptap-FieldContainer-root {
@@ -45,6 +46,6 @@
 }
 
 .MuiTiptap-RichTextContent-root {
-  height: 100%;
-  /* max-height: 95%; */
+  height: 90%;
+  max-height: 90%;
 }
