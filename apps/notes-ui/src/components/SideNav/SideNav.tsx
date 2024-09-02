@@ -61,7 +61,7 @@ export function SideNav({ menuExpanded }: Props) {
         <div className="p-3 border-b border-slate-700">
           Signed in as:
           <div className="pb-3">
-            {user?.email}
+            {user?.firstName}
           </div>
         </div>
         <div className="p-5 text-center">

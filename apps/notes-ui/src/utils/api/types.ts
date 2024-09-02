@@ -3,4 +3,5 @@ export interface CreateOrUpdateTaskProps {
   description?: string;
   dueDate?: Date;
   completedAt?: Date | null;
+  noteId?: string;
 }

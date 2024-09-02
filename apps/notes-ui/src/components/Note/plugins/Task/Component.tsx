@@ -12,6 +12,7 @@ import {
   createTask,
   fetchTask,
 } from '../../../../utils/api';
+import { useNotes } from '../../../../providers/NoteProvider';
 
 export function Component(props: any) {
   const [isSelected, setIsSelected] = useState(false);
@@ -19,7 +20,8 @@ export function Component(props: any) {
   const [dueDate, setDueDate] = useState(new Date());
   const [completed, setCompleted] = useState(false);
   const [description, setDescription] = useState('');
-  const fetchedRef = useRef(false)
+  const fetchedRef = useRef(false);
+  const { currentNote } = useNotes();
 
   useEffect(() => {
     if (props.node.attrs.taskId && !fetchedRef.current) {
@@ -40,6 +42,7 @@ export function Component(props: any) {
       dueDate: dueDate,
       title: title,
       description: description,
+      noteId: currentNote?.id,
     })
   }
 
@@ -51,6 +54,7 @@ export function Component(props: any) {
         title,
         dueDate,
         description,
+        noteId: currentNote?.id,
       }).then((resp) => {
         props.updateAttributes({
           taskId: resp.data.id,
