@@ -7,5 +7,6 @@ export class NewTaskDto extends PickType(
     'title',
     'description',
     'dueDate',
+    'noteId',
   ] as const,
 ) {}

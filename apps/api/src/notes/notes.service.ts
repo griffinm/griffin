@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateDto } from "./dto/create.dto";
 import { UpdateDto } from "./dto/update.dto";
 import { SearchService } from "../search/search.service";
+import { associateTasks } from "./associateTasks";
 
 @Injectable()
 export class NoteService {
@@ -78,6 +79,7 @@ export class NoteService {
     });
 
     this.searchService.addNote(updatedNote, userId);
+    associateTasks(updatedNote, userId, this.prisma, this.logger);
 
     return updatedNote;
   }

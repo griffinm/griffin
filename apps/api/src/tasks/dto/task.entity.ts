@@ -53,6 +53,11 @@ export class TaskEntity {
   @Exclude()
   deletedAt?: Date;
 
+  @IsString()
+  @IsOptional()
+  @Expose()
+  noteId?: string;
+
   constructor(partial: Partial<TaskEntity>) {
     Object.assign(this, instanceToPlain(partial));
   }
