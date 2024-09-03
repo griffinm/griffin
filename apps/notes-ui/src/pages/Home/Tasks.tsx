@@ -21,11 +21,14 @@ export function Tasks() {
     fetchTasks();
   }, []);
 
-  return null
-
   return (
     <Card>
-      <CardHeader title="Tasks" />
+      <CardHeader
+        title="Tasks"
+        action={
+          <Button variant="outlined" onClick={() => showNewTaskModal()}>Add Task</Button>
+        }
+      />
       {loading && <Loading />}
       {!loading && tasks.length === 0 && (
         <div className="p-3 text-center">

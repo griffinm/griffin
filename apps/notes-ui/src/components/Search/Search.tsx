@@ -6,6 +6,7 @@ import { useNotes } from '../../providers/NoteProvider'
 import { useNavigate } from 'react-router-dom'
 import { urls } from '../../utils/urls'
 
+
 const SEARCH_TIMEOUT = 300;
 
 export function Search() {
