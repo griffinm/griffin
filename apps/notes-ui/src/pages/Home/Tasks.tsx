@@ -6,8 +6,13 @@ import { Loading } from "../../components/Loading";
 import { Typography } from "@mui/material";
 import { formatDistanceStrict } from "date-fns";
 import { useTasks } from "../../providers/TaskProvider";
+import { useNavigate } from "react-router-dom";
+import { urls } from "../../utils/urls";
+import AddIcon from '@mui/icons-material/Add';
+import ListIcon from '@mui/icons-material/List';
 
 export function Tasks() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const { showNewTaskModal } = useTasks();
@@ -26,7 +31,16 @@ export function Tasks() {
       <CardHeader
         title="Tasks"
         action={
-          <Button variant="outlined" onClick={() => showNewTaskModal()}>Add Task</Button>
+          <div className="flex gap-2">
+            <Button variant="outlined" onClick={() => navigate(urls.tasks)} startIcon={<ListIcon />}>View All</Button>
+            <Button
+              variant="outlined"
+              onClick={() => showNewTaskModal()}
+              startIcon={<AddIcon />}
+            >
+              Add
+            </Button>
+          </div>
         }
       />
       {loading && <Loading />}

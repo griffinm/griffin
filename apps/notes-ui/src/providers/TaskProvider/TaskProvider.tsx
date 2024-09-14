@@ -28,6 +28,7 @@ interface TaskProps {
   sidebarTasks: Task[];
   taskPageTasks: TaskListResponse;
   fetchTasksForTaskPage: (props: FetchTasksProps) => void;
+  deleteTask: (task: Task) => void;
 }
 
 export const TasksContext = createContext<TaskProps>({
@@ -35,6 +36,7 @@ export const TasksContext = createContext<TaskProps>({
   createTask: () => {},
   updateTask: () => {},
   fetchTasks: () => {},
+  deleteTask: () => {},
   showNewTaskModal: () => {},
   onModalClose: () => {},
   modalOpen: false,
@@ -143,12 +145,23 @@ export function TaskProvider({ children }: Props) {
     }
   };
 
+  const deleteTask = async (task: Task) => {
+    await deleteTaskApi(task.id);
+    setTasks(tasks.filter((t) => t.id !== task.id));
+    setSidebarTasks(sidebarTasks.filter((t) => t.id !== task.id));
+    setTaskPageTasks({
+      ...taskPageTasks,
+      data: taskPageTasks.data.filter((t) => t.id !== task.id),
+    });
+  };
+
   return (
     <TasksContext.Provider value={{ 
       loading, 
       createTask, 
       updateTask,
       fetchTasks,
+      deleteTask,
       showNewTaskModal: (task?: Task) => {
         if (task?.id) {
           setTaskToEdit(task);

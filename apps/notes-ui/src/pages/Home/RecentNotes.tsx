@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { formatDistance } from "date-fns";
 import { urls } from "../../utils/urls";
 import { useNotes } from "../../providers/NoteProvider";
+import AddIcon from '@mui/icons-material/Add';
 
 export function RecentNotes() {
   const [recentNotes, setRecentNotes] = useState<Note[]>([]);
@@ -30,7 +31,13 @@ export function RecentNotes() {
       <CardHeader
         title="Recent Notes"
         action={
-          <Button variant="outlined" onClick={() => createNote(defaultNotebook!.id)}>Add Note</Button>
+          <Button
+            variant="outlined"
+            onClick={() => createNote(defaultNotebook!.id)}
+            startIcon={<AddIcon />}
+          >
+            Add
+          </Button>
         }
       />
 

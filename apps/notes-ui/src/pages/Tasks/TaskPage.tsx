@@ -20,6 +20,7 @@ import { format, formatDistanceToNowStrict } from "date-fns";
 import { Task } from "@prisma/client";
 import classnames from "classnames";
 import { ArrowBackIos, ArrowForwardIos, Delete, Edit } from "@mui/icons-material";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 
 const INITIAL_PAGE = 1;
 const INITIAL_RESULTS_PER_PAGE = 20;
@@ -30,12 +31,15 @@ export function TaskPage() {
   const [resultsPerPage, setResultsPerPage] = useState(INITIAL_RESULTS_PER_PAGE);
   const [search, setSearch] = useState('');
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
+  const [confirmDeleteDialogTask, setConfirmDeleteDialogTask] = useState<Task | null>(null);
   
   const { 
     taskPageTasks, 
     fetchTasksForTaskPage,
     updateTask,
     showNewTaskModal,
+    deleteTask,
   } = useTasks();
   const tasks = taskPageTasks.data;
 
@@ -106,7 +110,10 @@ export function TaskPage() {
             <Button size="small" onClick={() => showNewTaskModal(task)}>
               <Edit />
             </Button>
-            <Button size="small">
+            <Button size="small" onClick={() => {
+              setConfirmDeleteDialogOpen(true);
+              setConfirmDeleteDialogTask(task);
+            }}>
               <Delete />
             </Button>
           </TableCell>
@@ -181,8 +188,29 @@ export function TaskPage() {
     )
   }
 
+  const renderConfirmDeleteDialog = () => {
+    if (!confirmDeleteDialogTask) {
+      return null;
+    }
+
+    return (
+      <ConfirmDialog
+        open={confirmDeleteDialogOpen}
+        data={confirmDeleteDialogTask}
+        onClose={() => {
+          setConfirmDeleteDialogOpen(false);
+          setConfirmDeleteDialogTask(null);
+        }}
+        onConfirm={deleteTask}
+        title="Delete Task"
+        message="Are you sure you want to delete this task?"
+      />
+    )
+  }
+
   return (
     <PageContainer>
+      {renderConfirmDeleteDialog()}
       <Typography variant="h4">Tasks</Typography>
       {renderTop()}
       <Table size="small">
