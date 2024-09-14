@@ -3,4 +3,5 @@ export const urls = {
   note: (noteId: string) => `/notes/${noteId}`,
   signIn: '/sign-in',
   signUp: '/sign-up',
+  profile: '/profile',
 };

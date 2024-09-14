@@ -60,7 +60,9 @@ export function SideNav({ menuExpanded }: Props) {
         <div className="p-3 border-b border-slate-700">
           Signed in as:
           <div className="pb-3">
-            {user?.firstName}
+            <Link to={urls.profile}>
+              {user?.firstName}
+            </Link>
           </div>
         </div>
         <div className="p-5 text-center">

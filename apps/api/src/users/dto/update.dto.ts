@@ -1,6 +1,6 @@
 import { PickType } from "@nestjs/mapped-types";
 import { UserEntity } from "./user.entity";
-import { IsString, IsNotEmpty } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional } from "class-validator";
 
 export class UpdateDto extends PickType(
   UserEntity, 
@@ -10,6 +10,7 @@ export class UpdateDto extends PickType(
   ]
 ) {
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   password: string;
 }
