@@ -20,6 +20,7 @@ interface UserContextProps {
   signOut: () => Promise<void>;
   errors: string[];
   createUser: (email: string, password: string, firstName: string) => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 const UserContext = createContext<UserContextProps>({
@@ -29,6 +30,7 @@ const UserContext = createContext<UserContextProps>({
   signOut: () => Promise.resolve(),
   errors: [],
   createUser: () => Promise.resolve(),
+  setUser: () => {},
 });
 
 export function UserProvider({ children }: Props) {
@@ -115,6 +117,7 @@ export function UserProvider({ children }: Props) {
       signOut,
       errors,
       createUser,
+      setUser,
     }}>
       {loading ? (
         <div className="flex items-center justify-center h-screen">

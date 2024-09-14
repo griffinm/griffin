@@ -17,6 +17,7 @@ export class UserEntity {
 
   @IsString()
   @IsNotEmpty()
+  @Expose()
   email: string;
 
   @IsString()

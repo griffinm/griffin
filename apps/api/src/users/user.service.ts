@@ -47,7 +47,7 @@ export class UserService {
   }
 
   async updateUser(id: string, updateDto: UpdateDto): Promise<UserEntity> {
-    const hashedPassword = await bcrypt.hash(updateDto.password, 10);
+    const hashedPassword = updateDto.password ? await bcrypt.hash(updateDto.password, 10) : undefined;
     const userExists = await this.checkIfUserExists(updateDto.email, id);
     if (userExists) {
       throw new BadRequestException('User already exists');
