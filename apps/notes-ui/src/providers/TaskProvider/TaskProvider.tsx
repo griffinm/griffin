@@ -126,7 +126,10 @@ export function TaskProvider({ children }: Props) {
     }
     setSidebarTasks(tmpSidebarTasks);
 
-    // The task page is going to have to do this itself
+    setTaskPageTasks({
+      ...taskPageTasks,
+      data: [response.data, ...taskPageTasks.data],
+    });
   };
 
   const updateTask = async (task: CreateOrUpdateTaskProps, id: string) => {
