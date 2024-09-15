@@ -10,7 +10,7 @@ import { NoteModule } from '../notes/notes.module';
 import { MediaModule } from '../media/media.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { AppLoggerMiddleware } from './AppLogger.middleware';
-import { SearchModule } from '../search/search.module';
+import { QuestionsModule } from '../questions/questions.module';
 
 @Module({
   imports: [
@@ -24,6 +24,7 @@ import { SearchModule } from '../search/search.module';
     AuthModule,
     MediaModule,
     TasksModule,
+    QuestionsModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],

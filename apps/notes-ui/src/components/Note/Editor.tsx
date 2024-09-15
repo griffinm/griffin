@@ -44,6 +44,7 @@ import { Editor as TiptapEditor } from "@tiptap/core";
 import { useEditor } from "@tiptap/react";
 import { createMedia } from "../../utils/api";
 import { TaskExtension } from "./plugins/Task/Extension";
+import { QuestionExtension } from "./plugins/Question/Extension";
 
 interface Props {
   note: Note,
@@ -66,6 +67,7 @@ const extensions = [
     resizable: true,
   }),
   TaskExtension,
+  QuestionExtension,
 ]
 
 const SAVE_TIMEOUT = 1000;

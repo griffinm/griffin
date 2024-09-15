@@ -26,6 +26,7 @@ model User {
   notebooks Notebook[]
   media Media[]
   tasks Task[]
+  questions Question[]
 
   @@map("users")
 }
@@ -59,6 +60,7 @@ model Note {
   notebook Notebook @relation(fields: [notebookId], references: [id])
   media Media[]
   tasks Task[]
+  questions Question[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -98,4 +100,20 @@ model Task {
   note Note? @relation(fields: [noteId], references: [id])
 
   @@map("tasks")
+}
+
+model Question {
+  id String @id @default(uuid()) @map("id")
+  question String @map("question")
+  answer String? @map("answer")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  userId String @map("user_id")
+  noteId String @map("note_id")  
+
+  user User @relation(fields: [userId], references: [id])
+  note Note @relation(fields: [noteId], references: [id])
+
+  @@map("questions")
 }
