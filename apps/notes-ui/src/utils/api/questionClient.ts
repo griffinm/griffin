@@ -15,6 +15,13 @@ export interface UpdateQuestionRequest {
   deletedAt?: Date;
 }
 
+export const getMany = async (
+  includeAnswered: boolean = false,
+): Promise<AxiosResponse<Question[]>> => {
+  const url = `/questions?includeAnswered=${includeAnswered}`;
+  return baseClient.get(url);
+}
+
 export const createQuestion = async ({
   question,
   noteId,

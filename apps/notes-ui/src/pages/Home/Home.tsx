@@ -1,5 +1,6 @@
 import { RecentNotes } from "./RecentNotes";
 import { Tasks } from "./Tasks";
+import { Questions } from "./Questions";
 import { useUser } from "../../providers/UserProvider";
 import { Typography } from "@mui/material";
 
@@ -19,6 +20,9 @@ export function Home() {
         </div>
         <div>
           <Tasks />
+        </div>
+        <div>
+          <Questions />
         </div>
       </div>
     </div>

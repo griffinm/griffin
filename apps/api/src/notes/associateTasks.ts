@@ -2,7 +2,6 @@ import { Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { Note } from "@prisma/client";
 
-
 export async function associateTasks(note: Note, userId: string, prisma: PrismaService, logger: Logger) {
   logger.debug(`Pruning tasks for noteId ${note.id.substring(0, 7)}`);
   const noteContent = note.content;
@@ -20,6 +19,7 @@ export async function associateTasks(note: Note, userId: string, prisma: PrismaS
     where: {
       noteId: note.id,
       deletedAt: null,
+      userId,
     },
   });
 

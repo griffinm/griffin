@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuestionDto } from './dto/create.dto';
 import { UpdateQuestionDto } from './dto/update.dto';
 import { Question } from '@prisma/client';
+import { QuestionEntity } from './dto/question.entity';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class QuestionsService {
@@ -12,11 +14,31 @@ export class QuestionsService {
     private prisma: PrismaService,
   ) {}
 
+  async getMany(userId: string, includeAnswered: boolean = false): Promise<QuestionEntity[]> {
+    this.logger.debug(`Getting questions for user ${userId}`);
+    const questions = await this.prisma.question.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        note: {
+          deletedAt: null,
+        },
+
+      },
+    });
+    this.logger.debug(`Found ${questions.length} questions for user ${userId}`);
+
+    const objs = questions.map((question) => {
+      return plainToInstance(QuestionEntity, question);
+    });
+    return objs;
+  }
+
   async create(
     userId: string,
     noteId: string,
     createQuestionDto: CreateQuestionDto,
-  ): Promise<Question> {
+  ): Promise<QuestionEntity> {
     this.logger.debug(`Creating question for user ${userId}`);
     const note = await this.prisma.note.findFirst({
       where: {
@@ -41,13 +63,13 @@ export class QuestionsService {
     });
 
     this.logger.debug(`Question ID: ${question.id} created for user ${userId}`);
-    return question;
+    return plainToInstance(QuestionEntity, question);
   }
 
   async delete(
     userId: string,
     questionId: string,
-  ): Promise<Question> {
+  ): Promise<QuestionEntity> {
     this.logger.debug(`Deleting question ${questionId} for user ${userId}`);
     const question = await this.prisma.question.update({
       where: {
@@ -60,7 +82,7 @@ export class QuestionsService {
     });
     this.logger.debug(`Question ${questionId} deleted for user ${userId}`);
 
-    return question;
+    return plainToInstance(QuestionEntity, question);
   }
 
   async update(
@@ -68,7 +90,7 @@ export class QuestionsService {
     questionId: string,
     noteId: string,
     updateQuestionDto: UpdateQuestionDto,
-  ): Promise<Question> {
+  ): Promise<QuestionEntity> {
     this.logger.debug(`Updating question ${questionId} for user ${userId} noteId ${noteId}`);
     const question = await this.prisma.question.update({
       where: {
@@ -79,6 +101,6 @@ export class QuestionsService {
       data: updateQuestionDto,
     });
     this.logger.debug(`Question ${questionId} updated for user ${userId}`);
-    return question;
+    return plainToInstance(QuestionEntity, question);
   }
 }
