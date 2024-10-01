@@ -5,7 +5,6 @@ export interface RequestWithUser extends Request {
   user: User;
 }
 
-
 export const PriorityOptions: Record<string, string> = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
