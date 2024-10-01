@@ -137,7 +137,7 @@ export function SideNav({ menuExpanded }: Props) {
       </div>
 
       {currentNotebook && (
-        <div className="border-l-2 border-slate-700 w-[250px] h-full sticky top-0">
+        <div className="border-l-2 border-slate-700 w-[225px] sticky top-0 bottom-0">
           <NoteList />
         </div>
       )}

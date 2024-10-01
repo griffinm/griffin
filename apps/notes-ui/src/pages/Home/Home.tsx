@@ -3,9 +3,16 @@ import { Tasks } from "./Tasks";
 import { Questions } from "./Questions";
 import { useUser } from "../../providers/UserProvider";
 import { Typography } from "@mui/material";
+import { useNotes } from "../../providers/NoteProvider";
+import { useEffect } from "react";
 
 export function Home() {
   const { user } = useUser();
+  const { setCurrentNotebook } = useNotes();
+
+  useEffect(() => {
+    setCurrentNotebook();
+  }, []);
 
   return (
     <div className="p-5 max-w-4xl">
