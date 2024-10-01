@@ -43,7 +43,7 @@ export function Layout() {
   );
 
   const navClasses = classnames(
-    "bg-dark-1 text-white md:flex md:w-[250px] sticky h-[100vh] top-0 overflow-y-scroll overflow-x-wrap no-scrollbar",
+    "bg-dark-1 text-white md:flex sticky h-[100vh] top-0",
     {
       "hidden": !menuExpanded,
     },
@@ -61,7 +61,6 @@ export function Layout() {
         </div>
       )}
 
-      <div className="flex grow">
         <div className="flex flex-row grow">
           {!isFullScreen && (
             <div className={navClasses}>
@@ -72,7 +71,6 @@ export function Layout() {
             <Outlet />
           </div>
         </div>
-      </div>
 
       <TaskModal open={modalOpen} onClose={onModalClose} onSubmit={handleTaskSubmit} />
     </div>
