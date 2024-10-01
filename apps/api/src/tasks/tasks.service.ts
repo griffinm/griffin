@@ -106,7 +106,7 @@ export class TasksService {
     return createdTask;
   }
 
-  private ordering(): Prisma.TaskOrderByWithRelationAndSearchRelevanceInput[] {
+  private ordering(): Prisma.TaskOrderByWithAggregationInput[] {
     return [
       { dueDate: 'asc' },
       { priority: 'desc' },
