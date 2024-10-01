@@ -1,8 +1,18 @@
 import { Request } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 export interface RequestWithUser extends Request {
   user: User;
 }
+
+
+export const PriorityOptions: Record<string, string> = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+} as const;
+export type PriorityOptionType = typeof PriorityOptions[keyof typeof PriorityOptions];
+
 
 export interface SignInResponse {
   jwt: string;

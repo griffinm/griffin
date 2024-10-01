@@ -1,4 +1,4 @@
-import { TaskPriority } from "@prisma/client";
+import { PriorityOptionType } from "@griffin/types";
 
 export interface CreateOrUpdateTaskProps {
   title?: string;
@@ -6,5 +6,5 @@ export interface CreateOrUpdateTaskProps {
   dueDate?: Date;
   completedAt?: Date | null;
   noteId?: string;
-  priority?: TaskPriority;
+  priority?: PriorityOptionType;
 }

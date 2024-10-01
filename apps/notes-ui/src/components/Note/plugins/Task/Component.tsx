@@ -14,12 +14,12 @@ import {
 } from '../../../../utils/api';
 import { useNotes } from '../../../../providers/NoteProvider';
 import { PrioritySelect } from '../../../TaskForm/PrioritySelect';
-import { TaskPriority } from '@prisma/client';
+import { PriorityOptionType, PriorityOptions } from '@griffin/types';
 
 export function Component(props: any) {
   const [isSelected, setIsSelected] = useState(false);
   const [title, setTitle] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
+  const [priority, setPriority] = useState<PriorityOptionType>(PriorityOptions.MEDIUM);
   const [dueDate, setDueDate] = useState(new Date());
   const [completed, setCompleted] = useState(false);
   const [description, setDescription] = useState('');

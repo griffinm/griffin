@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react"
-import { Task, TaskPriority } from "@prisma/client"
-import { TextField, Button, Checkbox, FormControlLabel, Select, MenuItem, FormControl, InputLabel } from "@mui/material"
+import { useState } from "react"
+import { Task } from "@prisma/client"
+import { PriorityOptionType, PriorityOptions } from "@griffin/types";
+import { TextField, Button, Checkbox, FormControlLabel } from "@mui/material"
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -26,7 +27,7 @@ export function TaskForm({
   const [description, setDescription] = useState<string | undefined>(initialValues?.description || "");
   const [dueDate, setDueDate] = useState<Date | undefined>(initialValues?.dueDate || dayjs().toDate());
   const [completedAt, setCompletedAt] = useState<Date | undefined>(initialValues?.completedAt || undefined);
-  const [priority, setPriority] = useState<TaskPriority>(initialValues?.priority || TaskPriority.MEDIUM);
+  const [priority, setPriority] = useState<PriorityOptionType>(initialValues?.priority || PriorityOptions.MEDIUM);
 
   const renderDueDate = () => {
     return (
@@ -45,7 +46,7 @@ export function TaskForm({
           <PrioritySelect
             priority={priority}
             includeNoneOption={false}
-            onChange={(e) => setPriority(e as TaskPriority)}
+            onChange={(e) => setPriority(e as PriorityOptionType)}
           />
         </div>
 

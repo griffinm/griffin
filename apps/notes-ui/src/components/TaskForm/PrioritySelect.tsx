@@ -1,8 +1,8 @@
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import { TaskPriority } from "@prisma/client";
+import { PriorityOptionType, PriorityOptions as TaskPriority } from "@griffin/types";
 import { red, orange, green } from "@mui/material/colors";
 
-type PriorityWithNone = TaskPriority | "";
+type PriorityWithNone = typeof TaskPriority[keyof typeof TaskPriority] | "";
 
 interface Props<T> {
   priority: T;
@@ -11,7 +11,7 @@ interface Props<T> {
   small?: boolean;
 }
 
-export const priorityColors: Record<PriorityWithNone | TaskPriority, string> = {
+export const priorityColors: Record<PriorityWithNone | PriorityOptionType, string> = {
   [TaskPriority.LOW]: green[500],
   [TaskPriority.MEDIUM]: orange[500],
   [TaskPriority.HIGH]: red[500],
@@ -23,7 +23,7 @@ export function PrioritySelect({
   onChange, 
   includeNoneOption = false,
   small = false,
-}: Props<PriorityWithNone | TaskPriority>) {
+}: Props<PriorityWithNone | typeof TaskPriority>) {
 
 
   let priorityOptions = [

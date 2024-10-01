@@ -14,15 +14,18 @@ export function Home() {
           Welcome, {user?.firstName}
         </Typography>)}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <RecentNotes />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col justify-start align-top">
+          <div className="pb-4">
+            <RecentNotes />
+          </div>
+          <div>
+            <Questions />
+          </div>
         </div>
+        
         <div>
           <Tasks />
-        </div>
-        <div>
-          <Questions />
         </div>
       </div>
     </div>
