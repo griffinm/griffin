@@ -86,7 +86,7 @@ export class TasksService {
 
   async getCountForUser(userId: string): Promise<number> {
     const count = await this.prisma.task.count({
-      where: { userId, deletedAt: null },
+      where: { userId, deletedAt: null, completedAt: null },
     });
     return count;
   }
