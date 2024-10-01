@@ -38,7 +38,7 @@ interface CurrentNoteProps {
   noteLoading: boolean;
   notes: Note[];
   notesLoading: boolean;
-  setCurrentNoteId: (noteId: string) => void;
+  setCurrentNoteId: (noteId?: string) => void;
   updateNote: (note: NoteUpdateProps) => void;
   updateNotebook: (notebook: Notebook) => void;
   setCurrentNotebook: (notebook?: Notebook) => void;

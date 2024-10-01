@@ -34,7 +34,7 @@ export function Layout() {
   }
 
   const outletClasses = classnames(
-    "grow bg-dark-2 md:block",
+    "grow bg-dark-2 md:block overflow-y-scroll no-scrollbar",
     {
       "hidden": menuExpanded,
       'h-[100vh]': isFullScreen,
@@ -43,26 +43,26 @@ export function Layout() {
   );
 
   const navClasses = classnames(
-    "bg-dark-1 text-white md:flex md:min-w-[250px]",
+    "bg-dark-1 text-white md:flex md:w-[250px] sticky h-[100vh] top-0 overflow-y-scroll overflow-x-wrap no-scrollbar",
     {
       "hidden": !menuExpanded,
     },
   );
 
   return (
-    <div className="flex flex-col h-[100vh]">
+    <div className="flex flex-col h-full">
 
       {!isFullScreen && (
-        <div className="md:hidden bg-dark-1 text-white p-2">
+        <div className="md:hidden bg-dark-1 text-white">
           <MenuIcon onClick={() => {
-            setCurrentNoteId(null);
+            setCurrentNoteId();
             setMenuExpanded(!menuExpanded);
           }} />
         </div>
       )}
 
-      <div className="grow">
-        <div className="flex flex-row">
+      <div className="flex grow">
+        <div className="flex flex-row grow">
           {!isFullScreen && (
             <div className={navClasses}>
               <SideNav menuExpanded={menuExpanded} />
