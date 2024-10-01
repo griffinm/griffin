@@ -78,7 +78,8 @@ export function UserProvider({ children }: Props) {
       .then(response => {
         const { jwt } = response.data;
         const cookie = new cookies();
-        cookie.set('jwt', jwt);
+        // Set the JWT cookie to expire in 60 days
+        cookie.set('jwt', jwt, { expires: new Date(Date.now() + (60 * 60 * 24 * 60 * 1000)) });
         setJwt(jwt);
         navigate(urls.home);
       })
