@@ -1,6 +1,7 @@
 import { 
   Button,
   Checkbox,
+  Chip,
   FormControl,
   Input,
   InputLabel,
@@ -17,10 +18,11 @@ import { PageContainer } from "../../components/PageContainer/PageContainer";
 import { useTasks } from "../../providers/TaskProvider";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
-import { Task } from "@prisma/client";
+import { Task, TaskPriority } from "@prisma/client";
 import classnames from "classnames";
 import { ArrowBackIos, ArrowForwardIos, Delete, Edit } from "@mui/icons-material";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { priorityColors } from "../../components/TaskForm/PrioritySelect";
 
 const INITIAL_PAGE = 1;
 const INITIAL_RESULTS_PER_PAGE = 20;
@@ -68,6 +70,20 @@ export function TaskPage() {
     });
   }, [page, resultsPerPage]);
 
+  const renderPriority = (priority: TaskPriority) => {
+    return (
+      <Chip 
+        size="small" 
+        label={priority} 
+        color="primary"
+        sx={{
+          backgroundColor: priorityColors[priority],
+          color: '#FFF',
+        }}
+      />
+    )
+  }
+
   const renderTask = (task: Task) => {
     const titleClasses = classnames({
       "line-through": !!task.completedAt,
@@ -88,9 +104,14 @@ export function TaskPage() {
           />
         </TableCell>
         <TableCell>
-          <span className={titleClasses}>
-            {task.title}
-          </span>
+          <div>
+            <span className={titleClasses}>
+              {task.title}
+            </span>
+          </div>
+          <div className="mt-2">
+            {renderPriority(task.priority)}
+          </div>
         </TableCell>
         <TableCell>
           {task.dueDate && (

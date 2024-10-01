@@ -13,10 +13,13 @@ import {
   fetchTask,
 } from '../../../../utils/api';
 import { useNotes } from '../../../../providers/NoteProvider';
+import { PrioritySelect } from '../../../TaskForm/PrioritySelect';
+import { TaskPriority } from '@prisma/client';
 
 export function Component(props: any) {
   const [isSelected, setIsSelected] = useState(false);
   const [title, setTitle] = useState('');
+  const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
   const [dueDate, setDueDate] = useState(new Date());
   const [completed, setCompleted] = useState(false);
   const [description, setDescription] = useState('');
@@ -31,6 +34,7 @@ export function Component(props: any) {
         setDueDate(resp.data.dueDate || new Date());
         setDescription(resp.data.description || '');
         setCompleted(resp.data.completedAt !== null);
+        setPriority(resp.data.priority);
       })
     }
   }, [props.node.attrs.taskId])
@@ -39,10 +43,11 @@ export function Component(props: any) {
     setCompleted(!completed);
     updateTask(props.node.attrs.taskId, {
       completedAt: completed ? null : new Date(),
-      dueDate: dueDate,
-      title: title,
-      description: description,
+      dueDate,
+      title,
+      description,
       noteId: currentNote?.id,
+      priority,
     })
   }
 
@@ -55,6 +60,7 @@ export function Component(props: any) {
         dueDate,
         description,
         noteId: currentNote?.id,
+        priority,
       }).then((resp) => {
         props.updateAttributes({
           taskId: resp.data.id,
@@ -66,6 +72,7 @@ export function Component(props: any) {
         title,
         dueDate,
         description,
+        priority,
       })
     }
 
@@ -82,14 +89,27 @@ export function Component(props: any) {
         onSubmit={handleSave}
         className="flex flex-col gap-5 p-2"
       >
-        <TextField
-          placeholder="Task title"
-          size="small"
-          onChange={(e) => setTitle(e.target.value)}
-          value={title}
-          autoFocus
-          tabIndex={0}
-        />
+        <div className="flex flex-row gap-2 grow">
+          <div className="grow">
+            <TextField
+              placeholder="Task title"
+              size="small"
+              onChange={(e) => setTitle(e.target.value)}
+              value={title}
+              autoFocus
+              tabIndex={0}
+              fullWidth
+            />
+          </div>
+          <div className="w-[120px]">
+            <PrioritySelect
+              small
+              priority={priority}
+              includeNoneOption={false}
+              onChange={(e) => setPriority(e as TaskPriority)}
+            />
+          </div>
+        </div>
         <TextField
           placeholder="Task description"
           size="small"

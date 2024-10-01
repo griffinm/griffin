@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Task } from '@prisma/client';
+import { Prisma, Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateTaskDto } from './dto/update.dto';
 import { NewTaskDto } from './dto/new.dto';
@@ -46,7 +46,7 @@ export class TasksService {
         ...whereClause,
         ...(searchClauses.length > 0 && { OR: searchClauses }),
       },
-      orderBy: { dueDate: 'asc' },
+      orderBy: this.ordering(),
       take: filter.resultsPerPage,
       skip: (filter.page - 1) * filter.resultsPerPage,
     });
@@ -79,6 +79,7 @@ export class TasksService {
   async getAllForUser(userId: string): Promise<Task[]> {
     const tasks = await this.prisma.task.findMany({
       where: { userId, deletedAt: null },
+      orderBy: this.ordering(),
     });
     return tasks;
   }
@@ -104,4 +105,12 @@ export class TasksService {
     });
     return createdTask;
   }
+
+  private ordering(): Prisma.TaskOrderByWithRelationAndSearchRelevanceInput[] {
+    return [
+      { dueDate: 'asc' },
+      { priority: 'desc' },
+    ]
+  }
+
 }

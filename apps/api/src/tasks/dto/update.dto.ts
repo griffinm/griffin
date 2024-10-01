@@ -1,5 +1,7 @@
+import { TaskPriority } from '@prisma/client';
 import { 
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -28,4 +30,8 @@ export class UpdateTaskDto {
   @IsDateString()
   @IsOptional()
   deletedAt?: Date;
+
+  @IsEnum(TaskPriority)
+  @IsOptional()
+  priority?: TaskPriority;
 }

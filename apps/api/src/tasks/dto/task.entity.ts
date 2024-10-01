@@ -1,3 +1,4 @@
+import { TaskPriority } from '@prisma/client';
 import { Exclude, Expose, instanceToPlain } from 'class-transformer';
 import {
   IsString,
@@ -5,6 +6,7 @@ import {
   IsDateString,
   IsOptional,
   ValidateIf,
+  IsEnum,
 } from 'class-validator';
 
 @Exclude()
@@ -57,6 +59,11 @@ export class TaskEntity {
   @IsOptional()
   @Expose()
   noteId?: string;
+
+  @IsEnum(TaskPriority)
+  @IsOptional()
+  @Expose()
+  priority: TaskPriority;
 
   constructor(partial: Partial<TaskEntity>) {
     Object.assign(this, instanceToPlain(partial));

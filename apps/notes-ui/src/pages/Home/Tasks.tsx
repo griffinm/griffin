@@ -1,7 +1,7 @@
-import { Card, CardHeader, Button } from "@mui/material";
+import { Card, CardHeader, Button, Chip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { searchTasks } from "../../utils/api/taskClient";
-import { Task } from "@prisma/client";
+import { Task, TaskPriority } from "@prisma/client";
 import { Loading } from "../../components/Loading";
 import { Typography } from "@mui/material";
 import { formatDistanceStrict } from "date-fns";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { urls } from "../../utils/urls";
 import AddIcon from '@mui/icons-material/Add';
 import ListIcon from '@mui/icons-material/List';
+import { priorityColors } from "../../components/TaskForm/PrioritySelect";
 
 export function Tasks() {
   const navigate = useNavigate();
@@ -25,6 +26,20 @@ export function Tasks() {
     };
     fetchTasks();
   }, []);
+
+  const renderPriority = (priority: TaskPriority) => {
+    return (
+      <Chip 
+        size="small" 
+        label={priority} 
+        color="primary"
+        sx={{
+          backgroundColor: priorityColors[priority],
+          color: '#FFF',
+        }}
+      />
+    )
+  }
 
   return (
     <Card>
@@ -54,8 +69,9 @@ export function Tasks() {
           <div className="p-3 flex justify-between">
             <div>
               <Typography variant="body1">{task.title}</Typography>
+              {renderPriority(task.priority)}
               {task.dueDate && (
-                <Typography variant="caption">
+                <Typography variant="caption" sx={{ pl: 2}}>
                   Due {formatDistanceStrict(task.dueDate, new Date(), { addSuffix: true })}
                 </Typography>
               )}

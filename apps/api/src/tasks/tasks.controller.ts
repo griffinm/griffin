@@ -21,6 +21,7 @@ import { RequestWithUser } from "@griffin/types";
 import { FilterDto } from './dto/filter.dto';
 import { TaskEntity } from './dto/task.entity';
 import { PagedTaskList } from './dto/paged.entity';
+import { StripeTimePipe } from './stripe-time.pipe';
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -71,7 +72,7 @@ export class TasksController {
   @Post('tasks')
   async create(
     @Req() request: RequestWithUser,
-    @Body() task: NewTaskDto,
+    @Body(StripeTimePipe) task: NewTaskDto,
   ): Promise<Task> {
     return this.tasksService.create(request.user.id, task);
   }
@@ -80,7 +81,7 @@ export class TasksController {
   async update(
     @Req() request: RequestWithUser,
     @Param('id') id: string,
-    @Body() task: UpdateTaskDto,
+    @Body(StripeTimePipe) task: UpdateTaskDto,
   ): Promise<Task> {
     return this.tasksService.update(id, request.user.id, task);
   }

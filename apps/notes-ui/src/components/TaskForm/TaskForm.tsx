@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
-import { Task } from "@prisma/client"
-import { TextField, Button, Checkbox, FormControlLabel } from "@mui/material"
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { Task, TaskPriority } from "@prisma/client"
+import { TextField, Button, Checkbox, FormControlLabel, Select, MenuItem, FormControl, InputLabel } from "@mui/material"
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { CreateOrUpdateTaskProps } from '../../utils/api';
+import { PrioritySelect } from "./PrioritySelect";
 
 interface Props {
   onSubmit: (task: CreateOrUpdateTaskProps) => void,
@@ -25,20 +26,29 @@ export function TaskForm({
   const [description, setDescription] = useState<string | undefined>(initialValues?.description || "");
   const [dueDate, setDueDate] = useState<Date | undefined>(initialValues?.dueDate || dayjs().toDate());
   const [completedAt, setCompletedAt] = useState<Date | undefined>(initialValues?.completedAt || undefined);
+  const [priority, setPriority] = useState<TaskPriority>(initialValues?.priority || TaskPriority.MEDIUM);
 
   const renderDueDate = () => {
     return (
       <div className="flex flex-col gap-4 grow">
-        <div>
+        <div className="grid grid-cols-2 gap-4">
+
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimePicker
+            <DatePicker
               sx={{ width: '100%' }}
               label="Due Date"
               value={dayjs(dueDate)}
               onChange={(newValue) => setDueDate(newValue?.toDate() || dayjs().toDate())}
             />
           </LocalizationProvider>
+
+          <PrioritySelect
+            priority={priority}
+            includeNoneOption={false}
+            onChange={(e) => setPriority(e as TaskPriority)}
+          />
         </div>
+
         <div className="flex justify-center items-center gap-2">
           <Button size="small" variant="outlined" onClick={() => setDueDate(dayjs().toDate())}>
             Today
@@ -66,6 +76,7 @@ export function TaskForm({
       title,
       description,
       dueDate,
+      priority,
       completedAt: completedAt || null,
     });
   }
@@ -107,7 +118,7 @@ export function TaskForm({
         <TextField
           fullWidth
           multiline
-          rows={5}
+          rows={6}
           id="outlined-basic"
           label="Description"
           variant="outlined"

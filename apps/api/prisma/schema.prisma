@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
 }
 
@@ -15,105 +9,103 @@ datasource db {
 }
 
 model User {
-  id String @id @default(uuid()) @map("id")
-  email String @unique @map("email")
-  password String @map("password") @default("")
-  firstName String? @map("first_name")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
+  id        String     @id @default(uuid()) @map("id")
+  email     String     @unique @map("email")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  password  String     @default("") @map("password")
+  firstName String?    @map("first_name")
+  media     Media[]
   notebooks Notebook[]
-  media Media[]
-  tasks Task[]
   questions Question[]
+  tasks     Task[]
 
   @@map("users")
 }
 
 model Notebook {
-  id String @id @default(uuid()) @map("id")
-  title String? @map("title")
-  userId String @map("user_id")
-  deletedAt DateTime? @map("deleted_at")
-  parentId String? @map("parent_id")
-  isDefault Boolean @default(false) @map("is_default")
-
-  user User @relation(fields: [userId], references: [id])
-  parent Notebook? @relation("NotebookChildren", fields: [parentId], references: [id])
-  children Notebook[] @relation("NotebookChildren")
-  notes Note[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        String     @id @default(uuid()) @map("id")
+  userId    String     @map("user_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  title     String?    @map("title")
+  deletedAt DateTime?  @map("deleted_at")
+  isDefault Boolean    @default(false) @map("is_default")
+  parentId  String?    @map("parent_id")
+  parent    Notebook?  @relation("NotebookChildren", fields: [parentId], references: [id])
+  children  Notebook[] @relation("NotebookChildren")
+  user      User       @relation(fields: [userId], references: [id])
+  notes     Note[]
 
   @@map("notebooks")
 }
 
 model Note {
-  id String @id @default(uuid()) @map("id")
-  title String? @map("title")
-  content String? @map("content")
-  notebookId String @map("notebook_id")
-  deletedAt DateTime? @map("deleted_at")
-
-  notebook Notebook @relation(fields: [notebookId], references: [id])
-  media Media[]
-  tasks Task[]
-  questions Question[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         String     @id @default(uuid()) @map("id")
+  title      String?    @map("title")
+  content    String?    @map("content")
+  notebookId String     @map("notebook_id")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  deletedAt  DateTime?  @map("deleted_at")
+  media      Media[]
+  notebook   Notebook   @relation(fields: [notebookId], references: [id])
+  questions  Question[]
+  tasks      Task[]
 
   @@map("notes")
 }
 
 model Media {
-  id String @id @default(uuid()) @map("id")
-  noteId String @map("note_id")
-  userId String @map("user_id")
+  id        String   @id @default(uuid()) @map("id")
+  noteId    String   @map("note_id")
   createdAt DateTime @default(now()) @map("created_at")
-  key String @map("key")
-  mimeType String @map("mime_type")
-  size Int @map("size")
-  publicUrl String @map("public_url")
-
-  note Note @relation(fields: [noteId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  key       String   @map("key")
+  mimeType  String   @map("mime_type")
+  size      Int      @map("size")
+  userId    String   @map("user_id")
+  publicUrl String   @map("public_url")
+  note      Note     @relation(fields: [noteId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("media")
 }
 
 model Task {
-  id String @id @default(uuid()) @map("id")
-  title String @map("title")
-  description String? @map("description")
-  dueDate DateTime? @map("due_date")
-  completedAt DateTime? @map("completed_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
-  userId String @map("user_id")
-  noteId String? @map("note_id")
-
-  user User @relation(fields: [userId], references: [id])
-  note Note? @relation(fields: [noteId], references: [id])
+  id          String       @id @default(uuid()) @map("id")
+  title       String       @map("title")
+  description String?      @map("description")
+  dueDate     DateTime?    @map("due_date")
+  completedAt DateTime?    @map("completed_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  deletedAt   DateTime?    @map("deleted_at")
+  userId      String       @map("user_id")
+  noteId      String?      @map("note_id")
+  priority    TaskPriority @default(MEDIUM) @map("priority")
+  note        Note?        @relation(fields: [noteId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
 
   @@map("tasks")
 }
 
 model Question {
-  id String @id @default(uuid()) @map("id")
-  question String @map("question")
-  answer String? @map("answer")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        String    @id @default(uuid()) @map("id")
+  question  String    @map("question")
+  answer    String?   @map("answer")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
-  userId String @map("user_id")
-  noteId String @map("note_id")  
-
-  user User @relation(fields: [userId], references: [id])
-  note Note @relation(fields: [noteId], references: [id])
+  userId    String    @map("user_id")
+  noteId    String    @map("note_id")
+  note      Note      @relation(fields: [noteId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@map("questions")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
