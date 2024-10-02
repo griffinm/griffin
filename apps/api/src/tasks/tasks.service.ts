@@ -17,12 +17,7 @@ export class TasksService {
     this.logger.debug(`Filtering tasks for user ${userId} with filter: ${JSON.stringify(filter)}`);
     let whereClause = {
       deletedAt: null,
-      completedAt: null,
     };
-
-    if (filter.completed === false) {
-      whereClause.completedAt = null;
-    }
 
     if (!filter.page) {
       filter.page = 1;
@@ -39,12 +34,18 @@ export class TasksService {
         { description: { contains: filter.search, mode: 'insensitive' } },
       ];
     }
-
+    console.log("End Date", filter.endDate);
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 
         ...whereClause,
         ...(searchClauses.length > 0 && { OR: searchClauses }),
+        ...(filter.priority && { priority: filter.priority }),
+        ...(filter.startDate && { dueDate: { gte: filter.startDate } }),
+        ...(filter.endDate && { dueDate: { lte: filter.endDate } }),
+        ...(filter.completed === 'OnlyCompleted' && { completedAt: { not: null } }),
+        ...(filter.completed === 'OnlyNotCompleted' && { completedAt: null }),
+        ...(filter.completed === 'All' && { completedAt: undefined }),
       },
       orderBy: this.ordering(),
       take: filter.resultsPerPage,
@@ -86,7 +87,7 @@ export class TasksService {
 
   async getCountForUser(userId: string): Promise<number> {
     const count = await this.prisma.task.count({
-      where: { userId, deletedAt: null },
+      where: { userId, deletedAt: null, completedAt: null },
     });
     return count;
   }

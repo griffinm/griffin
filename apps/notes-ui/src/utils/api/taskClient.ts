@@ -2,13 +2,17 @@ import { Task } from "@prisma/client";
 import { baseClient } from "./baseClient";
 import { AxiosResponse } from "axios";
 import { CreateOrUpdateTaskProps } from "./types";
+import { PriorityOptionType, CompletedFilterOptions } from "@griffin/types";
 
 export interface FetchTasksProps {
-  completed?: boolean;
+  completed?: CompletedFilterOptions;
   page?: number;
   resultsPerPage?: number;
   sortBy?: 'dueDate' | 'createdAt';
   search?: string;
+  priority?: PriorityOptionType;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface TaskListResponse {
@@ -24,6 +28,10 @@ export const searchTasks = async({
   resultsPerPage,
   sortBy,
   search,
+  priority,
+  completed,
+  startDate,
+  endDate,
 }: FetchTasksProps): Promise<AxiosResponse<TaskListResponse>> => {
   const params = new URLSearchParams();
 
@@ -32,6 +40,10 @@ export const searchTasks = async({
     resultsPerPage,
     sortBy,
     search,
+    priority,
+    completed,
+    startDate,
+    endDate,
   }).forEach(([key, value]) => {
     if (value !== undefined) {
       params.append(key, value.toString());

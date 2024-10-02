@@ -12,8 +12,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { NoteService } from './notes.service';
 import { NoteEntity } from './dto/note.entity';
 import { UpdateDto } from './dto/update.dto';
-import { Query } from '@nestjs/common';
-import { SearchResult, RequestWithUser } from '@griffin/types';
+import { RequestWithUser } from '@griffin/types';
 
 @Controller('notes')
 @UseGuards(AuthGuard)

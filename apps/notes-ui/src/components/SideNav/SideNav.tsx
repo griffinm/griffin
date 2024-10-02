@@ -21,9 +21,6 @@ interface Props {
 export function SideNav({ menuExpanded }: Props) {
   const { user, signOut } = useUser();
   const { showMessage } = useToast();
-  const containerClasses = classnames(
-    "flex flex-row md:min-h-[500px]",
-  );
   const {
     currentNotebook,
     createNote,
@@ -32,6 +29,13 @@ export function SideNav({ menuExpanded }: Props) {
   const { 
     showNewTaskModal,
   } = useTasks();
+  
+  const containerClasses = classnames(
+    "flex flex-row md:min-h-[450px]", {
+      "w-full md:w-[450px]": currentNotebook,
+      "w-full md:w-[225px]": !currentNotebook,
+    }
+  );
 
   const renderSearch = () => {
     return (
@@ -121,19 +125,19 @@ export function SideNav({ menuExpanded }: Props) {
 
   return (
     <div className={containerClasses}>
-      <div className="flex flex-col h-screen md:min-w-[250px]">
+      <div className="flex flex-col h-screen md:min-w-[225px]">
         {renderSearch()}
-
         {renderActions()}
+        <div className="overflow-y-scroll overflow-x-wrap no-scrollbar grow">
+          {renderContentLists()}
+        </div>
 
-        {renderContentLists()}
-        
         {renderAccountButton()}
         
       </div>
 
       {currentNotebook && (
-        <div className="border-l-2 border-slate-700 md:w-[225px]">
+        <div className="border-l-2 border-slate-700 w-[225px] sticky top-0 bottom-0">
           <NoteList />
         </div>
       )}

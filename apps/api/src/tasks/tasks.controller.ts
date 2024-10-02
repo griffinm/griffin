@@ -51,13 +51,18 @@ export class TasksController {
       tasks = await this.tasksService.getAllForUser(request.user.id);
     }
     
-    const totalRecords = await this.tasksService.getCountForUser(request.user.id);
+    const totalRecords = await this.tasksService.filter(request.user.id, {
+      ...query,
+      page: 1,
+      resultsPerPage: 10000,
+    });
+
     const pagedTasks = new PagedTaskList();
     pagedTasks.data = tasks;
     pagedTasks.page = query?.page || 1;
     pagedTasks.resultsPerPage = query?.resultsPerPage || 10;
-    pagedTasks.totalPages = Math.ceil(totalRecords / pagedTasks.resultsPerPage);
-    pagedTasks.totalRecords = totalRecords;
+    pagedTasks.totalPages = Math.ceil(totalRecords.length / pagedTasks.resultsPerPage);
+    pagedTasks.totalRecords = totalRecords.length;
     return pagedTasks;
   }
   

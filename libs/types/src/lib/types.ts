@@ -5,10 +5,13 @@ export interface RequestWithUser extends Request {
   user: User;
 }
 
+export type CompletedFilterOptions = 'OnlyCompleted' | 'OnlyNotCompleted' | 'All';
+
 export const PriorityOptions: Record<string, string> = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
+  NONE: '',
 } as const;
 export type PriorityOptionType = typeof PriorityOptions[keyof typeof PriorityOptions];
 
