@@ -81,12 +81,20 @@ export function TaskProvider({ children }: Props) {
     page,
     resultsPerPage,
     search,
+    priority,
+    completed,
+    startDate,
+    endDate,
   }: FetchTasksProps) => {
     if (!user) return;
     const response = await searchTasksApi({
       page,
       resultsPerPage,
       search,
+      priority,
+      completed,
+      startDate,
+      endDate,
     });
     setTaskPageTasks(response.data);
   }

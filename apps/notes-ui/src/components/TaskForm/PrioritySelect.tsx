@@ -33,7 +33,7 @@ export function PrioritySelect({
   ];
 
   return (
-    <FormControl fullWidth>
+    <FormControl size={small ? 'small' : 'medium'} fullWidth>
       <InputLabel id="priority-label">Priority</InputLabel>
       <Select
         size={small ? 'small' : 'medium'}

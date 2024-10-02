@@ -3,6 +3,7 @@ import {
   Checkbox,
   Chip,
   FormControl,
+  FormControlLabel,
   Input,
   InputLabel,
   MenuItem,
@@ -10,7 +11,9 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
 } from "@mui/material";
@@ -20,22 +23,44 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Task, TaskPriority } from "@prisma/client";
 import classnames from "classnames";
-import { ArrowBackIos, ArrowForwardIos, Delete, Edit } from "@mui/icons-material";
+import { Delete, Edit } from "@mui/icons-material";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { priorityColors } from "../../components/TaskForm/PrioritySelect";
+import { priorityColors, PrioritySelect } from "../../components/TaskForm/PrioritySelect";
+import { CompletedFilterOptions, PriorityOptionType } from "@griffin/types";
+import { searchTasks } from "../../utils/api/taskClient";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const INITIAL_PAGE = 1;
 const INITIAL_RESULTS_PER_PAGE = 20;
-const TIMEOUT = 250;
+const TIMEOUT = 50;
+
+interface Filters {
+  priority?: PriorityOptionType;
+  textFilter?: string;
+  completed?: CompletedFilterOptions;
+  notCompleted?: boolean;
+  startDate?: Date | null;
+  endDate?: Date | null;
+}
 
 export function TaskPage() {
   const [page, setPage] = useState(INITIAL_PAGE);
   const [resultsPerPage, setResultsPerPage] = useState(INITIAL_RESULTS_PER_PAGE);
-  const [search, setSearch] = useState('');
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [confirmDeleteDialogTask, setConfirmDeleteDialogTask] = useState<Task | null>(null);
-  
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Filters>({
+    priority: "",
+    textFilter: "",
+    completed: 'All',
+    startDate: dayjs().toDate(),
+    endDate: dayjs().add(30, 'day').toDate(),
+  });
+
   const { 
     taskPageTasks, 
     fetchTasksForTaskPage,
@@ -50,13 +75,17 @@ export function TaskPage() {
       clearTimeout(searchTimeoutRef.current);
     }
     searchTimeoutRef.current = setTimeout(() => {
-      fetchTasksForTaskPage({
+      searchTasks({
         page,
         resultsPerPage,
-        search,
+        search: filters.textFilter,
+        priority: filters.priority,
+        completed: filters.completed,
+        startDate: (filters.startDate || dayjs().subtract(10, 'year').toDate()).toISOString(),
+        endDate: (filters.endDate || dayjs().add(10, 'year').toDate()).toISOString(),
       });
     }, TIMEOUT);
-  }, [search]);
+  }, [filters, page, resultsPerPage]);
 
   useEffect(() => {
     debouncedSearch();
@@ -66,9 +95,13 @@ export function TaskPage() {
     fetchTasksForTaskPage({
       page,
       resultsPerPage,
-      search,
+      search: filters.textFilter,
+      priority: filters.priority,
+      completed: filters.completed,
+      startDate: (filters.startDate || dayjs().subtract(10, 'year').toDate()).toISOString(),
+      endDate: (filters.endDate || dayjs().add(10, 'year').toDate()).toISOString(),
     });
-  }, [page, resultsPerPage]);
+  }, [page, resultsPerPage, filters]);
 
   const renderPriority = (priority: TaskPriority) => {
     return (
@@ -136,77 +169,87 @@ export function TaskPage() {
               setConfirmDeleteDialogTask(task);
             }}>
               <Delete />
-            </Button>
-          </TableCell>
+          </Button>
+        </TableCell>
       </TableRow>
     );
   }
 
-  const renderTop = () => {
+  const renderPaging = () => {
     return (
-      <div>
+      <TablePagination
+        count={taskPageTasks.totalRecords}
+        page={page - 1}
+        rowsPerPage={resultsPerPage}
+        rowsPerPageOptions={[10, 20, 50, 100]}
+        onPageChange={(_, page: number) => setPage(page + 1)}
+        onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => setResultsPerPage(parseInt(e.target.value))}
+      />
+    )
+  }
+
+  const renderFilters = () => {
+    if (!showFilters) {
+      return (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowFilters(true)}>Show Filters</Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-7">
         <div>
-          <div className="flex py-4 justify-between">
-            <div>
-              <Input
-                placeholder="Search by title"
-                size="small"
-                value={search} 
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-center">
-                <div>
-                  <Button
-                    startIcon={<ArrowBackIos />}
-                    size="small"
-                    onClick={() => setPage(page - 1)}
-                    variant="text"
-                    sx={{ color: '#FFF'}}
-                    disabled={page <= 1}
-                  />
-                </div>
-                <div>
-                  Page {page} of {taskPageTasks.totalPages}
-                </div>
-                <div>
-                  <Button
-                    startIcon={<ArrowForwardIos />}
-                    size="small"
-                    onClick={() => setPage(page + 1)}
-                    variant="text"
-                    sx={{ color: '#FFF'}}
-                    disabled={page >= taskPageTasks.totalPages}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <FormControl size="small">
-                <InputLabel id="results-per-page-label">Results per page</InputLabel>
-                <Select
-                  labelId="results-per-page-label"
-                  label="Results per page"
-                  value={resultsPerPage}
-                  sx={{ minWidth: '120px' }}
-                  onChange={(e) => setResultsPerPage(e.target.value as number)}
-                >
-                  <MenuItem value={20}>20</MenuItem>
-                  <MenuItem value={50}>50</MenuItem>
-                  <MenuItem value={100}>100</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-
-          </div>
+          <Input
+            fullWidth
+            placeholder="Search by title"
+       
+            value={filters.textFilter} 
+            onChange={(e) => setFilters({ ...filters, textFilter: e.target.value })}
+          />
         </div>
 
-        
+        <div>
+          <PrioritySelect 
+            includeNoneOption 
+            small
+            priority={filters.priority as PriorityOptionType} 
+            onChange={(priority) => {
+              setFilters({ ...filters, priority: priority as PriorityOptionType });
+            }} 
+          />
+        </div>
+
+        <div>
+          <FormControl size="small" fullWidth>
+            <InputLabel id="completed-label">Completed</InputLabel>
+            <Select
+              fullWidth
+              size="small"
+              labelId="completed-label"
+              label="Completed"
+              value={filters.completed}
+              onChange={(e) => setFilters({ ...filters, completed: e.target.value as CompletedFilterOptions })}
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="OnlyCompleted">Only Completed</MenuItem>
+              <MenuItem value="OnlyNotCompleted">Only Not Completed</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
+
+        <div className="flex justify-end align-middle">
+          <Button
+            size="small" 
+            onClick={() => setShowFilters(false)}
+            color="primary"
+          >
+            Hide Filters
+          </Button>
+        </div>
+
       </div>
-    )
+    );
   }
 
   const renderConfirmDeleteDialog = () => {
@@ -233,11 +276,12 @@ export function TaskPage() {
     <PageContainer>
       {renderConfirmDeleteDialog()}
       <Typography variant="h4">Tasks</Typography>
-      {renderTop()}
+      {renderFilters()}
+
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell></TableCell>
+            <TableCell>Completed</TableCell>
             <TableCell>Title</TableCell>
             <TableCell>Due</TableCell>
             <TableCell>Actions</TableCell>
@@ -246,6 +290,13 @@ export function TaskPage() {
         <TableBody>
           {tasks.map(task => renderTask(task))}
         </TableBody>
+
+        <TableFooter>
+          <TableRow>
+            {renderPaging()}
+          </TableRow>
+        </TableFooter>
+
       </Table>
     </PageContainer>
   )
