@@ -28,10 +28,8 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { priorityColors, PrioritySelect } from "../../components/TaskForm/PrioritySelect";
 import { CompletedFilterOptions, PriorityOptionType } from "@griffin/types";
 import { searchTasks } from "../../utils/api/taskClient";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { ByDay } from "./ByDay";
 
 const INITIAL_PAGE = 1;
 const INITIAL_RESULTS_PER_PAGE = 20;
@@ -60,6 +58,7 @@ export function TaskPage() {
     startDate: dayjs().toDate(),
     endDate: dayjs().add(30, 'day').toDate(),
   });
+  const [showByDay, setShowByDay] = useState(true);
 
   const { 
     taskPageTasks, 
@@ -272,12 +271,8 @@ export function TaskPage() {
     )
   }
 
-  return (
-    <PageContainer>
-      {renderConfirmDeleteDialog()}
-      <Typography variant="h4">Tasks</Typography>
-      {renderFilters()}
-
+  const renderTable = () => {
+    return (
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -298,6 +293,28 @@ export function TaskPage() {
         </TableFooter>
 
       </Table>
+    )
+  }
+
+  return (
+    <PageContainer>
+      {renderConfirmDeleteDialog()}
+      <Typography variant="h4">Tasks</Typography>
+
+      <div>
+        <FormControlLabel
+          control={<Checkbox checked={showByDay} onChange={(e) => setShowByDay(e.target.checked)} />}
+          label="Show by Day"
+        />
+      </div>
+
+      {renderFilters()}
+
+      {showByDay ? (
+        <ByDay tasks={tasks} />
+      ) : (
+        renderTable()
+      )}
     </PageContainer>
   )
 }

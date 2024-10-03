@@ -1,5 +1,4 @@
 import { NotebookList } from '../NotebookList'
-import { TaskList } from '../TaskList'
 import { useNotes } from '../../providers/NoteProvider'
 import { NoteList } from '../NoteList'
 import { Search } from '../Search'
@@ -10,7 +9,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom';
 import { urls } from '../../utils/urls';
-import { Add } from '@mui/icons-material'
+import { Add, CheckBox } from '@mui/icons-material'
 import { useTasks } from '../../providers/TaskProvider';
 import { useToast } from '../../providers/ToastProvider';
 
@@ -45,16 +44,26 @@ export function SideNav({ menuExpanded }: Props) {
     )
   }
 
-  const renderHomeButton = () => {
+  const renderStaticButtons = () => {
     return (
-      <Link to={urls.home}>
-        <ListItemButton>
-          <ListItemIcon>
-            <HomeIcon />
-          </ListItemIcon>
-          <ListItemText primary="Home" />
-        </ListItemButton>
-      </Link>
+      <>
+        <Link to={urls.home}>
+          <ListItemButton>
+            <ListItemIcon>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Home" />
+          </ListItemButton>
+        </Link>
+        <Link to={urls.tasks}>
+          <ListItemButton>
+            <ListItemIcon>
+              <CheckBox />
+            </ListItemIcon>
+            <ListItemText primary="Tasks" />
+          </ListItemButton>
+        </Link>
+      </>
     )
   }
 
@@ -85,11 +94,10 @@ export function SideNav({ menuExpanded }: Props) {
           sx={{ width: '100%', flexGrow: 1 }}
           component="nav"
         >
-          {renderHomeButton()}
+          {renderStaticButtons()}
           <div className="flex grow">
             <NotebookList />
           </div>
-          <TaskList />
         </List>
       </div>
     )

@@ -18,7 +18,7 @@ export class StripeTimePipe implements PipeTransform {
     if (value instanceof UpdateTaskDto || value instanceof NewTaskDto) {
       if (value.dueDate) {
         const dateObj = new Date(value.dueDate);
-        dateObj.setHours(0, 0, 0, 0);
+        dateObj.setHours(23, 59, 59, 999);
         value.dueDate = dateObj;
       }
     }
