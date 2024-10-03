@@ -11,6 +11,7 @@ import { MediaModule } from '../media/media.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { AppLoggerMiddleware } from './AppLogger.middleware';
 import { QuestionsModule } from '../questions/questions.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { QuestionsModule } from '../questions/questions.module';
     MediaModule,
     TasksModule,
     QuestionsModule,
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],

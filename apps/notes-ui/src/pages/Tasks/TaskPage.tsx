@@ -56,7 +56,7 @@ export function TaskPage() {
   const [filters, setFilters] = useState<Filters>({
     priority: "",
     textFilter: "",
-    completed: 'All',
+    completed: 'OnlyNotCompleted',
     startDate: dayjs().toDate(),
     endDate: dayjs().add(30, 'day').toDate(),
   });

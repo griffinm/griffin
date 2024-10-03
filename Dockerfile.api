@@ -15,7 +15,13 @@ COPY . .
 
 # Build the backend application
 RUN nx reset
+
+# Generate Prisma client
+RUN (cd apps/api && npx prisma generate)
+
 RUN npx nx run-many --target=build
+
+
 
 # Stage 2: Production image
 FROM node:20-alpine AS runner
@@ -28,10 +34,7 @@ WORKDIR /app
 
 # Copy the built application from the builder stage
 COPY --from=builder /app/dist/apps/ ./dist/apps/
-
-# Install only production dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --production
+COPY --from=builder /app/node_modules ./node_modules
 
 # Expose the port your app runs on
 EXPOSE 3000

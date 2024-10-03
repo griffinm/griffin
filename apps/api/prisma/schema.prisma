@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://yardzen:yardzen@localhost:5432/notes"
+  url      = env("DATABASE_URL")
 }
 
 model User {
