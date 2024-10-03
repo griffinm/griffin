@@ -20,7 +20,6 @@ import { NoteService } from '../notes/notes.service';
 import { NoteEntity } from '../notes/dto/note.entity';
 import { UpdateDto } from './dto/update.dto';
 import { CreateDto as NoteCreateDto } from '../notes/dto/create.dto';
-import { plainToInstance } from 'class-transformer';
 
 @Controller('notebooks')
 @UseInterceptors(ClassSerializerInterceptor)

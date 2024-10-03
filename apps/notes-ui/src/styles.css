@@ -45,8 +45,16 @@
 }
 
 .tiptap.ProseMirror {
-  height: 100% !important;
-  overflow: auto !important;
+  height: calc(100vh - 75px) !important;
+  max-height: calc(100vh - 75px) !important;
+  /* overflow-y: scroll !important; */
+
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .MuiTiptap-FieldContainer-root {
@@ -57,4 +65,5 @@
 .MuiTiptap-RichTextContent-root {
   height: 90%;
   max-height: 90%;
+  padding-top: 0 !important;
 }

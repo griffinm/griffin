@@ -4,7 +4,7 @@ import { Button, CircularProgress, Input } from "@mui/material";
 // import { Editor } from './Editor'
 const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
 import { useNotes } from "../../providers/NoteProvider";
-import { ContactSupport, Delete, OpenInNew } from '@mui/icons-material';
+import { Delete, OpenInNew } from '@mui/icons-material';
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Note as NoteType } from "@prisma/client"
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,6 @@ export function Note() {
     noteLoading,
     setCurrentNoteId,
   } = useNotes();
-  const [newNoteTitle, setNewNoteTitle] = useState(currentNote?.title);
   const [searchParams] = useSearchParams();
   const isFullScreen = searchParams.get('fs') === 'true';
 
@@ -29,10 +28,6 @@ export function Note() {
     if (!noteId) return;
     setCurrentNoteId(noteId);
   }, [noteId, setCurrentNoteId]);
-
-  useEffect(() => {
-    setNewNoteTitle(currentNote?.title);
-  }, [currentNote]);
 
   if (noteLoading || !currentNote) {
     return (
@@ -49,7 +44,7 @@ export function Note() {
   }
 
   const containerClasses = classNames(
-    "pr-5 pt-5 pl-4 flex flex-col grow h-[100%]",
+    "flex flex-col grow h-[100%]",
     {
       "h-[100vh]": isFullScreen,
       "max-w-[1000px]": !isFullScreen,
@@ -58,20 +53,7 @@ export function Note() {
 
   return (
     <div className={containerClasses}>
-      <div className="flex">
-        <Input
-          sx={{ fontSize: 24 }}
-          fullWidth
-          type="text"
-          value={newNoteTitle || currentNote.title}
-          onChange={(e) => {
-            setNewNoteTitle(e.target.value);
-          }}
-          onBlur={(e) => {
-            updateNote({ id: currentNote.id, title: e.target.value });
-          }}
-        />
-        <div className="p-2">
+        {/* <div className="p-2">
           <Button
             variant="outlined"
             size="small"
@@ -88,8 +70,8 @@ export function Note() {
             <OpenInNew />
           </a>
           </Button>
-        </div>
-        <div className="p-2">
+        </div> */}
+        {/* <div className="p-2">
           <Button
             variant="outlined"
             color="error"
@@ -98,9 +80,9 @@ export function Note() {
           >
               <Delete />
           </Button>
-        </div>
-      </div>
-      <div className="mt-5 flex flex-row grow max-h-[calc(100vh-150px)]">
+        </div> */}
+
+      <div className="flex flex-row grow">
         <div className="grow">
           <Editor
             note={currentNote}

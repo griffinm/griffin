@@ -45,6 +45,7 @@ import { useEditor } from "@tiptap/react";
 import { createMedia } from "../../utils/api";
 import { TaskExtension } from "./plugins/Task/Extension";
 import { QuestionExtension } from "./plugins/Question/Extension";
+import { TitleBarExtension } from "./plugins/TitleBar/Extension";
 
 interface Props {
   note: Note,
@@ -53,6 +54,7 @@ interface Props {
 }
 
 const extensions = [
+  TitleBarExtension,
   StarterKit,
   TableCell,
   TableHeader,
@@ -207,8 +209,14 @@ export function Editor({
           variant: "outlined",
         }}
         ref={rteRef}
+        onTransaction={(transaction) => {
+          const content = transaction.editor.getHTML();
+          if (!content.startsWith('<title-bar></title-bar>')) {
+            transaction.editor.commands.insertContentAt(0, '<title-bar></title-bar>');
+          }
+        }}
         extensions={extensions}
-        content={note.content}
+        content={`<title-bar></title-bar>${note.content}`}
         renderControls={() => (
           <MenuControlsContainer>
             <MenuSelectHeading />

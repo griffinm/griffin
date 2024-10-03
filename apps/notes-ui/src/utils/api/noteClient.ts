@@ -1,7 +1,6 @@
 import { Note } from "@prisma/client";
 import { AxiosResponse } from "axios";
 import { baseClient } from "./baseClient";
-import { SearchResult } from "@griffin/types";
 
 export interface NoteUpdateProps {
   id: string,
