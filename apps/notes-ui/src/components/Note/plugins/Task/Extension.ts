@@ -38,7 +38,7 @@ export const TaskExtension = Node.create({
   addCommands() {
     return {
       setTask: () => ({ chain }) => {
-        return chain().insertContentAt(0, {
+        return chain().insertContent({
           type: 'task',
         }).run()
       },
