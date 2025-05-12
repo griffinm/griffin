@@ -211,12 +211,12 @@ export function Editor({
         ref={rteRef}
         onTransaction={(transaction) => {
           const content = transaction.editor.getHTML();
-          if (!content.startsWith('<title-bar></title-bar>')) {
+          if (!content.includes('<title-bar>')) {
             transaction.editor.commands.insertContentAt(0, '<title-bar></title-bar>');
           }
         }}
         extensions={extensions}
-        content={`<title-bar></title-bar>${note.content}`}
+        content={note.content}
         renderControls={() => (
           <MenuControlsContainer>
             <MenuSelectHeading />
