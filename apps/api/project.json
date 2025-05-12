@@ -19,6 +19,31 @@
           "buildTarget": "api:build:production"
         }
       }
+    },
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/api",
+        "main": "apps/api/src/main.ts",
+        "tsConfig": "apps/api/tsconfig.app.json",
+        "webpackConfig": "apps/api/webpack.config.js",
+        "assets": [
+          "apps/api/src/assets",
+          {
+            "glob": "./../../package.json",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        }
+      }
     }
   }
 }
