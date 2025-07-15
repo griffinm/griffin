@@ -64,7 +64,7 @@ export function Layout() {
         <div className="flex flex-row grow">
           {!isFullScreen && (
             <div className={navClasses}>
-              <SideNav menuExpanded={menuExpanded} />
+              <SideNav menuExpanded={menuExpanded} onClose={() => setMenuExpanded(false)} />
             </div>
           )}
           <div className={outletClasses}>

@@ -23,7 +23,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Task, TaskPriority } from "@prisma/client";
 import classnames from "classnames";
-import { Delete, Edit } from "@mui/icons-material";
+import { Add, Delete, Edit } from "@mui/icons-material";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { priorityColors, PrioritySelect } from "../../components/TaskForm/PrioritySelect";
 import { CompletedFilterOptions, PriorityOptionType } from "@griffin/types";
@@ -58,7 +58,7 @@ export function TaskPage() {
     startDate: dayjs().toDate(),
     endDate: dayjs().add(30, 'day').toDate(),
   });
-  const [showByDay, setShowByDay] = useState(true);
+  const [showByDay, setShowByDay] = useState(false);
 
   const { 
     taskPageTasks, 
@@ -299,8 +299,20 @@ export function TaskPage() {
   return (
     <PageContainer>
       {renderConfirmDeleteDialog()}
-      <Typography variant="h4">Tasks</Typography>
-
+      <div className="flex flex-row justify-between">
+        <div>
+          <Typography variant="h4">Tasks</Typography>
+        </div>
+        <div>
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={() => showNewTaskModal()}
+          >
+            Task
+          </Button>
+        </div>
+      </div>
       <div>
         <FormControlLabel
           control={<Checkbox checked={showByDay} onChange={(e) => setShowByDay(e.target.checked)} />}

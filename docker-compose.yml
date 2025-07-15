@@ -1,6 +1,5 @@
 volumes:
-  postgis-data:
-  pgadmin-data:
+  griffin-db-data:
 
 services:
   typesense:
@@ -13,24 +12,13 @@ services:
     command: '--data-dir /data --api-key=xyz --enable-cors'
 
   db:
-    image: postgis/postgis:14-3.4-alpine
+    image: postgres:17
     volumes:
-      - postgis-data:/var/lib/postgresql
+      - griffin-db-data:/var/lib/postgresql
     environment:
-      - POSTGRES_USER=yardzen
-      - POSTGRES_PASS=yardzen
+      - POSTGRES_USER=griffin
+      - POSTGRES_PASS=griffin
       - ALLOW_IP_RANGE=0.0.0.0/0
-      - POSTGRES_PASSWORD=yardzen
+      - POSTGRES_PASSWORD=griffin
     ports:
       - 5432:5432
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin4_container
-    restart: always
-    ports:
-      - "8888:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: griffin.mahoney@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: password
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin

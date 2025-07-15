@@ -5,7 +5,7 @@ interface Props {
 export function PageContainer({ children }: Props) {
   return (
     <div>
-      <div className="p-5 max-w-[1000px]">
+      <div className="p-5">
         {children}
       </div>
     </div>

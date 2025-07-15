@@ -44,44 +44,11 @@ export function Note() {
   }
 
   const containerClasses = classNames(
-    "flex flex-col grow h-[100%]",
-    {
-      "h-[100vh]": isFullScreen,
-      "max-w-[1000px]": !isFullScreen,
-    },
+    "flex flex-col grow h-[100%]"
   );
 
   return (
     <div className={containerClasses}>
-        {/* <div className="p-2">
-          <Button
-            variant="outlined"
-            size="small"
-          >
-          <a 
-            href={"#"} 
-            className="flex items-center"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              window.open(`/notes/${currentNote.id}?fs=true`, `${currentNote.title}`, 'width=1000,height=800');
-            }}
-          >
-            <OpenInNew />
-          </a>
-          </Button>
-        </div> */}
-        {/* <div className="p-2">
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => setOpenDeleteDialog(true)}
-            size="small"
-          >
-              <Delete />
-          </Button>
-        </div> */}
-
       <div className="flex flex-row grow">
         <div className="grow">
           <Editor

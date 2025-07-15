@@ -12,12 +12,14 @@ import { urls } from '../../utils/urls';
 import { Add, CheckBox } from '@mui/icons-material'
 import { useTasks } from '../../providers/TaskProvider';
 import { useToast } from '../../providers/ToastProvider';
+import { useRef, useEffect } from 'react';
 
 interface Props {
   menuExpanded: boolean;
+  onClose?: () => void;
 }
 
-export function SideNav({ menuExpanded }: Props) {
+export function SideNav({ menuExpanded, onClose }: Props) {
   const { user, signOut } = useUser();
   const { showMessage } = useToast();
   const {
@@ -35,6 +37,21 @@ export function SideNav({ menuExpanded }: Props) {
       "w-full md:w-[225px]": !currentNotebook,
     }
   );
+
+  const sideNavRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuExpanded) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (sideNavRef.current && !sideNavRef.current.contains(event.target as Node)) {
+        onClose && onClose();
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuExpanded, onClose]);
 
   const renderSearch = () => {
     return (
@@ -132,7 +149,7 @@ export function SideNav({ menuExpanded }: Props) {
   }
 
   return (
-    <div className={containerClasses}>
+    <div ref={sideNavRef} className={containerClasses}>
       <div className="flex flex-col h-screen md:min-w-[225px]">
         {renderSearch()}
         {renderActions()}
