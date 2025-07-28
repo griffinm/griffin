@@ -15,6 +15,7 @@ import { SignUp } from './pages/SignUp';
 import { TaskPage } from './pages/Tasks';
 import { Providers } from './providers/Providers';
 import { Profile } from './pages/Profile';
+import { TabContainer } from './components/TabContainer';
 
 export const themeOptions: ThemeOptions = {
   palette: {
@@ -44,6 +45,7 @@ root.render(
               <Route path="/tasks" element={<TaskPage />} />
               <Route path="notes/:noteId" element={<Note />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/tab-container" element={<TabContainer />} />
             </Route>
           </Routes>
         </Providers>
