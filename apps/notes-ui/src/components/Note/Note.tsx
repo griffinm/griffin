@@ -1,14 +1,13 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState, lazy } from "react";
-import { Button, CircularProgress, Input } from "@mui/material";
-// import { Editor } from './Editor'
-const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
+import { CircularProgress } from "@mui/material";
 import { useNotes } from "../../providers/NoteProvider";
-import { Delete, OpenInNew } from '@mui/icons-material';
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Note as NoteType } from "@prisma/client"
 import { useNavigate } from "react-router-dom";
 import classNames from "classnames";
+
+const Editor = lazy(() => import('./Editor').then(module => ({ default: module.Editor })));
 
 export function Note() {
   const { noteId } = useParams();
@@ -21,8 +20,6 @@ export function Note() {
     noteLoading,
     setCurrentNoteId,
   } = useNotes();
-  const [searchParams] = useSearchParams();
-  const isFullScreen = searchParams.get('fs') === 'true';
 
   useEffect(() => {
     if (!noteId) return;
