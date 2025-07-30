@@ -1,59 +1,7 @@
-/* Golden Layout Custom Styles */
-.lm_goldenlayout {
-  background: #ffffff;
-  height: 100%;
-  width: 100%;
-}
-
-.lm_content {
-  background: #ffffff;
-}
-
-.lm_tab {
-  background: #f8f9fa;
-  border-right: 1px solid #e9ecef;
-}
-
-.lm_tab.lm_active {
-  background: #ffffff;
-  border-bottom: 1px solid #ffffff;
-}
-
-.lm_tab:hover {
-  background: #e9ecef;
-}
-
-.lm_tab.lm_active:hover {
-  background: #ffffff;
-}
-
-.lm_header {
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.lm_header .lm_title {
-  color: #495057;
-  font-weight: 500;
-}
-
-.lm_controls > li {
-  background: transparent;
-}
-
-.lm_controls .lm_close_tab {
-  background-color: transparent;
-  opacity: 0.6;
-}
-
-.lm_controls .lm_close_tab:hover {
-  opacity: 1;
-  background-color: #dc3545;
-}
 
 /* Fix for sizing issues */
 .tab-container-wrapper {
-  height: calc(100vh - 120px);
+  height: 100vh;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -63,18 +11,6 @@
 .tab-container-wrapper > div {
   height: 100% !important;
   width: 100% !important;
-}
-
-/* Override parent layout styles when TabContainer is active */
-.tab-container-wrapper {
-  /* Ensure we take full available space */
-  flex: 1;
-  min-height: 0; /* Allow flexbox to shrink */
-}
-
-/* Prevent parent overflow from interfering */
-.tab-container-wrapper * {
-  box-sizing: border-box;
 }
 
 /* Additional isolation and performance improvements */
@@ -99,11 +35,6 @@
 /* Prevent text selection issues during drag operations */
 .lm_dragging {
   user-select: none;
-}
-
-/* Smooth transitions for layout changes */
-.lm_stack {
-  transition: none !important; /* Disable transitions that cause flickering */
 }
 
 /* Fix for components that might have conflicting styles */
