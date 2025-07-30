@@ -45,7 +45,7 @@ root.render(
               <Route path="/tasks" element={<TaskPage />} />
               <Route path="notes/:noteId" element={<Note />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/tab-container" element={<TabContainer />} />
+              <Route path="/notes" element={<TabContainer />} />
             </Route>
           </Routes>
         </Providers>

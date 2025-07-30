@@ -47,6 +47,8 @@ interface CurrentNoteProps {
   sortedNotes: Note[];
   allNotebooks: Notebook[];
   defaultNotebook: Notebook | undefined;
+  openNotes: string[];
+  setOpenNotes: (noteIds: string[]) => void;
 }
 
 export const CurrentNoteContext = createContext<CurrentNoteProps>({
@@ -72,6 +74,8 @@ export const CurrentNoteContext = createContext<CurrentNoteProps>({
   sortedNotes: [],
   allNotebooks: [],
   defaultNotebook: undefined,
+  openNotes: [],
+  setOpenNotes: () => {},
 });
 
 export function NoteProvider({ children }: Props) {
@@ -79,11 +83,13 @@ export function NoteProvider({ children }: Props) {
   const [currentNoteId, setCurrentNoteId] = useState<string | null | undefined>(undefined);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notebooksLoading, setNotebooksLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving] = useState(false);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteLoading, setNoteLoading] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
+  const [openNotes, setOpenNotes] = useState<string[]>([]);
+
   const navigate = useNavigate();
   const { user } = useUser();
 
@@ -269,6 +275,8 @@ export function NoteProvider({ children }: Props) {
         fetchNotebook,
         sortedNotes,
         defaultNotebook,
+        openNotes,
+        setOpenNotes,
       }}
     >
       {children}

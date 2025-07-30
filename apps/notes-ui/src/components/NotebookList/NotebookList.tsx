@@ -14,7 +14,6 @@ import { ConfirmDialog } from "../ConfirmDialog/ConfirmDialog";
 import { useNotes } from "../../providers/NoteProvider";
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { ExpandMore, ExpandLess, Add } from '@mui/icons-material';
-import { findChildrenForParent } from "./utils";
 
 export function NotebookList() {
   const [deleteNotebookDialogOpen, setDeleteNotebookDialogOpen] = useState(false);
@@ -40,7 +39,6 @@ export function NotebookList() {
 
   const renderNotebookList = () => {
     return notebooks.map((notebook) => {
-      const children = findChildrenForParent(notebook, allNotebooks);
       return (
         <NotebookListItem
           key={notebook.id}

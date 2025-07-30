@@ -13,7 +13,6 @@ export function NoteList() {
     sortedNotes: notes,
     currentNotebook,
     createNote,
-    currentNote,
     setCurrentNoteId,
     setCurrentNotebook,
   } = useNotes();
@@ -41,7 +40,7 @@ export function NoteList() {
   }
 
   const handleGoBack = () => {
-    setCurrentNoteId(null);
+    setCurrentNoteId();
     setCurrentNotebook();
     navigate(urls.home);
   }

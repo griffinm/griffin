@@ -19,12 +19,13 @@ export function NoteListItem({
   note,
   onMoveNote,
 }: Props) {
-  const { currentNote, allNotebooks, updateNote, fetchNotesForNotebook } = useNotes();
+  const { currentNote, allNotebooks, updateNote } = useNotes();
   const navigate = useNavigate();
   const isCurrentNote = note.id === currentNote?.id;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [filterTerm, setFilterTerm] = useState('');
   const { showMessage } = useToast();
+  const { setOpenNotes, openNotes } = useNotes();
 
   const filteredNotebooks = useMemo(() => {
     if (filterTerm) {
@@ -41,10 +42,15 @@ export function NoteListItem({
     }
   );
 
+  const handleClick = () => {
+    setOpenNotes([...openNotes, note]);
+    navigate(urls.notePage);
+  }
+
   return (
     <div
       className={classes}
-      onClick={() => navigate(urls.note(note.id))}
+      onClick={handleClick}
     >
       <div>
         {note.title}
