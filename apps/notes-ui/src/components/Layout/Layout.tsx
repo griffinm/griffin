@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { SideNav } from "../SideNav/SideNav";
 import MenuIcon from '@mui/icons-material/Menu';
 import classnames from 'classnames'
@@ -12,7 +12,9 @@ import { CreateOrUpdateTaskProps } from '../../utils/api';
 export function Layout() {
   const [menuExpanded, setMenuExpanded] = useState(false);
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const isFullScreen = searchParams.get('fs') === 'true';
+  const isNotesTabView = location.pathname === '/notes';
   const { modalOpen, onModalClose, createTask, updateTask, taskToEdit } = useTasks();
   const { currentNote, setCurrentNoteId, currentNotebook } = useNotes();
 
@@ -34,11 +36,13 @@ export function Layout() {
   }
 
   const outletClasses = classnames(
-    "grow bg-dark-2 md:block overflow-y-scroll no-scrollbar",
+    "grow bg-dark-2 md:block",
     {
       "hidden": menuExpanded,
       'h-[100vh]': isFullScreen,
-      'w-[400px]': !!currentNotebook,
+      'w-[400px]': !!currentNotebook && !isNotesTabView,
+      'overflow-y-scroll no-scrollbar': !isNotesTabView,
+      'h-full w-full': isNotesTabView,
     },
   );
 

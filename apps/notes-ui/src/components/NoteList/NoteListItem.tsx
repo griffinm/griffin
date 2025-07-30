@@ -43,7 +43,12 @@ export function NoteListItem({
   );
 
   const handleClick = () => {
-    setOpenNotes([...openNotes, note]);
+    // Check if note is already open to avoid duplicates
+    if (!openNotes.includes(note.id)) {
+      const newOpenNotes = [...openNotes, note.id];
+      setOpenNotes(newOpenNotes);
+    }
+    
     navigate(urls.notePage);
   }
 
