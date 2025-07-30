@@ -112,9 +112,6 @@ export function Editor({
   }, [])
   
   const fileListToImageFiles = (fileList: FileList): File[] => {
-    // You may want to use a package like attr-accept
-    // (https://www.npmjs.com/package/attr-accept) to restrict to certain file
-    // types.
     return Array.from(fileList).filter((file) => {
       const mimeType = (file.type || "").toLowerCase();
       return mimeType.startsWith("image/");
@@ -156,15 +153,9 @@ export function Editor({
         );
         if (pastedImageFiles.length > 0) {
           handleNewImageFiles(pastedImageFiles);
-          // Return true to mark the paste event as handled. This can for
-          // instance prevent redundant copies of the same image showing up,
-          // like if you right-click and copy an image from within the editor
-          // (in which case it will be added to the clipboard both as a file and
-          // as HTML, which Tiptap would otherwise separately parse.)
           return true;
         }
 
-        // We return false here to allow the standard paste-handler to run.
         return false;
       },
       [handleNewImageFiles],
@@ -185,9 +176,6 @@ export function Editor({
           })?.pos;
 
           handleNewImageFiles(imageFiles, insertPosition);
-
-          // Return true to treat the event as handled. We call preventDefault
-          // ourselves for good measure.
           event.preventDefault();
           return true;
         }

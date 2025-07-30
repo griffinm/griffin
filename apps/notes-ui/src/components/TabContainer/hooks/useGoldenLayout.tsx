@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { createRoot, Root } from 'react-dom/client';
 import { GoldenLayout, ComponentContainer } from "golden-layout";
 import { createLayoutConfig, saveLayoutConfig } from "../utils/layoutConfig";
 import { NoteComponent } from "../components/NoteComponent";
-import { UseGoldenLayoutProps, UseGoldenLayoutReturn, NoteMapItem } from "../types";
+import { UseGoldenLayoutProps, UseGoldenLayoutReturn } from "../types";
 import { useNotes } from "../../../providers/NoteProvider";
 import { NoteUpdateProps } from "../../../utils/api/noteClient";
 

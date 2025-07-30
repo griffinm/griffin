@@ -90,6 +90,6 @@ import { TabContainer } from './components/TabContainer';
 
 The component uses:
 - Golden Layout's built-in CSS
-- Custom CSS in `styles.css` for theme integration
+- Custom CSS in `styles.scss` for theme integration
 - Tailwind CSS classes for modern styling
 - Responsive design principles

@@ -39,3 +39,37 @@
   width: 100% !important;
   overflow: auto;
 }
+.lm_goldenlayout {
+  .lm_header {
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: rgb(27 38 53) !important;
+    // justify-content: center !important
+
+
+    .lm_tabs {
+      .lm_tab {
+        height: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+
+        border-radius: 4px !important;
+
+        .lm_close_tab {
+          padding-top: 5px !important;
+        }
+
+        &.lm_active {
+          background-color: #3f51b5;
+          color: white !important;
+        }
+
+      }
+
+      .lm_title {
+        font-size: 14px !important;
+      }
+    }
+  }
+}

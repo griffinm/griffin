@@ -3,7 +3,7 @@ import { useNoteTabs } from "./useNoteTabs";
 import { useGoldenLayout } from "./hooks/useGoldenLayout";
 import 'golden-layout/dist/css/goldenlayout-base.css';
 import 'golden-layout/dist/css/themes/goldenlayout-dark-theme.css';
-import './styles.css';
+import './styles.scss';
 
 export function TabContainer() {
   const { noteMap } = useNoteTabs();
