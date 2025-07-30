@@ -29,11 +29,12 @@ The main orchestrating component that:
 - Coordinates between note data and layout
 
 ### `NoteComponent`
-Individual note display component that:
-- Renders note content with proper styling
+Individual note display wrapper that:
+- Renders the full `Note.tsx` component with editor functionality
 - Shows loading states for notes being fetched
 - Updates tab titles dynamically
-- Handles empty note states
+- Provides note update and delete capabilities
+- Integrates with the global note provider for data consistency
 
 ## Hooks
 
@@ -42,6 +43,7 @@ Manages note data state:
 - Fetches note content from API
 - Tracks loading states for each note
 - Synchronizes with the global notes provider
+- Syncs tab data with provider updates for consistency
 - Returns a Map of note data keyed by note ID
 
 ### `useGoldenLayout`
@@ -50,6 +52,7 @@ Handles Golden Layout lifecycle:
 - Manages React root creation for components
 - Handles layout updates and cleanup
 - Provides resize handling
+- Integrates with note provider for update/delete operations
 - Returns control functions and state
 
 ## Utilities
@@ -72,12 +75,16 @@ import { TabContainer } from './components/TabContainer';
 
 ## Features
 
+- **Full Note Editing**: Uses the complete `Note.tsx` component with rich text editor
+- **Real-time Updates**: Changes sync across tabs and main app interface with automatic re-rendering
+- **Note Management**: Full CRUD operations (create, read, update, delete) within tabs
 - **Modular Architecture**: Each concern separated into focused modules
 - **Type Safety**: Full TypeScript support with shared interfaces
 - **Performance**: Efficient updates and proper cleanup
 - **Persistence**: Layout state saved to localStorage
 - **Responsive**: Handles window resize events
 - **Error Handling**: Graceful error boundaries and fallbacks
+- **Provider Integration**: Seamless sync with global note state
 
 ## Styling
 

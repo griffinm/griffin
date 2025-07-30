@@ -11,7 +11,7 @@ export function useNoteTabs(): State {
   const [state, setState] = useState<State>({
     noteMap: new Map(),
   });
-  const { openNotes: openNoteIds } = useNotes();
+  const { openNotes: openNoteIds, notes } = useNotes();
 
   const loadNote = useCallback(async (noteId: string) => {
     // Set loading state
@@ -101,6 +101,35 @@ export function useNoteTabs(): State {
       };
     });
   }, [openNoteIds, loadNote]);
+
+  // Sync with provider's notes array when notes are updated
+  useEffect(() => {
+    if (notes.length === 0) return;
+    
+    setState((prev) => {
+      const newNoteMap = new Map(prev.noteMap);
+      let hasChanges = false;
+      
+      // Update any notes that exist in both the provider and our noteMap
+      for (const [noteId, noteMapItem] of newNoteMap) {
+        const providerNote = notes.find(n => n.id === noteId);
+        if (providerNote && noteMapItem.note) {
+          // Check if the provider note is different from our cached note
+          if (providerNote.content !== noteMapItem.note.content || 
+              providerNote.title !== noteMapItem.note.title ||
+              providerNote.updatedAt !== noteMapItem.note.updatedAt) {
+            newNoteMap.set(noteId, {
+              ...noteMapItem,
+              note: providerNote
+            });
+            hasChanges = true;
+          }
+        }
+      }
+      
+      return hasChanges ? { ...prev, noteMap: newNoteMap } : prev;
+    });
+  }, [notes]);
 
   return state;
 }

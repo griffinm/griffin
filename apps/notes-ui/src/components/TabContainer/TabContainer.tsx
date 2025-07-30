@@ -18,6 +18,7 @@ export function TabContainer() {
     isInitialized, 
     initializeLayout, 
     updateLayout, 
+    refreshComponents, 
     cleanup, 
     handleResize 
   } = useGoldenLayout({
@@ -66,10 +67,35 @@ export function TabContainer() {
 
       return () => clearTimeout(timeoutId);
     } else {
-      // Update the ref to track current state
-      lastNoteMapRef.current = new Map(noteMapRef.current);
+      // No structural changes, but note content might have changed
+      // Check if any notes finished loading and trigger re-render
+      let needsRerender = false;
+      for (const [noteId, noteData] of noteMap) {
+        const lastNoteData = lastNoteMapRef.current.get(noteId);
+        if (lastNoteData) {
+          // Check if note finished loading or content changed
+          if (noteData.loaded !== lastNoteData.loaded ||
+              (noteData.loaded && noteData.note?.content !== lastNoteData.note?.content) ||
+              (noteData.loaded && noteData.note?.title !== lastNoteData.note?.title)) {
+            needsRerender = true;
+            break;
+          }
+        }
+      }
+      
+      if (needsRerender) {
+        const timeoutId = setTimeout(() => {
+          // Use lighter refresh instead of full updateLayout for content changes
+          refreshComponents();
+          lastNoteMapRef.current = new Map(noteMapRef.current);
+        }, 0);
+        return () => clearTimeout(timeoutId);
+      } else {
+        // Update the ref to track current state
+        lastNoteMapRef.current = new Map(noteMapRef.current);
+      }
     }
-  }, [noteMap, isInitialized, updateLayout]);
+  }, [noteMap, isInitialized, updateLayout, refreshComponents]);
 
   return (
     <div className="tab-container-wrapper">

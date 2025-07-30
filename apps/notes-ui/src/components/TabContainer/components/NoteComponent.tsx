@@ -1,13 +1,21 @@
 import { useEffect } from "react";
-import { Note } from "@prisma/client";
+import { Note as NoteType } from "@prisma/client";
 import { ComponentContainer } from "golden-layout";
+import { Note } from "../../Note/Note";
 
 interface NoteComponentProps {
   container: ComponentContainer;
-  note: Note | undefined;
+  note: NoteType | undefined;
+  onUpdateNote?: (note: NoteType) => void;
+  onDeleteNote?: (noteId: string) => void;
 }
 
-export function NoteComponent({ container, note }: NoteComponentProps) {
+export function NoteComponent({ 
+  container, 
+  note, 
+  onUpdateNote, 
+  onDeleteNote 
+}: NoteComponentProps) {
   useEffect(() => {
     if (note?.title) {
       container.setTitle(note.title);
@@ -25,19 +33,22 @@ export function NoteComponent({ container, note }: NoteComponentProps) {
     );
   }
 
+  // Default handlers if not provided
+  const handleUpdateNote = onUpdateNote || (() => {
+    console.warn('Note update not handled in tab view');
+  });
+
+  const handleDeleteNote = onDeleteNote || (() => {
+    console.warn('Note deletion not handled in tab view');
+  });
+
   return (
-    <div className="h-full w-full p-6 overflow-auto bg-white">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          {note.title || 'Untitled Note'}
-        </h1>
-        <div 
-          className="prose prose-lg max-w-none text-gray-700"
-          dangerouslySetInnerHTML={{ 
-            __html: note.content || '<p class="text-gray-500 italic">This note is empty.</p>' 
-          }}
-        />
-      </div>
+    <div className="h-full w-full bg-white">
+      <Note
+        note={note}
+        onUpdateNote={handleUpdateNote}
+        onDeleteNote={handleDeleteNote}
+      />
     </div>
   );
 }

@@ -4,11 +4,14 @@ import { GoldenLayout, ComponentContainer } from "golden-layout";
 import { createLayoutConfig, saveLayoutConfig } from "../utils/layoutConfig";
 import { NoteComponent } from "../components/NoteComponent";
 import { UseGoldenLayoutProps, UseGoldenLayoutReturn, NoteMapItem } from "../types";
+import { useNotes } from "../../../providers/NoteProvider";
+import { NoteUpdateProps } from "../../../utils/api/noteClient";
 
 export function useGoldenLayout({ noteMap, noteMapRef, containerRef }: UseGoldenLayoutProps): UseGoldenLayoutReturn {
   const layoutRef = useRef<GoldenLayout | null>(null);
   const componentRootsRef = useRef<Map<string, Root>>(new Map());
   const [isInitialized, setIsInitialized] = useState(false);
+  const { updateNote, deleteNote, setOpenNotes, openNotes } = useNotes();
 
   // Create note component factory
   const createNoteComponent = useCallback((container: ComponentContainer, componentState: any) => {
@@ -24,7 +27,40 @@ export function useGoldenLayout({ noteMap, noteMapRef, containerRef }: UseGolden
     const renderComponent = () => {
       // Get fresh noteMap reference to avoid stale closures
       const currentNoteData = noteMapRef.current.get(noteId);
-      root.render(<NoteComponent container={container} note={currentNoteData?.note} />);
+      
+      const handleUpdateNote = async (updatedNote: any) => {
+        try {
+          const updateData: NoteUpdateProps = {
+            id: updatedNote.id,
+            content: updatedNote.content,
+            title: updatedNote.title
+          };
+          await updateNote(updateData);
+          // The noteMap will be updated through the normal flow, which will trigger re-rendering
+        } catch (error) {
+          console.error('Failed to update note in tab:', error);
+        }
+      };
+
+      const handleDeleteNote = (noteIdToDelete: string) => {
+        try {
+          deleteNote(noteIdToDelete);
+          // Remove from openNotes list
+          const updatedOpenNotes = openNotes.filter(id => id !== noteIdToDelete);
+          setOpenNotes(updatedOpenNotes);
+        } catch (error) {
+          console.error('Failed to delete note in tab:', error);
+        }
+      };
+      
+      root.render(
+        <NoteComponent 
+          container={container} 
+          note={currentNoteData?.note}
+          onUpdateNote={handleUpdateNote}
+          onDeleteNote={handleDeleteNote}
+        />
+      );
     };
 
     renderComponent();
@@ -106,7 +142,7 @@ export function useGoldenLayout({ noteMap, noteMapRef, containerRef }: UseGolden
     }
   }, [noteMap, createNoteComponent, createEmptyComponent, containerRef]);
 
-  // Update layout when noteMap changes
+  // Update layout when noteMap changes (full reload)
   const updateLayout = useCallback(() => {
     if (!layoutRef.current || !isInitialized) {
       return;
@@ -127,6 +163,25 @@ export function useGoldenLayout({ noteMap, noteMapRef, containerRef }: UseGolden
       console.warn('Error updating layout:', error);
     }
   }, [noteMap, isInitialized]);
+
+  // Refresh existing components without full reload (lighter update)
+  const refreshComponents = useCallback(() => {
+    if (!isInitialized) {
+      return;
+    }
+
+    try {
+      // Re-render existing components using their stored render functions
+      componentRootsRef.current.forEach((root, noteId: string) => {
+        const renderFunction = (root as any)._renderComponent;
+        if (renderFunction && typeof renderFunction === 'function') {
+          renderFunction();
+        }
+      });
+    } catch (error) {
+      console.warn('Error refreshing components:', error);
+    }
+  }, [isInitialized]);
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -159,6 +214,7 @@ export function useGoldenLayout({ noteMap, noteMapRef, containerRef }: UseGolden
     isInitialized,
     initializeLayout,
     updateLayout,
+    refreshComponents,
     cleanup,
     handleResize
   };

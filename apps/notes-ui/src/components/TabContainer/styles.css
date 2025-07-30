@@ -13,13 +13,9 @@
   width: 100% !important;
 }
 
-/* Additional isolation and performance improvements */
 .tab-container-wrapper {
-  /* Isolate from parent layout constraints */
   contain: layout style;
-  /* Better performance for layout changes */
   will-change: transform;
-  /* Ensure proper stacking context */
   z-index: 1;
 }
 

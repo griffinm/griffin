@@ -17,6 +17,7 @@ export interface UseGoldenLayoutReturn {
   isInitialized: boolean;
   initializeLayout: () => void;
   updateLayout: () => void;
+  refreshComponents: () => void;
   cleanup: () => void;
   handleResize: () => void;
 }
