@@ -16,7 +16,7 @@ export class MediaController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File, 
+    @UploadedFile() file: any, 
     @Req() request: any,
     @Body() body,
   ): Promise<Media> {
