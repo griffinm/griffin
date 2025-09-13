@@ -67,3 +67,7 @@
   max-height: 90%;
   padding-top: 0 !important;
 }
+
+.menu-border {
+  @apply border-neutral-600;
+}

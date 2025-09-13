@@ -5,7 +5,8 @@
   "scripts": {
     "prisma:seed": "tsx apps/api/prisma/seed.ts",
     "dev": "NODE_ENV=development npx run-many -t serve --configuration=development",
-    "prod": "nx run api:serve:production"
+    "prod": "nx run api:serve:production",
+    "db:push": "(cd apps/api && npx prisma db push)"
   },
   "private": true,
   "dependencies": {
