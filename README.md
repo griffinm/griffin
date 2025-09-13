@@ -18,6 +18,93 @@ Run `npx nx serve griffin` to start the development server. Happy coding!
 
 Run `npx nx build griffin` to build the application. The build artifacts are stored in the output directory (e.g. `dist/` or `build/`), ready to be deployed.
 
+## Docker Deployment
+
+### Prerequisites
+- Docker installed on your system
+- PostgreSQL database running
+- Typesense instance (optional, for search functionality)
+
+### Environment Variables
+Create a `.env` file with the following variables:
+
+```bash
+# Database
+DATABASE_URL="postgresql://griffin:griffin@db:5432/griffin"
+
+# JWT Secret
+JWT_SECRET="your-jwt-secret-here"
+
+# AWS S3 (if using file uploads)
+AWS_ACCESS_KEY_ID="your-access-key"
+AWS_SECRET_ACCESS_KEY="your-secret-key"
+AWS_REGION="your-region"
+AWS_S3_BUCKET="your-bucket-name"
+
+# Typesense (if using search)
+TYPESENSE_API_KEY="xyz"
+TYPESENSE_HOST="typesense:8108"
+```
+
+### Building the API Docker Image
+
+```bash
+# Basic build
+docker build -f Dockerfile.api -t griffin-api:latest .
+
+# Build with BuildKit (recommended)
+DOCKER_BUILDKIT=1 docker build -f Dockerfile.api -t griffin-api:latest .
+
+# Build for specific platform
+docker buildx build --platform linux/amd64 -f Dockerfile.api -t griffin-api:latest .
+```
+
+### Running with Docker Compose
+
+The project includes a `docker-compose.yml` file for easy deployment:
+
+```bash
+# Start all services (API, database, Typesense)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f api
+
+# Stop services
+docker-compose down
+```
+
+### Manual Container Run
+
+```bash
+# Run the API container
+docker run -p 3000:3000 --env-file .env griffin-api:latest
+```
+
+### Database Setup
+
+After starting the containers, run database migrations:
+
+```bash
+# Run Prisma migrations
+npm run db:push
+
+# Seed the database (optional)
+npm run prisma:seed
+```
+
+### Testing the Deployment
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Test API endpoints
+curl http://localhost:3000/api
+```
+
+For detailed deployment instructions, see [DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md).
+
 ## Running tasks
 
 To execute tasks with Nx use the following syntax:

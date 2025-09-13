@@ -198,7 +198,13 @@ export function Editor({
     );
 
   return (
-    <RichTextEditorProvider editor={editor}>
+    <div style={{ 
+      width: '100%', 
+      maxWidth: '100%', 
+      overflowX: 'hidden',
+      boxSizing: 'border-box'
+    }}>
+      <RichTextEditorProvider editor={editor}>
       <RichTextEditor
         onUpdate={debouncedUpdate}
         editorProps={{
@@ -207,6 +213,40 @@ export function Editor({
         }}
         RichTextFieldProps={{
           variant: "outlined",
+          sx: {
+            '& .MuiOutlinedInput-root': {
+              overflowX: 'hidden',
+            },
+            '& .ProseMirror': {
+              overflowX: 'hidden',
+              wordWrap: 'break-word',
+              wordBreak: 'break-word',
+              whiteSpace: 'pre-wrap',
+              maxWidth: '100%',
+            },
+            '& .ProseMirror p': {
+              wordWrap: 'break-word',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+            },
+            '& .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6': {
+              wordWrap: 'break-word',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+            },
+            '& .ProseMirror pre': {
+              overflowX: 'auto',
+              whiteSpace: 'pre',
+            },
+            '& .ProseMirror table': {
+              maxWidth: '100%',
+              tableLayout: 'fixed',
+            },
+            '& .ProseMirror img': {
+              maxWidth: '100%',
+              height: 'auto',
+            }
+          }
         }}
         ref={rteRef}
         onTransaction={(transaction) => {
@@ -264,6 +304,7 @@ export function Editor({
         )}
       </RichTextEditor>
 
-    </RichTextEditorProvider>
+      </RichTextEditorProvider>
+    </div>
   )
 }

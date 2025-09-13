@@ -75,7 +75,8 @@ export function Layout() {
         position="static"
         sx={{
           width: '100%',
-          bgcolor: 'primary.dark'
+          bgcolor: 'primary.dark',
+          height: '55px',
         }}
       >
         <Toolbar>
@@ -89,7 +90,7 @@ export function Layout() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            Notes App
+            Notes
           </Typography>
         </Toolbar>
       </AppBar>
@@ -144,7 +145,7 @@ export function Layout() {
           component="main"
           sx={{
             flexGrow: 1,
-            p: 3,
+            p: 0,
             bgcolor: 'background.default',
             height: '100%',
             overflow: 'auto',
