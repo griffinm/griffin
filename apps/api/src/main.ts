@@ -1,15 +1,16 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe, LogLevel } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const logLevels: LogLevel[] = process.env.LOG_LEVEL 
+    ? [process.env.LOG_LEVEL as LogLevel]
+    : ['log', 'error', 'warn'];
+    
+  const app = await NestFactory.create(AppModule, {
+    logger: logLevels
+  });
   app.enableCors({
     origin: 'http://localhost:4200',
     credentials: true,

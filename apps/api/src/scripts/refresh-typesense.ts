@@ -5,6 +5,25 @@ import { config } from "dotenv";
 // Load environment variables from .env.local
 config({ path: '.env.local' });
 
+// Configure console logging level
+const logLevel = process.env.LOG_LEVEL || 'log';
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+const originalConsoleDebug = console.debug;
+
+// Override console methods based on log level
+if (logLevel === 'error') {
+  console.log = () => {};
+  console.warn = () => {};
+  console.debug = () => {};
+} else if (logLevel === 'warn') {
+  console.log = () => {};
+  console.debug = () => {};
+} else if (logLevel === 'log') {
+  console.debug = () => {};
+}
+
 const main = async () => {
   const prisma = new PrismaClient();
   
