@@ -13,8 +13,8 @@ export class SearchService implements OnModuleInit {
     this.logger.log('Initializing search service');
     this.typesenseClient = new Typesense.Client({
       nodes: [{
-        host: "localhost",
-        port: 8108,
+        host: process.env.TYPESENSE_HOST || "localhost",
+        port: parseInt(process.env.TYPESENSE_PORT || "8108"),
         protocol: "http",
       }],
       apiKey: 'xyz',
