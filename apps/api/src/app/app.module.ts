@@ -12,6 +12,7 @@ import { TasksModule } from '../tasks/tasks.module';
 import { AppLoggerMiddleware } from './AppLogger.middleware';
 import { QuestionsModule } from '../questions/questions.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { SearchModule } from '../search/search.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     TasksModule,
     QuestionsModule,
     PrismaModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],

@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import Typesense from "typesense";
 import { noteSchema, taskSchema } from "./schemas";
 import { Note } from "@prisma/client";
-import { SearchResultsDto } from "./dto/search-results.dto";
+import { SearchResultsDto, NoteResult } from "./dto/search-results.dto";
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -64,14 +64,13 @@ export class SearchService implements OnModuleInit {
     searchResults.query = query;
     searchResults.hits = result.hits.length;
     searchResults.noteResults = result.hits.map((hit) => {
-
-      return {
-        id: hit.document.id,
-        title: hit.document.title,
-        matchedTokens: hit.matched_tokens,
-        snippet: hit.highlights[0]?.snippet,
-        matchedField: hit.highlights[0]?.field,
-      }
+      const noteResult = new NoteResult();
+      noteResult.id = hit.document.id;
+      noteResult.title = hit.document.title;
+      noteResult.matchedTokens = hit.matched_tokens;
+      noteResult.snippet = hit.highlights[0]?.snippet;
+      noteResult.matchedField = hit.highlights[0]?.field;
+      return noteResult;
     });
 
     return searchResults;

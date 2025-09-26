@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "prisma:seed": "tsx apps/api/prisma/seed.ts",
+    "refresh-typesense": "tsx apps/api/src/scripts/refresh-typesense.ts",
     "dev": "NODE_ENV=development npx run-many -t serve --configuration=development",
     "prod": "nx run api:serve:production"
   },
