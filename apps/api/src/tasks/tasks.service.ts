@@ -34,7 +34,7 @@ export class TasksService {
         { description: { contains: filter.search, mode: 'insensitive' } },
       ];
     }
-    console.log("End Date", filter.endDate);
+
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 

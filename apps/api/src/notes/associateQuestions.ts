@@ -14,11 +14,9 @@ export async function associateQuestions(
   const questionRegex = /<question\squestionid="([^"]+)"/g
   const questionsIdsFound = []
   let match;
-  console.log(noteContent);
   while ((match = questionRegex.exec(noteContent)) !== null) {
     questionsIdsFound.push(match[1]);
   }
-  console.log(questionsIdsFound);
 
   // Find all of the questions already associated with the note
   const questions = await prisma.question.findMany({
