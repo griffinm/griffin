@@ -1,3 +1,5 @@
+name: prod
+
 volumes:
   db-data-prod:
   typesense-data-prod:
@@ -5,6 +7,7 @@ volumes:
 
 services:
   typesense:
+    container_name: griffin-typesense-prod
     image: typesense/typesense:27.0
     restart: on-failure
     ports:
@@ -14,6 +17,7 @@ services:
     command: '--data-dir /data --api-key=xyz --enable-cors'
 
   db:
+    container_name: griffin-db-prod
     image: postgres:17
     volumes:
       - db-data-prod:/var/lib/postgresql
@@ -25,6 +29,7 @@ services:
     ports:
       - 5432:5432
   api:
+    container_name: griffin-api-prod
     build:
       context: .
       dockerfile: Dockerfile.api
@@ -36,6 +41,7 @@ services:
     restart: on-failure
 
   ui:
+    container_name: griffin-ui-prod
     build:
       context: .
       dockerfile: Dockerfile.ui
