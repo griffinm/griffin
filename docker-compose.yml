@@ -1,6 +1,7 @@
 volumes:
   griffin-db-data:
 
+
 services:
   typesense:
     image: typesense/typesense:27.0
@@ -21,7 +22,7 @@ services:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_PASSWORD=griffin
     ports:
-      - 5432:5432
+      - 5433:5432
   api:
     build:
       context: .
