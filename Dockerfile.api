@@ -1,10 +1,8 @@
 # Stage 1: Build the application
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 # Set the working directory
 WORKDIR /app
-
-RUN npm install -g nx
 
 # Install dependencies
 COPY package.json package-lock.json ./
@@ -13,18 +11,26 @@ RUN npm ci
 # Copy the Nx workspace and backend app source
 COPY . .
 
-# Build the backend application
-RUN nx reset
-
-# Generate Prisma client
+# Generate Prisma client first
 RUN (cd apps/api && npx prisma generate)
 
-RUN npx nx run-many --target=build
+# Reset Nx cache and build
+RUN npx nx reset
+RUN npx nx run api:build:production
 
 
 
 # Stage 2: Production image
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
+
+# Install dependencies: OpenSSL, AWS CLI, jq for secret management
+RUN apt-get update && \
+  apt-get install -y openssl ca-certificates curl unzip jq && \
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+  unzip awscliv2.zip && \
+  ./aws/install && \
+  rm -rf awscliv2.zip aws && \
+  rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -33,11 +39,19 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Copy the built application from the builder stage
-COPY --from=builder /app/dist/apps/ ./dist/apps/
+COPY --from=builder /app/dist/apps/api ./dist/apps/api
 COPY --from=builder /app/node_modules ./node_modules
 
-# Expose the port your app runs on
-EXPOSE 3000
+# Copy environment file with all config
+COPY .env.prod ./.env
 
-# Start the backend application
-CMD ["node", "/app/dist/apps/api/main.js"]
+# Copy the entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Expose the port your app runs on
+EXPOSE 8080
+
+# Use entrypoint script to load secrets and start the application
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["node", "dist/apps/api/main.js"]

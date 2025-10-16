@@ -1,16 +1,15 @@
 # Stage 1: Build the React application
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm i --production
-RUN npm i -g nx
+RUN npm ci
 
 COPY . .
 
-RUN nx reset
-RUN nx run notes-ui:build
+RUN npx nx reset
+RUN npx nx run notes-ui:build:production
 
 # Stage 2: Nginx setup
 FROM nginx:stable-alpine AS nginx
@@ -21,7 +20,7 @@ COPY --from=builder /app/dist/apps/notes-ui /usr/share/nginx/html
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 9000
+EXPOSE 8080
 
 # Start Nginx when the container starts
 CMD ["nginx", "-g", "daemon off;"]
