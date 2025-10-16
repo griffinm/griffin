@@ -4,8 +4,6 @@ FROM node:20-alpine AS builder
 # Set the working directory
 WORKDIR /app
 
-RUN npm install -g nx
-
 # Install dependencies
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -14,12 +12,12 @@ RUN npm ci
 COPY . .
 
 # Build the backend application
-RUN nx reset
+RUN npx nx reset
 
 # Generate Prisma client
 RUN (cd apps/api && npx prisma generate)
 
-RUN npx nx run-many --target=build
+RUN npx nx run api:build:production
 
 
 
@@ -33,18 +31,14 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Copy the built application from the builder stage
-COPY --from=builder /app/dist/apps/ ./dist/apps/
+COPY --from=builder /app/dist/apps/api ./dist/apps/api
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy environment file
-COPY --from=builder /app/.env ./.env
-
-# Copy NX workspace configuration files
-COPY --from=builder /app/nx.json ./nx.json
-COPY --from=builder /app/apps/api/project.json ./apps/api/project.json
+# Copy environment file (if it exists)
+COPY --from=builder /app/.env* ./
 
 # Expose the port your app runs on
 EXPOSE 8080
 
-# Start the backend application using NX
-CMD ["npx", "nx", "run", "api:serve"]
+# Start the backend application directly (not using NX)
+CMD ["node", "dist/apps/api/main.js"]

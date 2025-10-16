@@ -4,13 +4,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm i --production
-RUN npm i -g nx
+RUN npm ci
 
 COPY . .
 
-RUN nx reset
-RUN nx run notes-ui:build
+RUN npx nx reset
+RUN npx nx run notes-ui:build
 
 # Stage 2: Nginx setup
 FROM nginx:stable-alpine AS nginx

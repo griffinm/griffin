@@ -1,5 +1,7 @@
 volumes:
-  db-data:
+  db-data-prod:
+  typesense-data-prod:
+
 
 services:
   typesense:
@@ -8,13 +10,13 @@ services:
     ports:
       - "8108:8108"
     volumes:
-      - ./typesense-data:/data
+      - ./typesense-data-prod:/data
     command: '--data-dir /data --api-key=xyz --enable-cors'
 
   db:
     image: postgres:17
     volumes:
-      - db-data:/var/lib/postgresql
+      - db-data-prod:/var/lib/postgresql
     environment:
       - POSTGRES_USER=griffin
       - POSTGRES_PASS=griffin
