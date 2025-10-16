@@ -30,6 +30,7 @@ services:
       - 5432:5432
   api:
     container_name: griffin-api-prod
+    image: griffin-api:latest
     build:
       context: .
       dockerfile: Dockerfile.api
@@ -42,6 +43,7 @@ services:
 
   ui:
     container_name: griffin-ui-prod
+    image: griffin-ui:latest
     build:
       context: .
       dockerfile: Dockerfile.ui

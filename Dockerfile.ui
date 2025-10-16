@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm ci
 COPY . .
 
 RUN npx nx reset
-RUN npx nx run notes-ui:build
+RUN npx nx run notes-ui:build:production
 
 # Stage 2: Nginx setup
 FROM nginx:stable-alpine AS nginx
