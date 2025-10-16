@@ -89,19 +89,14 @@ No manual credential setup needed.
 
 ## 📦 What Gets Built
 
-Each build creates Docker images with multiple tags:
+Each build creates Docker images with the `latest` tag:
 
 ```
-griffin-api:20251016-143022  (timestamp)
-griffin-api:20251016         (date)
-griffin-api:latest           (latest)
-
-griffin-ui:20251016-143022   (timestamp)
-griffin-ui:20251016          (date)
-griffin-ui:latest            (latest)
+griffin-api:latest
+griffin-ui:latest
 ```
 
-**Automatic Cleanup:** The build script automatically keeps only the 3 most recent timestamp-tagged images and removes older ones to save disk space.
+The `latest` tag is overwritten with each new build.
 
 ## 🌐 Service Access
 
@@ -160,19 +155,16 @@ docker compose -f docker-compose.prod.yml down -v
 ```bash
 # View all griffin images
 docker images | grep griffin
-
-# View by date
-docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}" | grep griffin
 ```
 
-### Manually Remove Old Images
+### Remove Old/Dangling Images
 
 ```bash
-# Remove specific image
-docker rmi griffin-api:20251015-120000
+# Remove dangling images (untagged)
+docker image prune
 
-# Remove all old images (if needed)
-docker image prune -a --filter "label!=keep"
+# Remove all unused images
+docker image prune -a
 ```
 
 ## 🐛 Troubleshooting
