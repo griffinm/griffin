@@ -1,5 +1,5 @@
 volumes:
-  griffin-db-data:
+  db-data:
 
 services:
   typesense:
@@ -14,7 +14,7 @@ services:
   db:
     image: postgres:17
     volumes:
-      - griffin-db-data:/var/lib/postgresql
+      - db-data:/var/lib/postgresql
     environment:
       - POSTGRES_USER=griffin
       - POSTGRES_PASS=griffin

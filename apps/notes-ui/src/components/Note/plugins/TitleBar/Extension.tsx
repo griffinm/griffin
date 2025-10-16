@@ -1,7 +1,6 @@
-import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core'
+import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Component } from './Component'
-import { Transaction } from '@tiptap/pm/state';
 
 export const TAG_NAME = 'title-bar';
 
