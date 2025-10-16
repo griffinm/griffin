@@ -1,16 +1,10 @@
-import { useState } from 'react'
-import { Container, Title, Text, Button, Card, Group, Stack, Badge, Grid, Paper, SimpleGrid, Progress, RingProgress, Center } from '@mantine/core'
-import { IconRocket, IconBrandReact, IconBrandVite, IconBrandTailwind, IconTrendingUp, IconUsers, IconShoppingCart, IconCurrencyDollar } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
+import { Container, Title, Text, Paper, Stack } from '@mantine/core'
 import Layout from './components/Layout'
 
 function App() {
-
   return (
     <Layout>
-      <Container size="xl" p="md">
-
-      </Container>
+      This is it
     </Layout>
   )
 }

@@ -1,18 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AppShell,
   Text,
   Burger,
   useMantineTheme,
   Group,
-  Avatar,
-  Menu,
-  UnstyledButton,
-  rem,
   NavLink,
   Stack,
   Divider,
   Badge,
+  Paper,
 } from '@mantine/core'
 import {
   IconDashboard,
@@ -28,9 +25,23 @@ import {
   IconMail,
 } from '@tabler/icons-react'
 
+const HEADER_HEIGHT = 40;
+
 const Layout = ({ children }) => {
   const theme = useMantineTheme()
   const [opened, setOpened] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // sm breakpoint
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const navigationData = [
     { icon: IconHome, label: 'Dashboard', href: '/', color: 'blue' },
@@ -40,164 +51,102 @@ const Layout = ({ children }) => {
     { icon: IconMail, label: 'Messages', href: '/messages', color: 'cyan' },
   ]
 
-  const UserButton = () => (
-    <UnstyledButton
-      style={{
-        padding: theme.spacing.xs,
-        borderRadius: theme.radius.sm,
-        color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
-        '&:hover': {
-          backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
-        },
-      }}
-    >
-      <Group>
-        <Avatar
-          src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-8.png"
-          radius="xl"
-        />
-        <div style={{ flex: 1 }}>
-          <Text size="sm" fw={500}>
-            John Doe
-          </Text>
-          <Text c="dimmed" size="xs">
-            john@example.com
-          </Text>
-        </div>
-        <IconChevronDown style={{ width: rem(14), height: rem(14) }} />
-      </Group>
-    </UnstyledButton>
-  )
-
   return (
-    <AppShell
-      styles={{
-        main: {
-          background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-        },
-      }}
-      navbar={
-        <AppShell.Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
-          <AppShell.Section grow>
-            <Stack gap="xs">
-              {navigationData.map((item) => (
-                <NavLink
-                  key={item.label}
-                  href={item.href}
-                  label={item.label}
-                  leftSection={<item.icon size="1rem" stroke={1.5} />}
-                  rightSection={
-                    item.label === 'Messages' && (
-                      <Badge size="xs" color="red" variant="filled">
-                        3
-                      </Badge>
-                    )
-                  }
-                  styles={{
-                    root: {
-                      borderRadius: theme.radius.sm,
-                    },
-                  }}
-                />
-              ))}
-            </Stack>
-          </AppShell.Section>
+    <div>
+      {/* Full-width header */}
+      <div 
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          zIndex: 1000,
+          height: HEADER_HEIGHT,
+          padding: theme.spacing.md,
+          background: theme.colors.gray[0],
+          display: 'flex',
+          alignItems: 'center'
+        }}
+      >
+        <Burger
+          opened={opened}
+          onClick={() => setOpened((o) => !o)}
+          size="sm"
+          color={theme.colors.gray[6]}
+          mr="xl"
+          hiddenFrom="sm"
+        />
+
+        <Group style={{ flex: 1 }} justify="space-between">
+          
+        </Group>
+      </div>
+
+      {/* Content area with navbar */}
+      <div style={{ 
+        display: 'flex', 
+        marginTop: HEADER_HEIGHT,
+        background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+        minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
+        height: `calc(100vh - ${HEADER_HEIGHT}px)`
+      }}>
+        {/* Left navbar */}
+        <div 
+          style={{ 
+            width: isMobile ? (opened ? 200 : 0) : 250,
+            minWidth: isMobile ? (opened ? 200 : 0) : 250,
+            transition: 'width 0.3s ease',
+            overflow: 'hidden',
+            background: theme.colors.gray[0],
+            padding: theme.spacing.md
+          }}
+        >
+          <Stack gap="xs">
+            {navigationData.map((item) => (
+              <NavLink
+                key={item.label}
+                href={item.href}
+                label={item.label}
+                leftSection={<item.icon size="1rem" stroke={1.5} />}
+                rightSection={
+                  item.label === 'Messages' && (
+                    <Badge size="xs" color="red" variant="filled">
+                      3
+                    </Badge>
+                  )
+                }
+                styles={{
+                  root: {
+                    borderRadius: theme.radius.sm,
+                  },
+                }}
+              />
+            ))}
+          </Stack>
 
           <Divider my="sm" />
 
-          <AppShell.Section>
-            <Stack gap="xs">
-              <NavLink
-                href="/settings"
-                label="Settings"
-                leftSection={<IconSettings size="1rem" stroke={1.5} />}
-              />
-              <NavLink
-                href="/logout"
-                label="Logout"
-                leftSection={<IconLogout size="1rem" stroke={1.5} />}
-                color="red"
-              />
-            </Stack>
-          </AppShell.Section>
-        </AppShell.Navbar>
-      }
-      header={
-        <AppShell.Header height={{ base: 50, md: 70 }} p="md">
-          <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Burger
-              opened={opened}
-              onClick={() => setOpened((o) => !o)}
-              size="sm"
-              color={theme.colors.gray[6]}
-              mr="xl"
-              hiddenFrom="sm"
+          <Stack gap="xs">
+            <NavLink
+              href="/settings"
+              label="Settings"
+              leftSection={<IconSettings size="1rem" stroke={1.5} />}
             />
+            <NavLink
+              href="/logout"
+              label="Logout"
+              leftSection={<IconLogout size="1rem" stroke={1.5} />}
+              color="red"
+            />
+          </Stack>
+        </div>
 
-            <Group style={{ flex: 1 }} justify="space-between">
-              <Group>
-                <Text size="xl" fw={700} className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  UI2 Dashboard
-                </Text>
-              </Group>
-
-              <Group gap="sm">
-                <UnstyledButton
-                  style={{
-                    padding: theme.spacing.xs,
-                    borderRadius: theme.radius.sm,
-                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
-                    '&:hover': {
-                      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
-                    },
-                  }}
-                >
-                  <IconSearch size="1.2rem" />
-                </UnstyledButton>
-
-                <UnstyledButton
-                  style={{
-                    padding: theme.spacing.xs,
-                    borderRadius: theme.radius.sm,
-                    color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
-                    '&:hover': {
-                      backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
-                    },
-                  }}
-                >
-                  <IconBell size="1.2rem" />
-                </UnstyledButton>
-
-                <Menu shadow="md" width={200}>
-                  <Menu.Target>
-                    <UserButton />
-                  </Menu.Target>
-
-                  <Menu.Dropdown>
-                    <Menu.Label>Application</Menu.Label>
-                    <Menu.Item leftSection={<IconDashboard size={14} />}>
-                      Dashboard
-                    </Menu.Item>
-                    <Menu.Item leftSection={<IconSettings size={14} />}>
-                      Settings
-                    </Menu.Item>
-
-                    <Menu.Divider />
-
-                    <Menu.Label>Danger zone</Menu.Label>
-                    <Menu.Item color="red" leftSection={<IconLogout size={14} />}>
-                      Logout
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
-            </Group>
-          </div>
-        </AppShell.Header>
-      }
-    >
-      {children}
-    </AppShell>
+        {/* Main content */}
+        <div className="flex-1 h-full bg-white w-full p-4 rounded-lg border border-gray-200 shadow-md mr-4 mb-4">
+          {children}
+        </div>
+      </div>
+    </div>
   )
 }
 
