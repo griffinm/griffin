@@ -45,8 +45,13 @@ COPY --from=builder /app/node_modules ./node_modules
 # Copy environment file with all config
 COPY .env.prod ./.env
 
+# Copy the entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose the port your app runs on
 EXPOSE 8080
 
-# Start the backend application directly (not using NX)
+# Use entrypoint script to load secrets and start the application
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "dist/apps/api/main.js"]
