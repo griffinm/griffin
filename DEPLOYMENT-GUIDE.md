@@ -49,6 +49,13 @@ aws configure  # or export AWS_ACCESS_KEY_ID, etc.
 ./deploy-prod.sh
 ```
 
+**Note:** Running `deploy-prod.sh` multiple times is safe. It rebuilds images and restarts API/UI containers while:
+
+- ✅ Preserving the database (never recreated)
+- ✅ Preserving Typesense data (never recreated)
+- ✅ Preserving the network
+- ✅ Only updating API and UI containers
+
 #### Restart Without Rebuilding
 
 ```bash
@@ -121,8 +128,8 @@ After deployment:
 docker compose -f docker-compose.prod.yml logs -f
 
 # Specific service
-docker logs -f griffin-api-prod
-docker logs -f griffin-ui-prod
+docker logs -f griffin-api
+docker logs -f griffin-ui
 ```
 
 ### Check Container Status
@@ -134,21 +141,57 @@ docker compose -f docker-compose.prod.yml ps
 ### Restart a Service
 
 ```bash
-docker restart griffin-api-prod
-docker restart griffin-ui-prod
+docker restart griffin-api
+docker restart griffin-ui
 ```
 
 ### Access Container Shell
 
 ```bash
-docker exec -it griffin-api-prod bash
+# Using npm script
+npm run docker:api bash
+
+# Or directly
+docker exec -it griffin-api bash
 ```
 
-### Remove Everything (including volumes)
+### Run Commands in API Container
 
 ```bash
-docker compose -f docker-compose.prod.yml down -v
+# Run any command interactively
+npm run docker:api <command>
+
+# Examples:
+npm run docker:api bash                    # Open shell
+npm run docker:api node --version          # Check Node version
+npm run docker:api npm run prisma:seed     # Run seed script
+npm run docker:api npx prisma migrate      # Run migrations
 ```
+
+### Stop Containers (preserves network, volumes, containers)
+
+```bash
+# Stops containers, keeps network and data
+./stop-prod.sh
+# or
+docker compose -f docker-compose.prod.yml stop
+```
+
+### Remove Containers Only (keeps network and data)
+
+```bash
+# Removes containers but preserves network and database data
+docker compose -f docker-compose.prod.yml down
+```
+
+**Critical Notes:**
+
+- ✅ `./stop-prod.sh` preserves everything (network, volumes, containers)
+- ✅ `down` removes containers but keeps network and volumes
+- ❌ **NEVER** use `down -v` in production - it will PERMANENTLY DELETE all data!
+- ✅ Database is **never** recreated during normal deployments
+- ✅ Database volume `db-data-prod` persists across all operations
+- ✅ Network `prod` is shared across multiple apps and never deleted
 
 ### List All Images
 
@@ -176,7 +219,7 @@ docker image prune -a
 
 ### Container exits immediately
 
-- Check logs: `docker logs griffin-api-prod`
+- Check logs: `docker logs griffin-api`
 - Verify `.env.prod` exists and is valid
 - Ensure all required secrets are in AWS Secrets Manager
 

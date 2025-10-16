@@ -1,13 +1,18 @@
-name: prod
+name: prod-notes
 
 volumes:
-  db-data-prod:
   typesense-data-prod:
 
 
+networks:
+  prod:
+    name: prod-network
+    external: true
+    driver: bridge
+
 services:
   typesense:
-    container_name: griffin-typesense-prod
+    container_name: notes-typesense
     image: typesense/typesense:27.0
     restart: on-failure
     ports:
@@ -15,21 +20,11 @@ services:
     volumes:
       - ./typesense-data-prod:/data
     command: '--data-dir /data --api-key=xyz --enable-cors'
+    networks:
+      - prod
 
-  db:
-    container_name: griffin-db-prod
-    image: postgres:17
-    volumes:
-      - db-data-prod:/var/lib/postgresql
-    environment:
-      - POSTGRES_USER=griffin
-      - POSTGRES_PASS=griffin
-      - ALLOW_IP_RANGE=0.0.0.0/0
-      - POSTGRES_PASSWORD=griffin
-    ports:
-      - 5432:5432
   api:
-    container_name: griffin-api-prod
+    container_name: notes-api
     image: griffin-api:latest
     build:
       context: .
@@ -37,12 +32,13 @@ services:
     ports:
       - "10100:8080"
     depends_on:
-      - db
       - typesense
     restart: on-failure
+    networks:
+      - prod
 
   ui:
-    container_name: griffin-ui-prod
+    container_name: notes-ui
     image: griffin-ui:latest
     build:
       context: .
@@ -52,3 +48,5 @@ services:
     depends_on:
       - api
     restart: on-failure
+    networks:
+      - prod

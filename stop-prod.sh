@@ -19,14 +19,18 @@ if [ "$(docker compose -f docker-compose.prod.yml ps -q | wc -l)" -eq 0 ]; then
     exit 0
 fi
 
-# Stop containers
+# Stop containers (preserves network and volumes)
 echo -e "${GREEN}Stopping containers...${NC}"
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml stop
 
 echo -e "\n${BLUE}========================================${NC}"
 echo -e "${GREEN}✓ Containers Stopped!${NC}"
 echo -e "${BLUE}========================================${NC}\n"
 
-echo -e "${YELLOW}Note:${NC} To remove volumes (database data), run:"
-echo "  docker compose -f docker-compose.prod.yml down -v"
+echo -e "${GREEN}✓ Network 'prod' preserved (shared with other apps)${NC}"
+echo -e "${GREEN}✓ Database data persists in volume 'db-data-prod'${NC}"
+echo -e "\n${YELLOW}To remove containers (keeps network/volumes):${NC}"
+echo "  docker compose -f docker-compose.prod.yml down"
+echo -e "\n${RED}⚠️  CRITICAL: NEVER use 'down -v' in production!${NC}"
+echo -e "${RED}⚠️  This will PERMANENTLY DELETE all database data!${NC}"
 
