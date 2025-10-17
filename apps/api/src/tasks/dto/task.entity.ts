@@ -1,4 +1,4 @@
-import { TaskPriority } from '@prisma/client';
+import { TaskPriority, TaskStatus } from '@prisma/client';
 import { Exclude, Expose, instanceToPlain } from 'class-transformer';
 import {
   IsString,
@@ -64,6 +64,16 @@ export class TaskEntity {
   @IsOptional()
   @Expose()
   priority: TaskPriority;
+
+  @IsEnum(TaskStatus)
+  @IsOptional()
+  @Expose()
+  status: TaskStatus;
+
+  @IsDateString()
+  @IsOptional()
+  @Expose()
+  statusChangedAt?: Date;
 
   constructor(partial: Partial<TaskEntity>) {
     Object.assign(this, instanceToPlain(partial));

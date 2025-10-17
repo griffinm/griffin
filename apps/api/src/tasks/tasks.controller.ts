@@ -45,11 +45,8 @@ export class TasksController {
     @Query() query?: FilterDto,
   ): Promise<PagedTaskList> {
     let tasks: TaskEntity[];
-    if (query) {
-      tasks = await this.tasksService.filter(request.user.id, query);
-    } else {
-      tasks = await this.tasksService.getAllForUser(request.user.id);
-    }
+    // Always use filter method to ensure proper filtering by status and other criteria
+    tasks = await this.tasksService.filter(request.user.id, query || {});
     
     const totalRecords = await this.tasksService.filter(request.user.id, {
       ...query,

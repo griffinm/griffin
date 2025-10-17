@@ -1,7 +1,6 @@
 import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { Transform } from "class-transformer";
-import { TaskPriority } from "@prisma/client";
-import { CompletedFilterOptions } from "@griffin/types";
+import { TaskPriority, TaskStatus } from "@prisma/client";
 
 export enum SortBy {
   DUE_DATE = 'dueDate',
@@ -11,7 +10,7 @@ export enum SortBy {
 export class FilterDto {
   @IsOptional()
   @IsString()
-  completed?: CompletedFilterOptions;
+  status?: TaskStatus;
 
   @IsOptional()
   @IsNumber()

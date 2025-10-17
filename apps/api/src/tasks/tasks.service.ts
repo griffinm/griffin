@@ -15,7 +15,7 @@ export class TasksService {
 
   async filter(userId: string, filter: FilterDto): Promise<TaskEntity[]> {
     this.logger.debug(`Filtering tasks for user ${userId} with filter: ${JSON.stringify(filter)}`);
-    let whereClause = {
+    const whereClause = {
       deletedAt: null,
     };
 
@@ -43,9 +43,7 @@ export class TasksService {
         ...(filter.priority && { priority: filter.priority }),
         ...(filter.startDate && { dueDate: { gte: filter.startDate } }),
         ...(filter.endDate && { dueDate: { lte: filter.endDate } }),
-        ...(filter.completed === 'OnlyCompleted' && { completedAt: { not: null } }),
-        ...(filter.completed === 'OnlyNotCompleted' && { completedAt: null }),
-        ...(filter.completed === 'All' && { completedAt: undefined }),
+        ...(filter.status && { status: filter.status }),
       },
       orderBy: this.ordering(),
       take: filter.resultsPerPage,
@@ -95,7 +93,7 @@ export class TasksService {
   async update(id: string, userId: string, task: UpdateTaskDto): Promise<Task> {
     const updatedTask = await this.prisma.task.update({
       where: { id, userId },
-      data: task,
+      data: task as any,
     });
     return updatedTask;
   }

@@ -32,7 +32,7 @@ import dayjs from "dayjs";
 import { ByDay } from "./ByDay";
 
 const INITIAL_PAGE = 1;
-const INITIAL_RESULTS_PER_PAGE = 20;
+const INITIAL_RESULTS_PER_PAGE = 100;
 const TIMEOUT = 50;
 
 interface Filters {
@@ -179,7 +179,7 @@ export function TaskPage() {
       <TablePagination
         count={taskPageTasks.totalRecords}
         page={page - 1}
-        rowsPerPage={resultsPerPage}
+        rowsPerPage={100}
         rowsPerPageOptions={[10, 20, 50, 100]}
         onPageChange={(_, page: number) => setPage(page + 1)}
         onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => setResultsPerPage(parseInt(e.target.value))}

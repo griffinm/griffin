@@ -154,7 +154,16 @@ export const AppLayout = () => {
         </div>
 
         {/* Main content */}
-        <div className="flex-1 h-full bg-white w-full p-4 rounded-lg border border-gray-200 shadow-md mr-4 mb-4">
+        <div 
+          className="flex-1 bg-white w-full p-4 rounded-lg border border-gray-200 shadow-md mr-4 mb-4"
+          style={{ 
+            height: 'calc(100% - 1rem)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE and Edge
+          }}
+        >
           <Outlet />
         </div>
       </div>
