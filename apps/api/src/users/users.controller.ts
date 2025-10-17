@@ -57,11 +57,11 @@ export class UsersController {
     user = new UserEntity(user);
 
     // Also create a JWT
-    const jwt = await this.authService.signInWithPassword(user.email, createDto.password);
+    const authResult = await this.authService.signInWithPassword(user.email, createDto.password);
 
     return {
       ...user,
-      jwt,
+      jwt: authResult.jwt,
     };
   }
 }

@@ -5,11 +5,13 @@ import { useContext, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getUrl } from '@/constants/urls';
 
-export function LogInForm() {
+export function SignUpForm() {
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const { login, loading, messages } = useContext(UserContext);
+  const { signUp, loading, messages } = useContext(UserContext);
   const navigate = useNavigate();
     
   const allErrors = [
@@ -26,11 +28,26 @@ export function LogInForm() {
     if (!email.trim()) {
       errors.push('Email is required');
     }
+    if (!firstName.trim()) {
+      errors.push('First name is required');
+    }
     if (!password.trim()) {
       errors.push('Password is required');
     }
+    if (!confirmPassword.trim()) {
+      errors.push('Please confirm your password');
+    }
     if (!email.includes('@')) {
       errors.push('Please enter a valid email address');
+    }
+    if (firstName.trim().length < 2) {
+      errors.push('First name must be at least 2 characters');
+    }
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters');
+    }
+    if (password !== confirmPassword) {
+      errors.push('Passwords do not match');
     }
     
     if (errors.length > 0) {
@@ -39,12 +56,16 @@ export function LogInForm() {
     }
 
     try {
-      await login({ email: email.trim(), password });
-      // Navigate to dashboard on successful login
+      await signUp({ 
+        email: email.trim(), 
+        firstName: firstName.trim(),
+        password 
+      });
+      // Navigate to dashboard on successful sign up
       navigate(getUrl('dashboard').path());
     } catch (error) {
       // Error is handled by UserContext
-      console.error('Login error:', error);
+      console.error('Sign up error:', error);
     }
   }
 
@@ -54,15 +75,25 @@ export function LogInForm() {
         <ErrorDisplay errors={allErrors} title="Oops! Something went wrong." />
         
         <TextInput 
+          label="First Name" 
+          placeholder="First Name" 
+          required 
+          autoFocus
+          value={firstName} 
+          onChange={(e) => setFirstName(e.target.value)}
+          disabled={loading}
+        />
+        
+        <TextInput 
           label="Email" 
           placeholder="Email" 
           type="email" 
           required 
-          autoFocus
           value={email} 
           onChange={(e) => setEmail(e.target.value)}
           disabled={loading}
         />
+        
         <PasswordInput 
           label="Password" 
           placeholder="Password" 
@@ -72,17 +103,28 @@ export function LogInForm() {
           onChange={(e) => setPassword(e.target.value)}
           disabled={loading}
         />
-        <div className="mt-3 justify-between flex items-center">
+        
+        <PasswordInput 
+          label="Confirm Password" 
+          placeholder="Confirm Password" 
+          type="password" 
+          required 
+          value={confirmPassword} 
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          disabled={loading}
+        />
+        
+        <div className="mt-3 justify-between flex items-center gap-2">
           <div className="text-center">
             <Text size="sm" c="dimmed">
-              Don't have an account?{' '}
-              <Anchor component={Link} to={getUrl('signup').path()}>
-                Sign up
+              Already have an account?{' '}
+              <Anchor component={Link} to={getUrl('login').path()}>
+                Log in
               </Anchor>
             </Text>
           </div>
           <Button type="submit" loading={loading} disabled={loading}>
-            {loading ? 'Logging In...' : 'Log In'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </Button>
         </div>
         

@@ -1,7 +1,7 @@
 import { createContext, useState } from "react";
 import { User } from '@/types';
-import { LoginCredentials } from '@/api/userApi';
-import { useCurrentUser, useLogin, useLogout } from '@/hooks/useAuth';
+import { LoginCredentials, SignUpCredentials } from '@/api/userApi';
+import { useCurrentUser, useLogin, useSignUp, useLogout } from '@/hooks/useAuth';
 import { AxiosError } from 'axios';
 
 interface UserContextProps {
@@ -12,11 +12,19 @@ interface UserContextProps {
   /** @param credentials - Login credentials (unused in default implementation) */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
   login: (credentials: LoginCredentials) => Promise<void>;
+  /** @param credentials - Sign up credentials (unused in default implementation) */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+  signUp: (credentials: SignUpCredentials) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 const defaultLogin: (credentials: LoginCredentials) => Promise<void> = async () => {
+  // Default empty implementation
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+const defaultSignUp: (credentials: SignUpCredentials) => Promise<void> = async () => {
   // Default empty implementation
 };
 
@@ -28,6 +36,7 @@ export const UserContext = createContext<UserContextProps>({
     // Default empty implementation
   },
   login: defaultLogin,
+  signUp: defaultSignUp,
   logout: async () => {
     // Default empty implementation
   },
@@ -38,6 +47,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   
   const { data: user, isLoading, refetch } = useCurrentUser();
   const loginMutation = useLogin();
+  const signUpMutation = useSignUp();
   const logoutMutation = useLogout();
 
   const handleLogin = async (credentials: LoginCredentials) => {
@@ -49,6 +59,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const statusCode = (error as AxiosError<{ message?: string }>)?.response?.status;
       if (statusCode === 401) {
         setMessages(['Invalid credentials']);
+      }
+    }
+  };
+
+  const handleSignUp = async (credentials: SignUpCredentials) => {
+    setMessages([]);
+    try {
+      await signUpMutation.mutateAsync(credentials);
+      setMessages([]);
+    } catch (error: unknown) {
+      const statusCode = (error as AxiosError<{ message?: string }>)?.response?.status;
+      if (statusCode === 409) {
+        setMessages(['User with this email already exists']);
+      } else {
+        const errorMessage = (error as AxiosError<{ message?: string }>)?.response?.data?.message || (error as Error)?.message || 'Sign up failed';
+        setMessages([errorMessage]);
       }
     }
   };
@@ -67,10 +93,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider value={{ 
       user, 
-      loading: isLoading || loginMutation.isPending || logoutMutation.isPending, 
+      loading: isLoading || loginMutation.isPending || signUpMutation.isPending || logoutMutation.isPending, 
       messages,
       refetch,
       login: handleLogin,
+      signUp: handleSignUp,
       logout: handleLogout,
     }}>
       {children}

@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactNode } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import {
   Burger,
   useMantineTheme,
@@ -9,21 +9,23 @@ import {
   Badge,
 } from '@mantine/core'
 import {
-  IconUsers,
   IconSettings,
   IconLogout,
   IconHome,
-  IconChartBar,
-  IconFileText,
-  IconMail,
+  IconCheck,
 } from '@tabler/icons-react'
+import { Outlet, useNavigate, Link } from 'react-router-dom';
+import { UserContext } from '@/providers/UserProvider/UserContext';
+import { getUrl } from '@/constants/urls';
 
 const HEADER_HEIGHT = 40;
 
-export const AppLayout = ({ children }: { children: ReactNode }) => {
+export const AppLayout = () => {
   const theme = useMantineTheme()
   const [opened, setOpened] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const { user, loading, logout } = useContext(UserContext)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -36,12 +38,25 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate(getUrl('login').path(), { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate(getUrl('login').path(), { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   const navigationData = [
-    { icon: IconHome, label: 'Dashboard', href: '/', color: 'blue' },
-    { icon: IconUsers, label: 'Users', href: '/users', color: 'green' },
-    { icon: IconChartBar, label: 'Analytics', href: '/analytics', color: 'orange' },
-    { icon: IconFileText, label: 'Documents', href: '/documents', color: 'purple' },
-    { icon: IconMail, label: 'Messages', href: '/messages', color: 'cyan' },
+    { icon: IconHome, label: 'Dashboard', path: getUrl('dashboard').path(), color: 'blue' },
+    { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
   ]
 
   return (
@@ -79,7 +94,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       <div style={{ 
         display: 'flex', 
         marginTop: HEADER_HEIGHT,
-        background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+        background: theme.colors.gray[0],
         minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
         height: `calc(100vh - ${HEADER_HEIGHT}px)`
       }}>
@@ -96,37 +111,38 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         >
           <Stack gap="xs">
             {navigationData.map((item) => (
-              <NavLink
-                key={item.label}
-                href={item.href}
-                label={item.label}
-                leftSection={<item.icon size="1rem" stroke={1.5} />}
-                rightSection={
-                  item.label === 'Messages' && (
-                    <Badge size="xs" color="red" variant="filled">
-                      3
-                    </Badge>
-                  )
-                }
-                styles={{
-                  root: {
-                    borderRadius: theme.radius.sm,
-                  },
-                }}
-              />
+              <Link key={item.label} to={item.path} style={{ textDecoration: 'none' }}>
+                <NavLink
+                  label={item.label}
+                  leftSection={<item.icon size="1rem" stroke={1.5} />}
+                  rightSection={
+                    item.label === 'Messages' && (
+                      <Badge size="xs" color="red" variant="filled">
+                        3
+                      </Badge>
+                    )
+                  }
+                  styles={{
+                    root: {
+                      borderRadius: theme.radius.sm,
+                    },
+                  }}
+                />
+              </Link>
             ))}
           </Stack>
 
           <Divider my="sm" />
 
           <Stack gap="xs">
+            <Link to="/settings" style={{ textDecoration: 'none' }}>
+              <NavLink
+                label="Settings"
+                leftSection={<IconSettings size="1rem" stroke={1.5} />}
+              />
+            </Link>
             <NavLink
-              href="/settings"
-              label="Settings"
-              leftSection={<IconSettings size="1rem" stroke={1.5} />}
-            />
-            <NavLink
-              href="/logout"
+              onClick={handleLogout}
               label="Logout"
               leftSection={<IconLogout size="1rem" stroke={1.5} />}
               color="red"
@@ -136,7 +152,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
 
         {/* Main content */}
         <div className="flex-1 h-full bg-white w-full p-4 rounded-lg border border-gray-200 shadow-md mr-4 mb-4">
-          {children}
+          <Outlet />
         </div>
       </div>
     </div>

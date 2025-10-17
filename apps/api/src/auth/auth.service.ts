@@ -19,7 +19,7 @@ export class AuthService {
   async signInWithPassword(
     email: string,
     password: string,
-  ): Promise<string> {
+  ): Promise<{ user: User; jwt: string }> {
     const user = await this.prisma.user.findFirst({ where: { email } });
     if (!user) {
       throw new Error('Invalid email or password');
@@ -38,6 +38,42 @@ export class AuthService {
 
     const token = jwt.sign(payload, process.env.JWT_TOKEN_SECRET);
 
-    return token;
+    return { user, jwt: token };
+  }
+
+  async signUpWithPassword(
+    email: string,
+    firstName: string,
+    password: string,
+  ): Promise<{ user: User; jwt: string }> {
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findFirst({ where: { email } });
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create the user
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        firstName,
+        password: hashedPassword,
+      },
+    });
+
+    // Generate JWT token
+    const payload: JwtPayload & { exp: number } = {
+      userId: user.id,
+      email: user.email,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 60), // 60 days
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_TOKEN_SECRET);
+
+    return { user, jwt: token };
   }
 }

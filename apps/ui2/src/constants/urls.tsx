@@ -1,18 +1,24 @@
-import { ComponentType } from 'react';
-import { LogInPage } from '../pages/LogInPage';
+import { ComponentType, lazy } from 'react';
 import { NoAuthLayout } from '../layouts/NoAuthLayout';
 import { APP_NAME } from './globals';
+import { AppLayout } from '@/layouts/AppLayout';
+
+// Lazy load page components
+const LogInPage = lazy(() => import('../pages/LogInPage').then(module => ({ default: module.LogInPage })));
+const SignUpPage = lazy(() => import('../pages/SignUpPage').then(module => ({ default: module.SignUpPage })));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage/DashboardPage').then(module => ({ default: module.DashboardPage })));
+const TasksPage = lazy(() => import('@/pages/TasksPage/TasksPage'))
 
 function pageTitle(pageName?: string) {
   if (!pageName) return APP_NAME;
   return `${pageName} | ${APP_NAME}`;
 }
 
-export type UrlName = 'login';
+export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks';
 
 export interface Url {
   name: UrlName;
-  path: (...args: any[]) => string;
+  path: () => string;
   urlTemplate: string;
   pageComponent: ComponentType;
   title?: string;
@@ -27,6 +33,30 @@ export const urls: Url[] = [
     pageComponent: LogInPage,
     title: pageTitle('Log In'),
     layoutComponent: NoAuthLayout
+  },
+  {
+    name: 'signup',
+    path: () => '/signup',
+    urlTemplate: '/signup',
+    pageComponent: SignUpPage,
+    title: pageTitle('Sign Up'),
+    layoutComponent: NoAuthLayout
+  },
+  {
+    name: 'dashboard',
+    path: () => '/',
+    urlTemplate: '/',
+    pageComponent: DashboardPage,
+    title: pageTitle('Dashboard'),
+    layoutComponent: AppLayout
+  },
+  {
+    name: 'tasks',
+    path: () => '/tasks',
+    urlTemplate: '/tasks',
+    pageComponent: TasksPage,
+    title: pageTitle('Tasks'),
+    layoutComponent: AppLayout
   }
 ];
 

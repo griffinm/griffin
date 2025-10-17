@@ -6,6 +6,12 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface SignUpCredentials {
+  email: string;
+  firstName: string;
+  password: string;
+}
+
 export interface LoginResponse {
   user: User;
   message?: string;
@@ -18,6 +24,11 @@ export const fetchCurrentUser = async (): Promise<User> => {
 
 export const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await baseClient.post<LoginResponse>('/auth/sign-in', credentials);
+  return response.data;
+}
+
+export const signUpUser = async (credentials: SignUpCredentials): Promise<LoginResponse> => {
+  const response = await baseClient.post<LoginResponse>('/auth/sign-up', credentials);
   return response.data;
 }
 

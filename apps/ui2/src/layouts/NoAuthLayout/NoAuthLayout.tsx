@@ -1,7 +1,21 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Card } from '@mantine/core';
+import { useContext, useEffect } from 'react';
+import { UserContext } from '@/providers/UserProvider/UserContext';
+import { getUrl } from '@/constants/urls';
+import { PageTransition } from '@/components/PageTransition';
 
 export const NoAuthLayout = () => {
+  const { user, loading } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(getUrl('dashboard').path(), { replace: true });
+    }
+  }, [user, loading, navigate]);
+
   return (
     <div className="bg-gray-50 h-screen w-screen flex-1">
       <div className="p-4 flex align-center justify-center items-center gap-2">
