@@ -14,7 +14,7 @@ import {
   IconHome,
   IconCheck,
 } from '@tabler/icons-react'
-import { Outlet, useNavigate, Link } from 'react-router-dom';
+import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
 import { getUrl } from '@/constants/urls';
 
@@ -26,6 +26,7 @@ export const AppLayout = () => {
   const [isMobile, setIsMobile] = useState(false)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -101,38 +102,43 @@ export const AppLayout = () => {
         {/* Left navbar */}
         <div 
           style={{ 
-            width: isMobile ? (opened ? 200 : 0) : 250,
-            minWidth: isMobile ? (opened ? 200 : 0) : 250,
+            width: isMobile ? (opened ? 200 : 0) : 200,
+            minWidth: isMobile ? (opened ? 200 : 0) : 200,
             transition: 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],
-            padding: theme.spacing.md,
+            padding: '15px',
             display: 'flex',
             flexDirection: 'column',
             height: '100%'
           }}
         >
           <Stack gap="xs" style={{ flex: 1 }}>
-            {navigationData.map((item) => (
-              <Link key={item.label} to={item.path} style={{ textDecoration: 'none' }}>
-                <NavLink
-                  label={item.label}
-                  leftSection={<item.icon size="1rem" stroke={1.5} />}
-                  rightSection={
-                    item.label === 'Messages' && (
-                      <Badge size="xs" color="red" variant="filled">
-                        3
-                      </Badge>
-                    )
-                  }
-                  styles={{
-                    root: {
-                      borderRadius: theme.radius.sm,
-                    },
-                  }}
-                />
-              </Link>
-            ))}
+            {navigationData.map((item) => {
+              const isActive = location.pathname === item.path
+              return (
+                <Link key={item.label} to={item.path} style={{ textDecoration: 'none' }}>
+                  <NavLink
+                    label={item.label}
+                    leftSection={<item.icon size="1rem" stroke={1.5} />}
+                    rightSection={
+                      item.label === 'Messages' && (
+                        <Badge size="xs" color="red" variant="filled">
+                          3
+                        </Badge>
+                      )
+                    }
+                    active={isActive}
+                    component="div"
+                    styles={{
+                      root: {
+                        borderRadius: theme.radius.sm,
+                      },
+                    }}
+                  />
+                </Link>
+              )
+            })}
           </Stack>
 
           <Divider my="sm" />
@@ -142,6 +148,8 @@ export const AppLayout = () => {
               <NavLink
                 label="Settings"
                 leftSection={<IconSettings size="1rem" stroke={1.5} />}
+                active={location.pathname === '/settings'}
+                component="div"
               />
             </Link>
             <NavLink

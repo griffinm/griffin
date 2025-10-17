@@ -82,9 +82,10 @@ export const theme: MantineThemeOverride = createTheme({
             }),
             ...(component === 'small' && {
               fontSize: fontSize.small,
-              fontWeight: 400,
+              padding: 0,
+              fontWeight: 300,
               color: theme.colors.gray[100],
-              lineHeight: 1.8,
+              lineHeight: '1.5rem',
               marginBottom: theme.spacing.xs as any,
             }),
           },

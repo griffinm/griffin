@@ -87,3 +87,4 @@ export function TaskRow({ task, onUpdateTask, onEditTask, onDeleteTask }: TaskRo
     </TableRow>
   );
 }
+

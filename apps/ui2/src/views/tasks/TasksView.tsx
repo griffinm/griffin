@@ -23,13 +23,7 @@ export function TasksView() {
     })
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const taskId = active.id as string;
-    
-    // Find the task being dragged from all columns
-    // We'll need to search through all the data to find the task
-    // For now, we'll set a placeholder and improve this later
+  const handleDragStart = () => {
     setActiveTask(null);
   };
 
