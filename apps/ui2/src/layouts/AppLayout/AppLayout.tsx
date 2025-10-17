@@ -106,10 +106,13 @@ export const AppLayout = () => {
             transition: 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],
-            padding: theme.spacing.md
+            padding: theme.spacing.md,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%'
           }}
         >
-          <Stack gap="xs">
+          <Stack gap="xs" style={{ flex: 1 }}>
             {navigationData.map((item) => (
               <Link key={item.label} to={item.path} style={{ textDecoration: 'none' }}>
                 <NavLink

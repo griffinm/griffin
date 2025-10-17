@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -71,22 +70,40 @@ model Media {
   @@map("media")
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
+
 model Task {
-  id          String       @id @default(uuid()) @map("id")
-  title       String       @map("title")
-  description String?      @map("description")
-  dueDate     DateTime?    @map("due_date")
-  completedAt DateTime?    @map("completed_at")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
-  deletedAt   DateTime?    @map("deleted_at")
-  userId      String       @map("user_id")
-  noteId      String?      @map("note_id")
-  priority    TaskPriority @default(MEDIUM) @map("priority")
-  note        Note?        @relation(fields: [noteId], references: [id])
-  user        User         @relation(fields: [userId], references: [id])
+  id            String              @id @default(uuid()) @map("id")
+  title         String              @map("title")
+  description   String?             @map("description")
+  dueDate       DateTime?           @map("due_date")
+  status        TaskStatus          @default(TODO) @map("status")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  deletedAt     DateTime?           @map("deleted_at")
+  userId        String              @map("user_id")
+  noteId        String?             @map("note_id")
+  priority      TaskPriority        @default(MEDIUM) @map("priority")
+  note          Note?               @relation(fields: [noteId], references: [id])
+  user          User                @relation(fields: [userId], references: [id])
+  statusHistory TaskStatusHistory[]
+  completedAt   DateTime?           @map("completed_at")
 
   @@map("tasks")
+}
+
+model TaskStatusHistory {
+  id        String     @id @default(uuid()) @map("id")
+  taskId    String     @map("task_id")
+  status    TaskStatus @map("status")
+  changedAt DateTime   @default(now()) @map("changed_at")
+  task      Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_status_history")
 }
 
 model Question {
