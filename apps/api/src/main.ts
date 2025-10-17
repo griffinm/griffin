@@ -11,10 +11,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: logLevels
   });
-  app.enableCors({
-    origin: 'http://localhost:4200',
-    credentials: true,
-  });
+
+  if (process.env.NODE_ENV === 'development') {
+    app.enableCors({
+      origin: 'http://localhost:4200',
+      credentials: true,
+    });
+  }
+
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   app.use(cookieParser());

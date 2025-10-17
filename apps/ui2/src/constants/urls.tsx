@@ -8,7 +8,10 @@ function pageTitle(pageName?: string) {
   return `${pageName} | ${APP_NAME}`;
 }
 
+export type UrlName = 'login';
+
 export interface Url {
+  name: UrlName;
   path: (...args: any[]) => string;
   urlTemplate: string;
   pageComponent: ComponentType;
@@ -18,6 +21,7 @@ export interface Url {
 
 export const urls: Url[] = [
   {
+    name: 'login',
     path: () => '/login',
     urlTemplate: '/login',
     pageComponent: LogInPage,
@@ -25,3 +29,12 @@ export const urls: Url[] = [
     layoutComponent: NoAuthLayout
   }
 ];
+
+export function getUrl(name: UrlName): Url {
+  const url = urls.find(url => url.name === name);
+  if (!url) {
+    throw new Error(`Url ${name} not found`);
+  }
+
+  return url;
+}
