@@ -9,13 +9,9 @@ import {
   Badge,
 } from '@mantine/core'
 import {
-  IconDashboard,
   IconUsers,
   IconSettings,
   IconLogout,
-  IconChevronDown,
-  IconBell,
-  IconSearch,
   IconHome,
   IconChartBar,
   IconFileText,
