@@ -1,11 +1,9 @@
-import { Container, Title, Text, Paper, Stack } from '@mantine/core'
-import Layout from './components/Layout'
+import { RouterProvider } from 'react-router-dom'
+import { router } from './components/AppRouter'
 
 function App() {
   return (
-    <Layout>
-      This is it
-    </Layout>
+    <RouterProvider router={router} />
   )
 }
 

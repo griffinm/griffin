@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import {
-  AppShell,
-  Text,
   Burger,
   useMantineTheme,
   Group,
@@ -9,7 +7,6 @@ import {
   Stack,
   Divider,
   Badge,
-  Paper,
 } from '@mantine/core'
 import {
   IconDashboard,
@@ -27,7 +24,7 @@ import {
 
 const HEADER_HEIGHT = 40;
 
-const Layout = ({ children }) => {
+export const AppLayout = ({ children }: { children: ReactNode }) => {
   const theme = useMantineTheme()
   const [opened, setOpened] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -150,4 +147,3 @@ const Layout = ({ children }) => {
   )
 }
 
-export default Layout

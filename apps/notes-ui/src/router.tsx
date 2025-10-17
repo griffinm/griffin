@@ -1,20 +1,16 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Layout } from "./components/Layout";
-import { Note } from "./components/Note";
+import { NoAuthLayout } from "@/layouts/NoAuthLayout";
+import { LogInPage } from "@/pages/LogInPage";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Layout />,
+    path: "/auth",
+    element: <NoAuthLayout />,
     children: [
       {
-        path: "/",
-        element: <div>Home</div>,
+        path: "/login",
+        element: <LogInPage />,
       },
-      {
-        path: "/note/:noteId",
-        element: <Note />,
-      },
-    ]
-  },
+    ],
+  }
 ]);
