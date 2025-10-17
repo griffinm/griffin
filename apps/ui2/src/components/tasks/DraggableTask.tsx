@@ -2,15 +2,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task, TaskPriority } from '@/types/task';
 import { TruncatedDescription } from './TruncatedDescriptoin';
-import { Text } from '@mantine/core';
-import { TaskColumn } from './TaskColumn';
 import { formatDistanceToNowStrict } from 'date-fns';
 import classNames from 'classnames';
 
 interface DraggableTaskProps {
   task: Task;
   isLastTask: boolean;
-  lastTaskElementRef: (node: HTMLDivElement | null) => void;
+  lastTaskElementRef: (_node: HTMLDivElement | null) => void;
 }
 
 export function DraggableTask({ task, isLastTask, lastTaskElementRef }: DraggableTaskProps) {
@@ -21,7 +19,10 @@ export function DraggableTask({ task, isLastTask, lastTaskElementRef }: Draggabl
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ 
+    id: task.id,
+    data: task,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -85,11 +86,11 @@ function TaskContent({ task }: { task: Task }) {
   }
 
   return (
-      <div className="flex flex-row h-full gap-2 w-full flex-1">
+      <div className="flex flex-row h-full gap-2 w-full flex-1 min-w-0">
         <div className={priorityClasses} />
 
-        <div className="flex flex-col h-full justify-between flex-1 p-2">
-          <p className="text-md font-medium mb-1">{task.title}</p>
+        <div className="flex flex-col h-full justify-between flex-1 p-2 min-w-0 overflow-hidden">
+          <p className="text-md font-medium mb-1 break-words">{task.title}</p>
 
           {task.description && (
             <TruncatedDescription description={task.description} />

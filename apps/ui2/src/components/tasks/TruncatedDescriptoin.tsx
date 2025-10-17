@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Text } from "@mantine/core";
 
 const TRUNCATION_LENGTH = 100;
 
@@ -14,9 +13,11 @@ export function TruncatedDescription({ description }: { description?: string }) 
   const isTruncated = truncateRequired && !expanded;
 
   return (
-    <p onClick={() => setExpanded(!expanded)} className="text-xs text-gray-600 ">
-      {description.substring(0, isTruncated ? TRUNCATION_LENGTH : description.length)}
-      {isTruncated && !expanded && '...'}
-    </p>
+    <div className="overflow-hidden">
+      <p onClick={() => setExpanded(!expanded)} className="text-xs text-gray-600 break-words">
+        {description.substring(0, isTruncated ? TRUNCATION_LENGTH : description.length)}
+        {isTruncated && !expanded && '...'}
+      </p>
+    </div>
   );
 }

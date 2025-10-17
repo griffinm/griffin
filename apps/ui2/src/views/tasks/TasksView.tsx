@@ -23,8 +23,9 @@ export function TasksView() {
     })
   );
 
-  const handleDragStart = () => {
-    setActiveTask(null);
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = event.active.data.current as Task;
+    setActiveTask(task);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -40,15 +41,7 @@ export function TasksView() {
     // Check if we're dropping directly on a column (status)
     if (over.id === TaskStatus.TODO || over.id === TaskStatus.IN_PROGRESS || over.id === TaskStatus.COMPLETED) {
       newStatus = over.id as TaskStatus;
-      console.log('Dropped on column, new status:', newStatus);
     } else {
-      // If dropping on a task, we need to find which column it belongs to
-      // We'll determine this by checking which column contains the task
-      console.log('Dropped on task, finding column...');
-      
-      // Find which column the dropped task belongs to
-      // We need to check all the task data to find the column
-      // For now, let's try a different approach - check the DOM element
       const overElement = document.querySelector(`[data-task-id="${over.id}"]`);
       if (overElement) {
         const columnElement = overElement.closest('[data-column-status]');
@@ -56,7 +49,6 @@ export function TasksView() {
           const columnStatus = columnElement.getAttribute('data-column-status');
           if (columnStatus && (columnStatus === TaskStatus.TODO || columnStatus === TaskStatus.IN_PROGRESS || columnStatus === TaskStatus.COMPLETED)) {
             newStatus = columnStatus as TaskStatus;
-            console.log('Found column from DOM, new status:', newStatus);
           }
         }
       }

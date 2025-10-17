@@ -45,7 +45,7 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
     return (
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-x-hidden">
         <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">{title}</h2>
-        <div className="task-column-scroll flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+        <div className="task-column-scroll flex-1 overflow-y-auto overflow-x-hidden min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <p className="text-gray-500">Loading...</p>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
     return (
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-x-hidden">
         <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">{title}</h2>
-        <div className="task-column-scroll flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+        <div className="task-column-scroll flex-1 overflow-y-auto overflow-x-hidden min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <p className="text-red-500">Error: {error.message}</p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
       <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">
         {title}
       </h2>
-      <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 min-w-0">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {tasks.map((task: Task, index: number) => {
           const isLastTask = index === tasks.length - 1;
           return (
