@@ -22,22 +22,10 @@ const HEADER_HEIGHT = 40;
 
 export const AppLayout = () => {
   const theme = useMantineTheme()
-  const [opened, setOpened] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [opened, setOpened] = useState(true)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768) // sm breakpoint
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -83,7 +71,6 @@ export const AppLayout = () => {
           size="sm"
           color={theme.colors.gray[6]}
           mr="xl"
-          hiddenFrom="sm"
         />
 
         <Group style={{ flex: 1 }} justify="space-between">
@@ -102,12 +89,12 @@ export const AppLayout = () => {
         {/* Left navbar */}
         <div 
           style={{ 
-            width: isMobile ? (opened ? 200 : 0) : 200,
-            minWidth: isMobile ? (opened ? 200 : 0) : 200,
+            width: opened ? 200 : 0,
+            minWidth: opened ? 200 : 0,
             transition: 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],
-            padding: '15px',
+            padding: opened ? '15px' : 0,
             display: 'flex',
             flexDirection: 'column',
             height: '100%'

@@ -31,8 +31,6 @@ export function TasksView() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    console.log('Drag end - active:', active.id, 'over:', over?.id);
-    
     if (!over) return;
 
     const taskId = active.id as string;
@@ -54,7 +52,6 @@ export function TasksView() {
       }
       
       if (!newStatus) {
-        console.log('Could not determine target column. Skipping update.');
         setActiveTask(null);
         return;
       }
@@ -62,7 +59,6 @@ export function TasksView() {
 
     // Update the task status
     if (newStatus) {
-      console.log('Updating task', taskId, 'to status:', newStatus);
       updateTaskStatusMutation.mutate({
         taskId,
         status: newStatus,
@@ -73,20 +69,7 @@ export function TasksView() {
   };
 
   return (
-    <div className="p-5 w-full max-w-full overflow-hidden">
-      <style>
-        {`
-          .task-column-scroll::-webkit-scrollbar {
-            display: none;
-          }
-          .task-column-scroll {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* Internet Explorer 10+ */
-          }
-        `}
-      </style>
-      <h1 className="mb-5 text-2xl font-bold text-gray-900">Tasks</h1>
-      
+    <div className="p-5 w-full max-w-full overflow-hidden">      
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
