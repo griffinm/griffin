@@ -27,6 +27,12 @@ export enum TaskStatus {
 export enum SortBy {
   DUE_DATE = 'dueDate',
   CREATED_AT = 'createdAt',
+  COMPLETED_AT = 'completedAt',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
 }
 
 export interface TaskFilters {
@@ -34,6 +40,7 @@ export interface TaskFilters {
   page?: number;
   resultsPerPage?: number;
   sortBy?: SortBy;
+  sortOrder?: SortOrder;
   search?: string;
   priority?: TaskPriority;
   startDate?: string;

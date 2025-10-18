@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient, UseQueryResult, UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { fetchTasks, fetchTaskById, updateTaskStatus } from '@/api/tasksApi';
-import { Task, PagedTaskList, TaskFilters, TaskStatus } from '@/types/task';
+import { Task, PagedTaskList, TaskFilters, TaskStatus, SortBy, SortOrder } from '@/types/task';
 
 export const useTasks = (filters?: TaskFilters): UseQueryResult<PagedTaskList, Error> => {
   return useQuery({
@@ -48,13 +48,19 @@ export const useTasksByStatus = (status: TaskStatus): UseQueryResult<Task[], Err
 
 // Hook for infinite scroll tasks by status
 export const useInfiniteTasksByStatus = (status: TaskStatus): UseInfiniteQueryResult<PagedTaskList, Error> => {
+  // Determine sort criteria based on status
+  const sortBy = status === TaskStatus.COMPLETED ? SortBy.COMPLETED_AT : SortBy.DUE_DATE;
+  const sortOrder = status === TaskStatus.COMPLETED ? SortOrder.DESC : SortOrder.ASC;
+  
   return useInfiniteQuery({
-    queryKey: ['tasks', 'infinite', 'byStatus', status],
+    queryKey: ['tasks', 'infinite', 'byStatus', status, sortBy, sortOrder],
     queryFn: async ({ pageParam = 1 }) => {
       return await fetchTasks({ 
         status, 
         page: pageParam,
-        resultsPerPage: 20 
+        resultsPerPage: 20,
+        sortBy,
+        sortOrder,
       });
     },
     getNextPageParam: (lastPage) => {

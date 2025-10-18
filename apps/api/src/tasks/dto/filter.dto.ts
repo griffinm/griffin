@@ -5,6 +5,12 @@ import { TaskPriority, TaskStatus } from "@prisma/client";
 export enum SortBy {
   DUE_DATE = 'dueDate',
   CREATED_AT = 'createdAt',
+  COMPLETED_AT = 'completedAt',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
 }
 
 export class FilterDto {
@@ -29,6 +35,10 @@ export class FilterDto {
   @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;
+
+  @IsOptional()
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder;
 
   @IsOptional()
   @IsString()

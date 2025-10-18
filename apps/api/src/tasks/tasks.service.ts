@@ -45,7 +45,7 @@ export class TasksService {
         ...(filter.endDate && { dueDate: { lte: filter.endDate } }),
         ...(filter.status && { status: filter.status }),
       },
-      orderBy: this.ordering(),
+      orderBy: this.ordering(filter.sortBy, filter.sortOrder, filter.status),
       take: filter.resultsPerPage,
       skip: (filter.page - 1) * filter.resultsPerPage,
     });
@@ -105,11 +105,37 @@ export class TasksService {
     return createdTask;
   }
 
-  private ordering(): Prisma.TaskOrderByWithAggregationInput[] {
+  private ordering(sortBy?: string, sortOrder?: string, status?: string): Prisma.TaskOrderByWithAggregationInput[] {
+    // If specific sort criteria provided, use it as primary sort
+    if (sortBy) {
+      const order = sortOrder || 'asc';
+      const primarySort = { [sortBy]: { sort: order, nulls: 'last' } };
+      
+      // Always include priority and createdAt as secondary sorts
+      return [
+        primarySort,
+        { priority: 'desc' },
+        { createdAt: 'asc' },
+      ];
+    }
+    
+    // Default sorting based on status if no sort criteria provided
+    // For completed tasks, sort by completedAt descending (newest first)
+    if (status === 'COMPLETED') {
+      return [
+        { completedAt: { sort: 'desc', nulls: 'last' } },
+        { priority: 'desc' },
+        { createdAt: 'asc' },
+      ];
+    }
+    
+    // For non-completed tasks (TODO, IN_PROGRESS, or all tasks)
+    // Sort by dueDate ascending (earliest first, nulls last)
     return [
-      { dueDate: 'asc' },
+      { dueDate: { sort: 'asc', nulls: 'last' } },
       { priority: 'desc' },
-    ]
+      { createdAt: 'asc' },
+    ];
   }
 
 }

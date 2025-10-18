@@ -21,7 +21,6 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
 
   // Flatten all pages into a single array of tasks
   const tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
-  const totalTasks = (data as any)?.pages?.[0]?.totalRecords || 0;
 
   // Make this column a drop zone
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
