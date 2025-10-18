@@ -21,6 +21,7 @@ import { getUrl } from '@/constants/urls';
 import { NoteTree } from '@/views/NoteTree';
 
 const HEADER_HEIGHT = 40;
+const LEFT_NAVBAR_WIDTH_DESKTOP = 250;
 
 export const AppLayout = () => {
   const theme = useMantineTheme()
@@ -118,9 +119,9 @@ export const AppLayout = () => {
           style={{ 
             position: isMobile ? 'fixed' : 'relative',
             top: isMobile ? HEADER_HEIGHT : 'auto',
-            left: isMobile ? (opened ? 0 : -200) : 'auto',
-            width: isMobile ? 200 : (opened ? 200 : 0),
-            minWidth: isMobile ? 200 : (opened ? 200 : 0),
+            left: isMobile ? (opened ? 0 : -LEFT_NAVBAR_WIDTH_DESKTOP) : 'auto',
+            width: isMobile ? 200 : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
+            minWidth: isMobile ? 200 : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
             transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],
@@ -132,7 +133,7 @@ export const AppLayout = () => {
             boxShadow: isMobile && opened ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
           }}
         >
-          <Stack gap="xs" style={{ flex: 1 }}>
+          <Stack gap="xs" style={{ overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
             {navigationData.map((item) => {
               const isActive = location.pathname === item.path
               return (
@@ -159,6 +160,9 @@ export const AppLayout = () => {
               )
             })}
             <Divider my="sm" />
+          </Stack>
+
+          <Stack gap="xs" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
             <NoteTree />
           </Stack>
 
