@@ -8,6 +8,7 @@ import {
   Divider,
   Badge,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import {
   IconSettings,
   IconLogout,
@@ -22,10 +23,18 @@ const HEADER_HEIGHT = 40;
 
 export const AppLayout = () => {
   const theme = useMantineTheme()
-  const [opened, setOpened] = useState(true)
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const [opened, setOpened] = useState(false)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Close navbar on mobile when route changes
+  useEffect(() => {
+    if (isMobile) {
+      setOpened(false)
+    }
+  }, [location.pathname, isMobile])
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -57,7 +66,7 @@ export const AppLayout = () => {
           top: 0, 
           left: 0, 
           right: 0, 
-          zIndex: 1000,
+          zIndex: 10,
           height: HEADER_HEIGHT,
           padding: theme.spacing.md,
           background: theme.colors.gray[0],
@@ -84,20 +93,42 @@ export const AppLayout = () => {
         marginTop: HEADER_HEIGHT,
         background: theme.colors.gray[0],
         minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
-        height: `calc(100vh - ${HEADER_HEIGHT}px)`
+        height: `calc(100vh - ${HEADER_HEIGHT}px)`,
+        position: 'relative'
       }}>
+        {/* Backdrop for mobile */}
+        {isMobile && opened && (
+          <div
+            onClick={() => setOpened(false)}
+            style={{
+              position: 'fixed',
+              top: HEADER_HEIGHT,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 9,
+            }}
+          />
+        )}
+
         {/* Left navbar */}
         <div 
           style={{ 
-            width: opened ? 200 : 0,
-            minWidth: opened ? 200 : 0,
-            transition: 'width 0.3s ease',
+            position: isMobile ? 'fixed' : 'relative',
+            top: isMobile ? HEADER_HEIGHT : 'auto',
+            left: isMobile ? (opened ? 0 : -200) : 'auto',
+            width: isMobile ? 200 : (opened ? 200 : 0),
+            minWidth: isMobile ? 200 : (opened ? 200 : 0),
+            transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],
             padding: opened ? '15px' : 0,
             display: 'flex',
             flexDirection: 'column',
-            height: '100%'
+            height: isMobile ? `calc(100vh - ${HEADER_HEIGHT}px)` : '100%',
+            zIndex: 10,
+            boxShadow: isMobile && opened ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
           }}
         >
           <Stack gap="xs" style={{ flex: 1 }}>
@@ -150,7 +181,7 @@ export const AppLayout = () => {
 
         {/* Main content */}
         <div 
-          className="flex-1 bg-white w-full p-4 rounded-lg border border-gray-200 shadow-md mr-4 mb-4"
+          className="flex-1 bg-white w-full p-2 sm:p-4 rounded-lg border border-gray-200 shadow-md sm:mr-4 mb-4"
           style={{ 
             height: 'calc(100% - 1rem)',
             overflowY: 'auto',

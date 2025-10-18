@@ -28,6 +28,7 @@ export function TaskModal({
           description: formData.description,
           dueDate: formData.dueDate,
           priority: formData.priority,
+          status: formData.status,
         });
         notifications.show({
           title: 'Success',
@@ -41,6 +42,7 @@ export function TaskModal({
           description: formData.description,
           dueDate: formData.dueDate,
           priority: formData.priority,
+          status: formData.status,
         });
         notifications.show({
           title: 'Success',

@@ -35,6 +35,7 @@ export class UpdateTaskDto {
   @IsOptional()
   priority?: TaskPriority;
 
+  @IsEnum(TaskStatus)
   @IsOptional()
-  status?: any;
+  status?: TaskStatus;
 }

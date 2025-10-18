@@ -87,7 +87,7 @@ export function TasksView() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col lg:flex-row gap-7 h-[calc(100vh-200px)] w-full max-w-full overflow-hidden overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row gap-3 md:gap-7 h-[calc(100vh-200px)] w-full max-w-full overflow-hidden overflow-x-hidden">
           <TaskColumn status={TaskStatus.TODO} title="To Do" />
           <TaskColumn status={TaskStatus.IN_PROGRESS} title="In Progress" />
           <TaskColumn status={TaskStatus.COMPLETED} title="Completed" />

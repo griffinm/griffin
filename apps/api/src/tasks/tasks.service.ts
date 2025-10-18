@@ -91,10 +91,25 @@ export class TasksService {
   }
 
   async update(id: string, userId: string, task: UpdateTaskDto): Promise<Task> {
+    // Get the existing task to check if status has changed
+    const existingTask = await this.getById(id, userId);
+    
+    // Update the task
     const updatedTask = await this.prisma.task.update({
       where: { id, userId },
-      data: task as any,
+      data: task,
     });
+    
+    // If status has changed, create a status history entry
+    if (task.status && task.status !== existingTask.status) {
+      await this.prisma.taskStatusHistory.create({
+        data: {
+          taskId: id,
+          status: task.status,
+        },
+      });
+    }
+    
     return updatedTask;
   }
 
@@ -102,6 +117,15 @@ export class TasksService {
     const createdTask = await this.prisma.task.create({
       data: { ...task, userId },
     });
+    
+    // Create initial status history entry
+    await this.prisma.taskStatusHistory.create({
+      data: {
+        taskId: createdTask.id,
+        status: createdTask.status,
+      },
+    });
+    
     return createdTask;
   }
 
