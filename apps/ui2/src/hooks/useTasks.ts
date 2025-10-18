@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient, UseQueryResult, UseInfiniteQueryResult } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, UseQueryResult, UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { fetchTasks, fetchTaskById, updateTaskStatus } from '@/api/tasksApi';
 import { Task, PagedTaskList, TaskFilters, TaskStatus } from '@/types/task';
 
@@ -75,8 +75,116 @@ export const useUpdateTaskStatus = () => {
   return useMutation({
     mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) => 
       updateTaskStatus(taskId, status),
-    onSuccess: () => {
-      // Invalidate all task queries to refetch data
+    
+    // Optimistically update the cache before the mutation
+    onMutate: async ({ taskId, status: newStatus }) => {
+      // Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+
+      // Snapshot the previous state for rollback
+      const previousData = {
+        byStatus: {} as Record<TaskStatus, InfiniteData<PagedTaskList, number>>,
+      };
+
+      // Get all possible statuses
+      const statuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED];
+
+      // Find the task and its old status
+      let movedTask: Task | undefined;
+      let oldStatus: TaskStatus | undefined;
+
+      // Loop through all status query caches to find and update the task
+      statuses.forEach((status) => {
+        const queryKey = ['tasks', 'byStatus', status];
+        const data = queryClient.getQueryData<InfiniteData<PagedTaskList, number>>(queryKey);
+        
+        if (data) {
+          // Save snapshot
+          previousData.byStatus[status] = data;
+
+          // Check if this status has the task we're moving
+          const pages = data.pages || [];
+          for (const page of pages) {
+            const task = page.data?.find((t: Task) => t.id === taskId);
+            if (task) {
+              movedTask = task;
+              oldStatus = status;
+              break;
+            }
+          }
+        }
+      });
+
+      // If we found the task, update the cache optimistically
+      if (movedTask && oldStatus !== undefined) {
+        // Remove task from old status column
+        const oldQueryKey = ['tasks', 'byStatus', oldStatus];
+        queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(oldQueryKey, (old) => {
+          if (!old) return old;
+          
+          return {
+            ...old,
+            pages: old.pages.map((page: PagedTaskList) => ({
+              ...page,
+              data: page.data.filter((t: Task) => t.id !== taskId),
+              totalRecords: page.totalRecords - 1,
+            })),
+          };
+        });
+
+        // Add task to new status column with updated status
+        const newQueryKey = ['tasks', 'byStatus', newStatus];
+        const updatedTask = { ...movedTask, status: newStatus };
+        
+        queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(newQueryKey, (old) => {
+          if (!old) {
+            // If there's no data for this status yet, create a new structure
+            return {
+              pages: [{
+                data: [updatedTask],
+                page: 1,
+                resultsPerPage: 20,
+                totalPages: 1,
+                totalRecords: 1,
+              }],
+              pageParams: [1],
+            };
+          }
+          
+          return {
+            ...old,
+            pages: old.pages.map((page: PagedTaskList, index: number) => {
+              // Add to the first page
+              if (index === 0) {
+                return {
+                  ...page,
+                  data: [updatedTask, ...page.data],
+                  totalRecords: page.totalRecords + 1,
+                };
+              }
+              return page;
+            }),
+          };
+        });
+      }
+
+      // Return context with snapshot for potential rollback
+      return { previousData };
+    },
+    
+    // If the mutation fails, rollback to the previous state
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        // Restore all the snapshots
+        Object.entries(context.previousData.byStatus).forEach(([status, data]) => {
+          const queryKey = ['tasks', 'byStatus', status as TaskStatus];
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    
+    // Always refetch after error or success to ensure consistency
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });

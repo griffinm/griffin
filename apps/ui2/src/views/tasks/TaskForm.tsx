@@ -44,7 +44,7 @@ export function TaskForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         <div>
           <TextInput
             value={title} 
@@ -73,7 +73,7 @@ export function TaskForm({
           </div>
 
           {/* Right Column */}
-          <div className="bg-neutral-50 p-4 rounded-lg w-1/4 flex flex-col gap-4">
+          <div className="pl-4 rounded-lg w-1/4 flex flex-col gap-4">
             <DatePickerInput
               label="Due Date"
               value={dueDate}
@@ -87,7 +87,7 @@ export function TaskForm({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex justify-end gap-2">
           <Button type="button" size="xs" variant="outline" onClick={onCancel} leftSection={<IconX size={16} />}>Cancel</Button>
           <Button type="submit" size="xs" leftSection={<IconCheck size={16} />}>Save</Button>
         </div>

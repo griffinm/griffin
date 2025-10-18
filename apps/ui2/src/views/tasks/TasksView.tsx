@@ -9,10 +9,13 @@ import {
 } from '@dnd-kit/core';
 import { useUpdateTaskStatus } from '@/hooks/useTasks';
 import { TaskStatus, Task } from '@/types/task';
-import { TaskColumn, TaskDragOverlay } from '@/components/tasks';
+import { TaskColumn, TaskDragOverlay, TaskModal } from '@/components/tasks';
+import { Button } from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
 
 export function TasksView() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const updateTaskStatusMutation = useUpdateTaskStatus();
 
   const sensors = useSensors(
@@ -69,13 +72,22 @@ export function TasksView() {
   };
 
   return (
-    <div className="p-5 w-full max-w-full overflow-hidden">      
+    <div className="p-5 w-full max-w-full overflow-hidden">
+      <div className="flex justify-between items-center mb-4">
+        <Button 
+          leftSection={<IconPlus size={18} />}
+          onClick={() => setCreateModalOpen(true)}
+        >
+          Create Task
+        </Button>
+      </div>
+      
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col lg:flex-row gap-2.5 h-[calc(100vh-200px)] w-full max-w-full overflow-hidden overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row gap-7 h-[calc(100vh-200px)] w-full max-w-full overflow-hidden overflow-x-hidden">
           <TaskColumn status={TaskStatus.TODO} title="To Do" />
           <TaskColumn status={TaskStatus.IN_PROGRESS} title="In Progress" />
           <TaskColumn status={TaskStatus.COMPLETED} title="Completed" />
@@ -83,6 +95,11 @@ export function TasksView() {
         
         <TaskDragOverlay activeTask={activeTask} />
       </DndContext>
+
+      <TaskModal 
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+      />
     </div>
   );
 }
