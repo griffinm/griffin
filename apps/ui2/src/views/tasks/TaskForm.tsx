@@ -1,6 +1,6 @@
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 import { useState } from "react";
-import { TextInput } from "@mantine/core";
+import { Textarea } from "@mantine/core";
 import { Button } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { PrioritySelect } from "./PrioritySelect";
@@ -50,16 +50,16 @@ export function TaskForm({
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-4">
         <div>
-          <TextInput
+          <Textarea
             value={title} 
             placeholder="Title"
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
             variant="unstyled"
             required
-            styles={{
-              input: { base: { fontSize: '0.875rem', fontWeight: 'bold' }, sm: { fontSize: '1.5rem', fontWeight: 'bold' } }
-            }}
+            size="xl"
+            autosize
+            minRows={1}
           />
         </div>
         
