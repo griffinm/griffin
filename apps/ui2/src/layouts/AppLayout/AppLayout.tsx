@@ -18,13 +18,14 @@ import {
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
 import { getUrl } from '@/constants/urls';
+import { NoteTree } from '@/views/NoteTree';
 
 const HEADER_HEIGHT = 40;
 
 export const AppLayout = () => {
   const theme = useMantineTheme()
   const isMobile = useMediaQuery('(max-width: 768px)')
-  const [opened, setOpened] = useState(false)
+  const [opened, setOpened] = useState(true)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
@@ -157,6 +158,8 @@ export const AppLayout = () => {
                 </Link>
               )
             })}
+            <Divider my="sm" />
+            <NoteTree />
           </Stack>
 
           <Divider my="sm" />
