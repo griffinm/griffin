@@ -4,6 +4,8 @@ import { Task, TaskPriority } from '@/types/task';
 import { TruncatedDescription } from './TruncatedDescriptoin';
 import { formatDistanceToNowStrict } from 'date-fns';
 import classNames from 'classnames';
+import { useState } from 'react';
+import { TaskModal } from './TaskModal';
 
 interface DraggableTaskProps {
   task: Task;
@@ -12,6 +14,8 @@ interface DraggableTaskProps {
 }
 
 export function DraggableTask({ task, isLastTask, lastTaskElementRef }: DraggableTaskProps) {
+  const [showModal, setShowModal] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -30,6 +34,12 @@ export function DraggableTask({ task, isLastTask, lastTaskElementRef }: Draggabl
     opacity: isDragging ? 0.5 : 1,
   };
 
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    e.preventDefault();
+    setShowModal(true);
+  }
+
   return (
     <div
       ref={(node) => {
@@ -44,12 +54,13 @@ export function DraggableTask({ task, isLastTask, lastTaskElementRef }: Draggabl
       {...listeners}
       className="border border-gray-300 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow min-w-0 cursor-grab active:cursor-grabbing w-full"
     >
-      <TaskContent task={task} />
+      <TaskContent task={task} onClick={handleClick} />
+      {showModal && <TaskModal task={task} open={showModal} onClose={() => setShowModal(false)} />}
     </div>
   );
 }
 
-function TaskContent({ task }: { task: Task }) {
+function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventHandler<HTMLDivElement> }) {
   const isNotCompleted = !task?.completedAt;
   const priorityClasses = classNames('h-full w-[10px] rounded-l-md', {
     'bg-red-400': task.priority === TaskPriority.HIGH,
@@ -86,15 +97,11 @@ function TaskContent({ task }: { task: Task }) {
   }
 
   return (
-      <div className="flex flex-row h-full gap-2 w-full flex-1 min-w-0">
+      <div className="flex flex-row h-full gap-2 w-full flex-1 min-w-0" onClick={e => onClick(e)}>
         <div className={priorityClasses} />
 
         <div className="flex flex-col h-full justify-between flex-1 p-2 min-w-0 overflow-hidden">
           <p className="text-md font-medium mb-1 break-words">{task.title}</p>
-
-          {task.description && (
-            <TruncatedDescription description={task.description} />
-          )}
 
           {/* Due Date Footer */}
           <div className="flex justify-between items-center mt-2">

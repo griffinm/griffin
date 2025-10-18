@@ -2,9 +2,7 @@ import { useState } from "react"
 import { Task } from "@prisma/client"
 import { PriorityOptionType, PriorityOptions } from "@griffin/types";
 import { TextField, Button, Checkbox, FormControlLabel } from "@mui/material"
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateInput } from '@mantine/dates';
 import dayjs from 'dayjs';
 import { CreateOrUpdateTaskProps } from '../../utils/api';
 import { PrioritySelect } from "./PrioritySelect";

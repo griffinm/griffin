@@ -28,3 +28,21 @@ export const updateTaskStatus = async (id: string, status: string): Promise<Task
   const response = await baseClient.patch<Task>(`/tasks/${id}`, { status });
   return response.data;
 };
+
+export interface CreateOrUpdateTaskData {
+  title: string;
+  description?: string;
+  dueDate?: Date;
+  priority: string;
+  status?: string;
+}
+
+export const createTask = async (task: CreateOrUpdateTaskData): Promise<Task> => {
+  const response = await baseClient.post<Task>('/tasks', task);
+  return response.data;
+};
+
+export const updateTask = async (id: string, task: CreateOrUpdateTaskData): Promise<Task> => {
+  const response = await baseClient.patch<Task>(`/tasks/${id}`, task);
+  return response.data;
+};

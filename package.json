@@ -20,6 +20,7 @@
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.0.13",
     "@mantine/core": "^7.15.0",
+    "@mantine/dates": "^8.3.5",
     "@mantine/form": "^8.3.3",
     "@mantine/hooks": "^7.15.0",
     "@mantine/modals": "^8.3.3",
