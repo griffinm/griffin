@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Copy the Nx workspace and backend app source
 COPY . .
@@ -16,7 +16,7 @@ RUN (cd apps/api && npx prisma generate)
 
 # Reset Nx cache and build
 RUN npx nx reset
-RUN npx nx run api:build:production
+RUN npx nx run api:build:production --verbose
 
 
 
