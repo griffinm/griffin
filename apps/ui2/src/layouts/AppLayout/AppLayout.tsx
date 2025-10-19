@@ -173,11 +173,11 @@ export const AppLayout = () => {
           <Divider my="sm" />
 
           <Stack gap="xs">
-            <Link to="/settings" style={{ textDecoration: 'none' }}>
+            <Link to={getUrl('settings').path()} style={{ textDecoration: 'none' }}>
               <NavLink
                 label="Settings"
                 leftSection={<IconSettings size="1rem" stroke={1.5} />}
-                active={location.pathname === '/settings'}
+                active={location.pathname === getUrl('settings').path()}
                 component="div"
               />
             </Link>

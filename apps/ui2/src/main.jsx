@@ -10,7 +10,7 @@ import App from './App.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <MantineProvider>
-      <Notifications />
+      <Notifications position="top-right" />
       <App />
     </MantineProvider>
   </StrictMode>,

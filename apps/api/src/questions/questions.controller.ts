@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, ClassSerializerInterceptor, Controller, Get, Param, ParseBoolPipe, Patch, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { QuestionsService } from "./questions.service";
 import { RequestWithUser } from "@griffin/types";
@@ -15,7 +15,7 @@ export class QuestionsController {
   @Get('/questions')
   async getAll(
     @Req() request: RequestWithUser,
-    @Query('includeAnswered') includeAnswered: boolean = false,
+    @Query('includeAnswered', new ParseBoolPipe({ optional: true })) includeAnswered = false,
   ): Promise<QuestionEntity[]> {
     return this.questionsService.getMany(request.user.id, includeAnswered);
   }

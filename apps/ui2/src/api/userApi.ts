@@ -36,3 +36,14 @@ export const logoutUser = async (): Promise<{ message: string }> => {
   const response = await baseClient.post<{ message: string }>('/auth/sign-out');
   return response.data;
 }
+
+export interface UpdateProfileData {
+  firstName?: string;
+  email?: string;
+  password?: string;
+}
+
+export const updateUserProfile = async (data: UpdateProfileData): Promise<User> => {
+  const response = await baseClient.patch<User>('/users', data);
+  return response.data;
+}

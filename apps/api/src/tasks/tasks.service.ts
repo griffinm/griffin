@@ -129,15 +129,15 @@ export class TasksService {
     return createdTask;
   }
 
-  private ordering(sortBy?: string, sortOrder?: string, status?: string): Prisma.TaskOrderByWithAggregationInput[] {
+  private ordering(sortBy?: string, sortOrder?: string, status?: string): Prisma.TaskOrderByWithRelationInput[] {
     // If specific sort criteria provided, use it as primary sort
     if (sortBy) {
-      const order = sortOrder || 'asc';
+      const order = (sortOrder || 'asc') as 'asc' | 'desc';
       const primarySort = { [sortBy]: { sort: order, nulls: 'last' } };
       
       // Always include priority and createdAt as secondary sorts
       return [
-        primarySort,
+        primarySort as Prisma.TaskOrderByWithRelationInput,
         { priority: 'desc' },
         { createdAt: 'asc' },
       ];

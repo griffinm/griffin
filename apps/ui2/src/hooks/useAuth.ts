@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/constants/queryKeys';
-import { fetchCurrentUser, loginUser, signUpUser, logoutUser, LoginCredentials, SignUpCredentials } from '@/api/userApi';
+import { fetchCurrentUser, loginUser, signUpUser, logoutUser, updateUserProfile, LoginCredentials, SignUpCredentials, UpdateProfileData } from '@/api/userApi';
 import { TIMES } from '@/constants/globals';
 
 export const useCurrentUser = () => {
@@ -50,6 +50,20 @@ export const useLogout = () => {
       queryClient.setQueryData(queryKeys.auth.currentUser(), null);
       // Invalidate all auth queries
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
+    },
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: updateUserProfile,
+    onSuccess: (data) => {
+      // Update cache with new user data
+      queryClient.setQueryData(queryKeys.auth.currentUser(), data);
+      // Invalidate to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser() });
     },
   });
 };

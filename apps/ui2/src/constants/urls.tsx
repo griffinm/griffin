@@ -10,14 +10,15 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage/DashboardPage').t
 const TasksPage = lazy(() => import('@/pages/TasksPage/TasksPage'));
 const NotebooksPage = lazy(() => import('@/pages/NotebooksPage/NotebooksPage').then(module => ({ default: module.NotebooksPage })));
 const NotebookPage = lazy(() => import('@/pages/NotebookPage/NotebookPage'));
-const NotePage = lazy(() => import('@/pages/NotePage/NotePage'))
+const NotePage = lazy(() => import('@/pages/NotePage/NotePage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
 
 function pageTitle(pageName?: string) {
   if (!pageName) return APP_NAME;
   return `${pageName} | ${APP_NAME}`;
 }
 
-export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'notebooks' | 'notebook' | 'note';
+export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'notebooks' | 'notebook' | 'note' | 'settings';
 
 export interface Url {
   name: UrlName;
@@ -83,6 +84,14 @@ export const urls: Url[] = [
     urlTemplate: '/notes/:noteId',
     pageComponent: NotePage,
     title: pageTitle('Note'),
+    layoutComponent: AppLayout
+  },
+  {
+    name: 'settings',
+    path: () => '/settings',
+    urlTemplate: '/settings',
+    pageComponent: SettingsPage,
+    title: pageTitle('Settings'),
     layoutComponent: AppLayout
   }
 ];
