@@ -2,7 +2,7 @@
 
 typesense-data/
 typesense-data-prod/
-
+typesense-data-prod-ui2/
 # compiled output
 dist
 tmp
