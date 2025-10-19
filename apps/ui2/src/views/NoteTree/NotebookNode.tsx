@@ -1,4 +1,4 @@
-import { NavLink, Loader, Text, Group, Menu, ActionIcon } from '@mantine/core';
+import { NavLink, Loader, Text, Group, Menu, ActionIcon, useMantineTheme } from '@mantine/core';
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotebooksByParent, useDeleteNotebook, useUpdateNotebook } from '@/hooks';
@@ -14,6 +14,7 @@ interface NotebookNodeProps {
 }
 
 export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProps) {
+  const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   const [createModalOpened, setCreateModalOpened] = useState(false);
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
@@ -135,7 +136,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
     <>
       <NavLink
         label={
-          <Group gap="xs" wrap="nowrap" justify="space-between" style={{ flex: 1 }}>
+          <div style={{ position: 'relative', width: '100%' }}>
             {isEditing ? (
               <input
                 ref={inputRef}
@@ -146,7 +147,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
                 onKeyDown={handleKeyDown}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  flex: 1,
+                  width: '100%',
                   border: '1px solid #ced4da',
                   borderRadius: '4px',
                   padding: '4px 8px',
@@ -155,55 +156,68 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
                 }}
               />
             ) : (
-              <span onClick={handleClick} style={{ cursor: 'pointer', flex: 1 }}>
+              <span onClick={handleClick} style={{ cursor: 'pointer', display: 'block' }}>
                 {notebook.title}
                 {opened && isLoading && <Loader size="xs" ml={8} />}
               </span>
             )}
             {isHovered && (
-              <Menu shadow="md" width={200} position="right-start">
-                <Menu.Target>
-                  <ActionIcon
-                    size="xs"
-                    variant="subtle"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <IconDots size={14} color="gray" />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconPlus size={14} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCreateModalOpened(true);
-                    }}
-                  >
-                    Create Notebook
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconEdit size={14} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStartRename();
-                    }}
-                  >
-                    Rename
-                  </Menu.Item>
-                  <Menu.Item
-                    color="red"
-                    leftSection={<IconTrash size={14} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteModalOpened(true);
-                    }}
-                  >
-                    Delete
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
+              <div style={{ 
+                position: 'absolute', 
+                top: '50%', 
+                right: 0, 
+                transform: 'translateY(-50%)', 
+                zIndex: 10,
+                background: theme.colors.gray[0],
+                backdropFilter: 'blur(8px)',
+                borderRadius: '4px',
+                padding: '2px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+              }}>
+                <Menu shadow="md" width={200} position="right-start">
+                  <Menu.Target>
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <IconDots size={14} color="gray" />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconPlus size={14} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCreateModalOpened(true);
+                      }}
+                    >
+                      Create Notebook
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconEdit size={14} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartRename();
+                      }}
+                    >
+                      Rename
+                    </Menu.Item>
+                    <Menu.Item
+                      color="red"
+                      leftSection={<IconTrash size={14} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteModalOpened(true);
+                      }}
+                    >
+                      Delete
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </div>
             )}
-          </Group>
+          </div>
         }
         childrenOffset={childrenOffset}
         opened={opened}

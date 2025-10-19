@@ -74,7 +74,8 @@ export const AppLayout = () => {
           padding: theme.spacing.md,
           background: theme.colors.gray[0],
           display: 'flex',
-          alignItems: 'center'
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
         <Burger
