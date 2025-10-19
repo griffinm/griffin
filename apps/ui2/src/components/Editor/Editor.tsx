@@ -3,19 +3,30 @@ import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from '@tiptap/extension-link';
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
 import {
+  MenuButtonBold,
+  MenuButtonItalic,
+  MenuButtonCode,
+  MenuButtonCodeBlock,
   MenuButtonBulletedList,
   MenuButtonOrderedList,
   MenuButtonRedo,
   MenuButtonUndo,
   MenuControlsContainer,
   MenuDivider,
+  MenuSelectHeading,
   RichTextEditor,
   MenuButtonEditLink,
   MenuButtonTaskList,
   MenuButtonAlignCenter,
   MenuButtonAlignLeft,
   MenuButtonAlignRight,
+  MenuButtonAddTable,
+  TableBubbleMenu,
+  TableImproved,
   LinkBubbleMenu,
   LinkBubbleMenuHandler,
   type RichTextEditorRef,
@@ -23,10 +34,14 @@ import {
 } from "mui-tiptap";
 import { useRef } from "react";
 import { useEditor } from "@tiptap/react";
+import { Editor as TiptapEditor } from "@tiptap/core";
 import './styles.scss';
 
 const extensions = [
   StarterKit,
+  TableCell,
+  TableHeader,
+  TableRow,
   TaskList,
   TaskItem,
   TextAlign.configure({
@@ -36,16 +51,21 @@ const extensions = [
     openOnClick: false,
   }),
   LinkBubbleMenuHandler,
+  TableImproved.configure({
+    resizable: true,
+  }),
 ];
 
 export function Editor({
   value,
   onChange,
+  onUpdate,
   minHeight,
   maxHeight,
 }: {
   value: string;
-  onChange: (_html: string) => void;
+  onChange?: (_html: string) => void;
+  onUpdate?: (_params: { editor: TiptapEditor }) => void;
   minHeight?: string | number;
   maxHeight?: string | number;
 }) {
@@ -59,7 +79,12 @@ export function Editor({
   const handleUpdate = () => {
     if (rteRef.current?.editor) {
       const html = rteRef.current.editor.getHTML();
-      onChange(html);
+      if (onChange) {
+        onChange(html);
+      }
+      if (onUpdate) {
+        onUpdate({ editor: rteRef.current.editor });
+      }
     }
   };
 
@@ -74,24 +99,31 @@ export function Editor({
           variant: "outlined",
         }}
         sx={{
-          '.MuiOutlinedInput-root': {
-            minHeight: minHeight,
-            maxHeight: maxHeight,
-          },
-          '.ProseMirror': {
-            minHeight: minHeight,
+          '& .ProseMirror': {
+            minHeight: minHeight || '200px',
             maxHeight: maxHeight,
             overflowY: 'auto',
+            overflowX: 'hidden',
           },
         }}
         renderControls={() => (
           <MenuControlsContainer>
+            <MenuSelectHeading />
+            <MenuDivider />
             <MenuButtonUndo />
             <MenuButtonRedo />
+            <MenuDivider />
+            <MenuButtonBold />
+            <MenuButtonItalic />
+            <MenuDivider />
+            <MenuButtonCode />
+            <MenuButtonCodeBlock />
             <MenuDivider />
             <MenuButtonBulletedList />
             <MenuButtonOrderedList />
             <MenuButtonTaskList />
+            <MenuDivider />
+            <MenuButtonAddTable />
             <MenuDivider />
             <MenuButtonAlignLeft />
             <MenuButtonAlignCenter />
@@ -101,7 +133,12 @@ export function Editor({
           </MenuControlsContainer>
         )}
       >
-        {() => <LinkBubbleMenu />}
+        {() => (
+          <>
+            <LinkBubbleMenu />
+            <TableBubbleMenu />
+          </>
+        )}
       </RichTextEditor>
     </RichTextEditorProvider>
   );

@@ -1,7 +1,9 @@
 import { NavLink, Loader, Text } from '@mantine/core';
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTopLevelNotebooks, useNotebooksByParent } from '@/hooks';
 import { Notebook } from '@/types';
+import { getUrl } from '@/constants/urls';
 
 interface NotebookNodeProps {
   notebook: Notebook;
@@ -10,9 +12,20 @@ interface NotebookNodeProps {
 
 function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProps) {
   const [opened, setOpened] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
   
   // Only fetch children when the notebook is opened
   const { data: childNotebooks, isLoading } = useNotebooksByParent(notebook.id, opened);
+
+  // Check if this notebook is currently active
+  const notebookPath = getUrl('notebook').path(notebook.id);
+  const isActive = location.pathname === notebookPath;
+
+  // Handle clicking on the notebook label to navigate
+  const handleClick = () => {
+    navigate(notebookPath);
+  };
 
   // Determine what to render inside
   let childContent;
@@ -31,9 +44,8 @@ function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProps) {
 
   return (
     <NavLink
-      href={`#notebook-${notebook.id}`}
       label={
-        <span>
+        <span onClick={handleClick} style={{ cursor: 'pointer' }}>
           {notebook.title}
           {opened && isLoading && <Loader size="xs" ml={8} />}
         </span>
@@ -41,6 +53,7 @@ function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProps) {
       childrenOffset={childrenOffset}
       opened={opened}
       onChange={setOpened}
+      active={isActive}
     >
       {childContent}
     </NavLink>
