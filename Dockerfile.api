@@ -42,11 +42,14 @@ WORKDIR /app
 COPY --from=builder /app/dist/apps/api ./dist/apps/api
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy environment file with all config
-COPY .env.prod ./.env
+# Copy Prisma schema files
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+
+# Copy the production environment file
+COPY .env.prod .env
 
 # Copy the entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint-local.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose the port your app runs on

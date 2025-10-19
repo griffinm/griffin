@@ -37,6 +37,12 @@ services:
     networks:
       - prod
     environment:
+      - USE_AWS_SECRETS=false
+      - DATABASE_URL=postgresql://griffin:griffin@postgres-prod:5432/budgeting2_production
+      - JWT_TOKEN_SECRET=your-secret-jwt-key-change-in-production
+      - NODE_ENV=production
+      - PORT=8080
+      - LOG_LEVEL=log
       - TYPESENSE_HOST=typesense
       - TYPESENSE_PORT=8108
       - TYPESENSE_PROTOCOL=http
@@ -55,4 +61,3 @@ services:
     restart: on-failure
     networks:
       - prod
-
