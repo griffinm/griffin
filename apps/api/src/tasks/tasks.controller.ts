@@ -35,8 +35,9 @@ export class TasksController {
   async getById(
     @Req() request: RequestWithUser,
     @Param('id') id: string,
-  ): Promise<Task> {
-    return this.tasksService.getById(id, request.user.id);
+  ): Promise<TaskEntity> {
+    const task = await this.tasksService.getById(id, request.user.id);
+    return new TaskEntity(task);
   }
 
   @Get('/tasks')
@@ -44,9 +45,8 @@ export class TasksController {
     @Req() request: RequestWithUser,
     @Query() query?: FilterDto,
   ): Promise<PagedTaskList> {
-    let tasks: TaskEntity[];
     // Always use filter method to ensure proper filtering by status and other criteria
-    tasks = await this.tasksService.filter(request.user.id, query || {});
+    const tasks: TaskEntity[] = await this.tasksService.filter(request.user.id, query || {});
     
     const totalRecords = await this.tasksService.filter(request.user.id, {
       ...query,

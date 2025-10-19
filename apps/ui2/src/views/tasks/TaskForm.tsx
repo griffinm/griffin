@@ -8,6 +8,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import '@mantine/dates/styles.css';
 import { getDatePresets } from "./utils";
 import { Editor } from "@/components/Editor";
+import { StatusHistory } from "@/components/tasks/StatusHistory";
 
 export interface TaskFormData {
   title: string;
@@ -46,19 +47,20 @@ export function TaskForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Stack gap="md">
-        <TextInput
-          value={title} 
-          placeholder="Task Title"
-          onChange={(e) => setTitle(e.target.value)}
-          autoFocus
-          required
-          size="md"
-          label="Title"
-        />
-        
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <div className="flex flex-col sm:flex-row gap-4 flex-1 pb-20 sm:pb-4">
+        {/* Left Column */}
         <div>
+          <TextInput
+            value={title} 
+            placeholder="Task Title"
+            onChange={(e) => setTitle(e.target.value)}
+            autoFocus
+            required
+            size="md"
+            label="Title"
+          />
+
           <label className="text-sm font-medium mb-1 block">Description</label>
           <Editor
             value={description}
@@ -66,9 +68,11 @@ export function TaskForm({
             minHeight="150px"
             maxHeight="300px"
           />
+
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Right Column */}
+        <div className="flex flex-col gap-2 sm:w-3/8">
           <DatePickerInput
             label="Due Date"
             value={dueDate}
@@ -79,27 +83,33 @@ export function TaskForm({
           />
           <PrioritySelect priority={priority} onChange={setPriority} size="sm" />
           <StatusSelect status={status} onChange={setStatus} size="sm" />
-        </div>
 
-        <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="outline" 
-            onClick={onCancel} 
-            leftSection={<IconX size={16} />}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            size="sm" 
-            leftSection={<IconCheck size={16} />}
-          >
-            Save
-          </Button>
+          {/* TODO: This should be part of the view and not part of the form */}
+          {task?.statusHistory && task.statusHistory.length > 1 && (
+            <StatusHistory history={task.statusHistory} />
+          )}
         </div>
-      </Stack>
+      </div>
+
+      {/* Action Footer */}
+      <div className="fixed sm:relative bottom-0 left-0 right-0 sm:bottom-auto sm:left-auto sm:right-auto flex justify-end gap-2 p-4 sm:p-0 bg-white dark:bg-gray-900 border-t sm:border-t-0 border-gray-200 dark:border-gray-700 z-10">
+        <Button 
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          onClick={onCancel} 
+          leftSection={<IconX size={16} />}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          size="sm" 
+          leftSection={<IconCheck size={16} />}
+        >
+          Save
+        </Button>
+      </div>
     </form>
   );
 }

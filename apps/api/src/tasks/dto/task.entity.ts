@@ -1,5 +1,5 @@
 import { TaskPriority, TaskStatus } from '@prisma/client';
-import { Exclude, Expose, instanceToPlain } from 'class-transformer';
+import { Exclude, Expose, instanceToPlain, Type } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -7,7 +7,26 @@ import {
   IsOptional,
   ValidateIf,
   IsEnum,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
+
+@Exclude()
+export class TaskStatusHistoryEntity {
+  @Expose()
+  id: string;
+
+  @Expose()
+  taskId: string;
+
+  @Expose()
+  @IsEnum(TaskStatus)
+  status: TaskStatus;
+
+  @Expose()
+  @IsDateString()
+  changedAt: Date;
+}
 
 @Exclude()
 export class TaskEntity {
@@ -74,6 +93,13 @@ export class TaskEntity {
   @IsOptional()
   @Expose()
   statusChangedAt?: Date;
+
+  @IsArray()
+  @IsOptional()
+  @Expose()
+  @ValidateNested({ each: true })
+  @Type(() => TaskStatusHistoryEntity)
+  statusHistory?: TaskStatusHistoryEntity[];
 
   constructor(partial: Partial<TaskEntity>) {
     Object.assign(this, instanceToPlain(partial));

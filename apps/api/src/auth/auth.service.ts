@@ -4,11 +4,13 @@ import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '@prisma/client';
 import { JwtPayload } from '@griffin/types';
+import { NotebookService } from '../notebooks/notebook.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly notebookService: NotebookService,
   ) {}
 
   async validateJwt(token: string): Promise<User> {
@@ -63,6 +65,12 @@ export class AuthService {
         firstName,
         password: hashedPassword,
       },
+    });
+
+    // Create default notebook
+    await this.notebookService.createNotebook(user.id, {
+      title: 'Misc Notes',
+      isDefault: true,
     });
 
     // Generate JWT token

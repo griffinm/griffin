@@ -6,10 +6,14 @@ import { UserEntity } from './dto/user.entity';
 import { CreateDto } from './dto/create.dto';
 import { BadRequestException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { NotebookService } from '../notebooks/notebook.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notebookService: NotebookService,
+  ) {}
 
   async getById(id: string): Promise<UserEntity> {
     const user = await this.prisma.user.findFirst({ where: { id } });
@@ -35,12 +39,9 @@ export class UserService {
     });
 
     // Create default notebook
-    await this.prisma.notebook.create({
-      data: {
-        title: 'General',
-        userId: user.id,
-        isDefault: true
-      }
+    await this.notebookService.createNotebook(user.id, {
+      title: 'Misc Notes',
+      isDefault: true,
     });
 
     return user;

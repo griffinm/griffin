@@ -1,3 +1,10 @@
+export interface TaskStatusHistory {
+  id: string;
+  taskId: string;
+  status: TaskStatus;
+  changedAt: Date;
+}
+
 export interface Task {
   id: string;
   userId: string;
@@ -10,6 +17,7 @@ export interface Task {
   noteId?: string;
   priority: TaskPriority;
   status: TaskStatus;
+  statusHistory?: TaskStatusHistory[];
 }
 
 export enum TaskPriority {

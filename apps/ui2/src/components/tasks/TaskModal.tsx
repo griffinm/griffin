@@ -6,6 +6,7 @@ import { theme } from "@/theme";
 import { createTask, updateTask } from "@/api/tasksApi";
 import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTask } from "@/hooks/useTasks";
 
 export function TaskModal({
   task,
@@ -18,12 +19,18 @@ export function TaskModal({
 }) {
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints?.sm})`);
   const queryClient = useQueryClient();
+  
+  // Fetch full task data including statusHistory when editing an existing task
+  const { data: fullTask } = useTask(task?.id || '');
+  
+  // Use fullTask if available (editing), otherwise use the prop task (creating)
+  const taskData = fullTask || task;
 
   const handleSubmit = async (formData: TaskFormData) => {
     try {
-      if (task?.id) {
+      if (taskData?.id) {
         // Update existing task
-        await updateTask(task.id, {
+        await updateTask(taskData.id, {
           title: formData.title,
           description: formData.description,
           dueDate: formData.dueDate,
@@ -59,7 +66,7 @@ export function TaskModal({
       console.error('Error saving task:', error);
       notifications.show({
         title: 'Error',
-        message: task?.id ? 'Failed to update task' : 'Failed to create task',
+        message: taskData?.id ? 'Failed to update task' : 'Failed to create task',
         color: 'red',
       });
     }
@@ -74,7 +81,7 @@ export function TaskModal({
       size="80%"
       fullScreen={isMobile}
     >
-      <TaskForm task={task} onSubmit={handleSubmit} onCancel={onClose} />
+      <TaskForm task={taskData} onSubmit={handleSubmit} onCancel={onClose} />
     </Modal>
   );
 }

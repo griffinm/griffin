@@ -1,24 +1,24 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MediaController } from './media.controller';
 import { S3Service } from './s3.service';
-import { UserService } from '../users/user.service';  
 import { MediaService } from './media.service';
 import { ConfigModule } from '@nestjs/config';
-import { AuthService } from "../auth/auth.service";
+import { AuthModule } from "../auth/auth.module";
+import { UsersModule } from "../users/users.module";
 import { PrismaModule } from "../prisma/prisma.module";
 
 @Module({
   controllers: [MediaController],
   providers: [
-    AuthService,
     MediaService, 
     S3Service, 
-    UserService, 
   ],
   exports: [MediaService],
   imports: [
     ConfigModule,
     PrismaModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule),
   ],
 })
 export class MediaModule {}

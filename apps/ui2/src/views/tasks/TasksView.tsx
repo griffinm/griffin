@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   DndContext,
   DragEndEvent,
@@ -14,9 +15,20 @@ import { Button } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 
 export function TasksView() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const updateTaskStatusMutation = useUpdateTaskStatus();
+
+  // Check for create=true query parameter on mount
+  useEffect(() => {
+    if (searchParams.get('create') === 'true') {
+      setCreateModalOpen(true);
+      // Remove the query parameter after opening the modal
+      searchParams.delete('create');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

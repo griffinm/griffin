@@ -60,6 +60,13 @@ export class TasksService {
   async getById(id: string, userId: string): Promise<Task> {
     const task = await this.prisma.task.findUnique({
       where: { id, userId },
+      include: {
+        statusHistory: {
+          orderBy: {
+            changedAt: 'desc',
+          },
+        },
+      },
     });
     if (!task) {
       throw new NotFoundException('Task not found');

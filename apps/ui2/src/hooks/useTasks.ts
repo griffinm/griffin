@@ -190,8 +190,10 @@ export const useUpdateTaskStatus = () => {
     },
     
     // Always refetch after error or success to ensure consistency
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      // Also invalidate the individual task query to update status history
+      queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
     },
   });
 };

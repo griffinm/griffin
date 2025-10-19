@@ -6,5 +6,6 @@ export class CreateDto extends PickType(
   [
     'title',
     'parentId',
+    'isDefault',
   ] as const,
 ) {}
