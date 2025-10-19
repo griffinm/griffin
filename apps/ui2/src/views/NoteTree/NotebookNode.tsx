@@ -19,6 +19,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(notebook.title);
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -120,38 +121,14 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
     childContent = <div style={{ display: 'none' }} />;
   } else if (isLoading) {
     childContent = <Text size="sm" c="dimmed">Loading...</Text>;
-  } else {
-    // When expanded, show the create button at the top
-    const createButton = (
-      <NavLink
-        label={
-          <Group gap="xs">
-            <IconPlus size={14} />
-            <Text size="sm">Create Notebook</Text>
-          </Group>
-        }
-        onClick={() => setCreateModalOpened(true)}
-        style={{ fontStyle: 'italic' }}
-      />
+  } else if (childNotebooks && childNotebooks.length > 0) {
+    childContent = (
+      <>
+        {childNotebooks.map((child) => (
+          <NotebookNode key={child.id} notebook={child} childrenOffset={childrenOffset} />
+        ))}
+      </>
     );
-
-    if (childNotebooks && childNotebooks.length > 0) {
-      childContent = (
-        <>
-          {createButton}
-          {childNotebooks.map((child) => (
-            <NotebookNode key={child.id} notebook={child} childrenOffset={childrenOffset} />
-          ))}
-        </>
-      );
-    } else {
-      childContent = (
-        <>
-          {createButton}
-          <Text size="sm" c="dimmed">No child notebooks</Text>
-        </>
-      );
-    }
   }
 
   return (
@@ -183,44 +160,57 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
                 {opened && isLoading && <Loader size="xs" ml={8} />}
               </span>
             )}
-            <Menu shadow="md" width={200} position="right-start">
-              <Menu.Target>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <IconDots size={14} color="gray" />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconEdit size={14} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStartRename();
-                  }}
-                >
-                  Rename
-                </Menu.Item>
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconTrash size={14} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteModalOpened(true);
-                  }}
-                >
-                  Delete
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+            {isHovered && (
+              <Menu shadow="md" width={200} position="right-start">
+                <Menu.Target>
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <IconDots size={14} color="gray" />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<IconPlus size={14} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCreateModalOpened(true);
+                    }}
+                  >
+                    Create Notebook
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconEdit size={14} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartRename();
+                    }}
+                  >
+                    Rename
+                  </Menu.Item>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={14} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteModalOpened(true);
+                    }}
+                  >
+                    Delete
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            )}
           </Group>
         }
         childrenOffset={childrenOffset}
         opened={opened}
         onChange={setOpened}
         active={isActive}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {childContent}
       </NavLink>

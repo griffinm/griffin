@@ -1,14 +1,16 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Title, Text, Stack, Loader, Center } from '@mantine/core';
-import { IconPlus, IconArrowLeft } from '@tabler/icons-react';
+import { IconPlus, IconArrowLeft, IconNotebook } from '@tabler/icons-react';
 import { useNotesByNotebook } from '@/hooks/useNotes';
 import { useNotebook } from '@/hooks/useNotebooks';
 import { NoteCard } from './NoteCard';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { CreateNotebookModal } from '@/views/NoteTree/CreateNotebookModal';
 
 export function NotebookView() {
   const { notebookId } = useParams<{ notebookId: string }>();
   const navigate = useNavigate();
+  const [createNotebookModalOpen, setCreateNotebookModalOpen] = useState(false);
   
   const { data: notebook, isLoading: notebookLoading, error: notebookError } = useNotebook(notebookId || '');
   const { data: notes, isLoading: notesLoading, error: notesError } = useNotesByNotebook(notebookId || '');
@@ -60,14 +62,6 @@ export function NotebookView() {
   return (
     <div className="p-5 w-full">
       <div className="mb-6">
-        <Button
-          variant="subtle"
-          leftSection={<IconArrowLeft size={18} />}
-          onClick={() => navigate('/')}
-          mb="md"
-        >
-          Back
-        </Button>
 
         <div className="flex justify-between items-center">
           <div>
@@ -79,23 +73,41 @@ export function NotebookView() {
             )}
           </div>
           
-          <Button
-            leftSection={<IconPlus size={18} />}
-            onClick={handleCreateNote}
-          >
-            Create Note
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              leftSection={<IconNotebook size={18} />}
+              onClick={() => setCreateNotebookModalOpen(true)}
+              variant="default"
+            >
+              Create Notebook
+            </Button>
+            <Button
+              leftSection={<IconPlus size={18} />}
+              onClick={handleCreateNote}
+            >
+              Create Note
+            </Button>
+          </div>
         </div>
       </div>
 
       {sortedNotes.length === 0 ? (
         <Center h={200}>
-          <Text c="dimmed" size="lg">
-            No notes in this notebook yet
-          </Text>
+          <Stack align="center" gap="md">
+            <Text c="dimmed" size="lg">
+              No notes in this notebook yet
+            </Text>
+            <Button
+              size="lg"
+              leftSection={<IconPlus size={20} />}
+              onClick={handleCreateNote}
+            >
+              Create Your First Note
+            </Button>
+          </Stack>
         </Center>
       ) : (
-        <Stack gap="md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sortedNotes.map((note) => (
             <NoteCard
               key={note.id}
@@ -103,8 +115,14 @@ export function NotebookView() {
               onClick={() => handleNoteClick(note.id)}
             />
           ))}
-        </Stack>
+        </div>
       )}
+
+      <CreateNotebookModal 
+        opened={createNotebookModalOpen}
+        onClose={() => setCreateNotebookModalOpen(false)}
+        parentId={notebookId}
+      />
     </div>
   );
 }

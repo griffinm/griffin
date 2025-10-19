@@ -15,8 +15,26 @@ export class NoteService {
     private searchService: SearchService,
   ) {}
 
+  /**
+   * Truncate HTML content safely for preview purposes
+   * Strips HTML tags and truncates to specified length
+   */
+  private truncateContentForPreview(content: string | null, maxLength = 300): string | null {
+    if (!content) return content;
+    
+    // Simple HTML tag stripping (basic implementation)
+    const stripped = content.replace(/<[^>]*>/g, '');
+    
+    // Truncate if needed
+    if (stripped.length > maxLength) {
+      return stripped.substring(0, maxLength) + '...';
+    }
+    
+    return stripped;
+  }
+
   async findAllForUser(userId: string) {
-    return await this.prisma.note.findMany({
+    const notes = await this.prisma.note.findMany({
       where: {
         deletedAt: null,
         notebook: {
@@ -25,10 +43,16 @@ export class NoteService {
         },
       },
     });
+
+    // Truncate content for preview
+    return notes.map(note => ({
+      ...note,
+      content: this.truncateContentForPreview(note.content),
+    }));
   }
 
   async recentNotes(userId: string) {
-    return await this.prisma.note.findMany({
+    const notes = await this.prisma.note.findMany({
       where: {
         deletedAt: null,
         notebook: {
@@ -41,10 +65,16 @@ export class NoteService {
       },
       take: 5,
     });
+
+    // Truncate content for preview
+    return notes.map(note => ({
+      ...note,
+      content: this.truncateContentForPreview(note.content),
+    }));
   }
   
   async findAllForNotebook(notebookId: string, userId: string) {
-    return await this.prisma.note.findMany({
+    const notes = await this.prisma.note.findMany({
       where: {
         notebook: { id: notebookId, user: { id: userId } },
         deletedAt: null,
@@ -52,12 +82,18 @@ export class NoteService {
       select: {
         id: true,
         title: true,
-        content: false, // do not load the content when selecting for the list view
+        content: true, // load content for preview
         createdAt: true,
         updatedAt: true,
         notebookId: true,
       },
     });
+
+    // Truncate content for preview
+    return notes.map(note => ({
+      ...note,
+      content: this.truncateContentForPreview(note.content),
+    }));
   }
 
   async findOneForUser(id: string, userId: string) {
