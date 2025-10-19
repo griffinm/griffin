@@ -1,0 +1,58 @@
+name: prod-ui2
+
+volumes:
+  typesense-data-prod-ui2:
+
+
+networks:
+  prod:
+    name: prod-network
+    external: true
+    driver: bridge
+
+services:
+  typesense:
+    container_name: ui2-typesense
+    image: typesense/typesense:27.0
+    restart: on-failure
+    ports:
+      - "8109:8108"
+    volumes:
+      - ./typesense-data-prod-ui2:/data
+    command: '--data-dir /data --api-key=xyz --enable-cors'
+    networks:
+      - prod
+
+  api:
+    container_name: ui2-api
+    image: griffin-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "10101:8080"
+    depends_on:
+      - typesense
+    restart: on-failure
+    networks:
+      - prod
+    environment:
+      - TYPESENSE_HOST=typesense
+      - TYPESENSE_PORT=8108
+      - TYPESENSE_PROTOCOL=http
+      - TYPESENSE_API_KEY=xyz
+
+  ui2:
+    container_name: ui2-ui
+    image: griffin-ui2:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.ui2
+    ports:
+      - "10201:8080"
+    depends_on:
+      - api
+    restart: on-failure
+    networks:
+      - prod
+
