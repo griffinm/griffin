@@ -133,13 +133,13 @@ RUN npm ci
 COPY . .
 
 RUN npx nx reset
-RUN npx nx run notes-ui:build:production
+RUN npx nx run ui:build:production
 
 # Stage 2: Nginx setup
 FROM nginx:stable-alpine AS nginx
 
 # Copy built React app
-COPY --from=builder /app/dist/apps/notes-ui /usr/share/nginx/html
+COPY --from=builder /app/dist/apps/ui /usr/share/nginx/html
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -250,8 +250,8 @@ services:
       - prod
 
   ui:
-    container_name: griffin-ui
-    image: griffin-ui:latest
+    container_name: myapp-ui
+    image: myapp-ui:latest
     build:
       context: .
       dockerfile: Dockerfile.ui
@@ -334,8 +334,8 @@ docker compose -f docker-compose.prod.yml build ui
 
 echo -e "\n${GREEN}✓ Build Complete!${NC}"
 echo "Images created:"
-echo "  - griffin-api:latest"
-echo "  - griffin-ui:latest"
+echo "  - myapp-api:latest"
+echo "  - myapp-ui:latest"
 ```
 
 **Purpose**: Build both Docker images
@@ -362,8 +362,8 @@ if ! docker image inspect griffin-api:latest >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! docker image inspect griffin-ui:latest >/dev/null 2>&1; then
-    echo -e "${RED}Error: griffin-ui:latest not found${NC}"
+if ! docker image inspect myapp-ui:latest >/dev/null 2>&1; then
+    echo -e "${RED}Error: myapp-ui:latest not found${NC}"
     echo -e "${YELLOW}Run ./build-prod.sh first${NC}"
     exit 1
 fi

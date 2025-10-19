@@ -32,13 +32,3 @@ services:
       - db
       - typesense
     restart: on-failure
-
-  ui:
-    build:
-      context: .
-      dockerfile: Dockerfile.ui
-    ports:
-      - "10200:8080"
-    depends_on:
-      - api
-    restart: on-failure

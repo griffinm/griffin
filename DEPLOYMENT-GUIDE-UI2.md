@@ -184,27 +184,11 @@ docker image prune -a
 ## 📝 Notes
 
 - All scripts include error checking and will stop if any step fails
-- The shared `prod-network` allows UI2 to coexist with other applications (like notes-ui)
-- UI2 uses different ports (10101, 10201, 8109) to avoid conflicts with notes-ui
+- The shared `prod-network` allows UI2 to coexist with other applications
+- UI2 uses ports 10101, 10201, 8109
 - Timestamp tags allow rollback to specific versions if needed
-
-## 🔄 Running Both UI2 and Notes-UI
-
-You can run both UI2 and notes-ui simultaneously:
-
-```bash
-# Deploy notes-ui
-./deploy-prod.sh
-
-# Deploy UI2
-./deploy-prod-ui2.sh
-```
-
-They will share the same `prod-network` but use different ports:
-- notes-ui: ports 10100, 10200, 8108
-- ui2: ports 10101, 10201, 8109
 
 ## 🔗 Shared Network
 
-Both deployments use a shared Docker network called `prod-network`. This allows containers from different applications to communicate with each other if needed. The network is created automatically when you run either deployment script.
+The deployment uses a shared Docker network called `prod-network`. This allows containers from different applications to communicate with each other if needed. The network is created automatically when you run the deployment script.
 
