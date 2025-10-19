@@ -19,6 +19,7 @@ import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
 import { getUrl } from '@/constants/urls';
 import { NoteTree } from '@/views/NoteTree';
+import { Search } from '@/components/Search/Search';
 
 const HEADER_HEIGHT = 40;
 const LEFT_NAVBAR_WIDTH_DESKTOP = 250;
@@ -68,7 +69,7 @@ export const AppLayout = () => {
           top: 0, 
           left: 0, 
           right: 0, 
-          zIndex: 10,
+          zIndex: 100,
           height: HEADER_HEIGHT,
           padding: theme.spacing.md,
           background: theme.colors.gray[0],
@@ -85,7 +86,7 @@ export const AppLayout = () => {
         />
 
         <Group style={{ flex: 1 }} justify="space-between">
-          
+          <Search />
         </Group>
       </div>
 
@@ -188,7 +189,7 @@ export const AppLayout = () => {
 
         {/* Main content */}
         <div 
-          className="flex-1 bg-white w-full p-2 sm:p-4 rounded-lg border border-gray-200 shadow-md sm:mr-4 mb-4"
+          className="flex-1 bg-white w-full rounded-lg border border-gray-200 shadow-md sm:mr-4 mb-4"
           style={{ 
             height: 'calc(100% - 1rem)',
             overflowY: 'auto',

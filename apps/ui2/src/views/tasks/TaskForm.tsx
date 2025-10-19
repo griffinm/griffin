@@ -1,14 +1,13 @@
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 import { useState } from "react";
-import { Textarea } from "@mantine/core";
-import { Button } from "@mantine/core";
+import { TextInput, Button, Stack } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { PrioritySelect } from "./PrioritySelect";
 import { StatusSelect } from "./StatusSelect";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import '@mantine/dates/styles.css';
-import { Editor } from "@/components/Editor";
 import { getDatePresets } from "./utils";
+import { Editor } from "@/components/Editor";
 
 export interface TaskFormData {
   title: string;
@@ -28,7 +27,7 @@ export function TaskForm({
   onCancel?: () => void,
 }) {
   const [title, setTitle] = useState(task?.title || '');
-  const [description, setDescription] = useState(task?.description);
+  const [description, setDescription] = useState(task?.description || '');
   const [dueDate, setDueDate] = useState(task?.dueDate ? new Date(task.dueDate) : new Date());
   const [priority, setPriority] = useState(task?.priority || TaskPriority.MEDIUM);
   const [status, setStatus] = useState(task?.status || TaskStatus.TODO);
@@ -48,55 +47,59 @@ export function TaskForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-4">
+      <Stack gap="md">
+        <TextInput
+          value={title} 
+          placeholder="Task Title"
+          onChange={(e) => setTitle(e.target.value)}
+          autoFocus
+          required
+          size="md"
+          label="Title"
+        />
+        
         <div>
-          <Textarea
-            value={title} 
-            placeholder="Title"
-            onChange={(e) => setTitle(e.target.value)}
-            autoFocus
-            variant="unstyled"
-            required
-            size="xl"
-            autosize
-            minRows={1}
+          <label className="text-sm font-medium mb-1 block">Description</label>
+          <Editor
+            value={description}
+            onChange={setDescription}
+            minHeight="150px"
+            maxHeight="300px"
           />
         </div>
-        
-        {/* Start 2 column layout */}
-        <div className="flex flex-col sm:flex-row gap-2">
 
-          {/* Left Column */}
-          <div className="w-full sm:w-3/4">
-            <Editor 
-              value={description || ''} 
-              onChange={setDescription}
-              minHeight="200px"
-              maxHeight="300px"
-            />
-          </div>
-
-          {/* Right Column */}
-          <div className="pl-0 sm:pl-4 rounded-lg w-full sm:w-1/4 flex flex-col gap-1">
-            <DatePickerInput
-              label="Due Date"
-              value={dueDate}
-              onChange={(value) => setDueDate(value ? new Date(value) : new Date())}
-              allowDeselect={false}
-              presets={getDatePresets()}
-              size="xs"
-              />
-            <PrioritySelect priority={priority} onChange={setPriority} size="xs" />
-            <StatusSelect status={status} onChange={setStatus} size="xs" />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <DatePickerInput
+            label="Due Date"
+            value={dueDate}
+            onChange={(value) => setDueDate(value ? new Date(value) : new Date())}
+            allowDeselect={false}
+            presets={getDatePresets()}
+            size="sm"
+          />
+          <PrioritySelect priority={priority} onChange={setPriority} size="sm" />
+          <StatusSelect status={status} onChange={setStatus} size="sm" />
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-2">
-          <Button type="button" size="xs" variant="outline" onClick={onCancel} leftSection={<IconX size={16} />}>Cancel</Button>
-          <Button type="submit" size="xs" leftSection={<IconCheck size={16} />}>Save</Button>
+          <Button 
+            type="button" 
+            size="sm" 
+            variant="outline" 
+            onClick={onCancel} 
+            leftSection={<IconX size={16} />}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            size="sm" 
+            leftSection={<IconCheck size={16} />}
+          >
+            Save
+          </Button>
         </div>
-      </div>
+      </Stack>
     </form>
   );
 }

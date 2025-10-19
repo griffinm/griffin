@@ -1,0 +1,101 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { TextInput } from '@mantine/core';
+import { IconSearch } from '@tabler/icons-react';
+import { SearchResults } from '@/types/search';
+import { fetchSearchResults } from '@/api/searchApi';
+import { useNavigate } from 'react-router-dom';
+
+const SEARCH_TIMEOUT = 300;
+
+export function Search() {
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<SearchResults | undefined>();
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+
+  const debouncedSearch = useCallback(() => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+    updateTimeoutRef.current = setTimeout(() => {
+      if (searchTerm) {
+        handleSearch(searchTerm);
+      } else {
+        setSearchResults(undefined);
+      }
+    }, SEARCH_TIMEOUT);
+  }, [searchTerm]);
+
+  const handleSearch = async (searchTerm: string) => {
+    try {
+      const results = await fetchSearchResults({ query: searchTerm });
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults(undefined);
+    }
+  };
+
+  useEffect(() => {
+    debouncedSearch();
+  }, [debouncedSearch]);
+  
+  const renderResults = () => {
+    if (!searchResults) {
+      return null;
+    }
+
+    if (searchResults.noteResults?.length === 0) {
+      return (
+        <div className="p-3 text-gray-500 text-sm">
+          No results found
+        </div>
+      );
+    }
+
+    return searchResults.noteResults?.map((result) => {
+      return (
+        <div
+          key={result.id}
+          className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-50"
+          onClick={() => {
+            setSearchTerm('');
+            setSearchResults(undefined);
+            navigate(`/notes/${result.id}`);
+          }}
+        >
+          <div className="font-medium text-sm">{result.title}</div>
+          {result.snippet && (
+            <div 
+              className="text-xs text-gray-500 italic mt-1" 
+              dangerouslySetInnerHTML={{ __html: result.snippet }} 
+            />
+          )}
+        </div>
+      );
+    });
+  };
+
+  return (
+    <div className="relative w-full max-w-md">
+      <TextInput
+        placeholder="Search notes..."
+        size="sm"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        leftSection={<IconSearch size={16} />}
+        styles={{
+          input: {
+            backgroundColor: 'white',
+          }
+        }}
+      />
+      {searchTerm && searchResults && (
+        <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+          {renderResults()}
+        </div>
+      )}
+    </div>
+  );
+}
+

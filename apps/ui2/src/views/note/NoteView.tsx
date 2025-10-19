@@ -79,6 +79,7 @@ export function NoteView() {
         onUpdate={debouncedUpdate}
         minHeight="calc(100vh - 200px)"
         maxHeight="calc(100vh - 200px)"
+        noteId={noteId}
       />
     </div>
   );
