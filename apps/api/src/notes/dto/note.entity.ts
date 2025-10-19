@@ -14,10 +14,9 @@ export class NoteEntity {
   id: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   @Expose()
-  title: string;
+  title?: string;
 
   @IsString()
   @IsOptional()
@@ -25,10 +24,9 @@ export class NoteEntity {
   content?: string;
   
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   @Expose()
-  notebookId: string;
+  notebookId?: string;
 
   @IsDateString()
   @IsOptional()

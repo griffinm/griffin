@@ -14,6 +14,7 @@ import {
   IconLogout,
   IconHome,
   IconCheck,
+  IconBook,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
@@ -58,6 +59,7 @@ export const AppLayout = () => {
   const navigationData = [
     { icon: IconHome, label: 'Dashboard', path: getUrl('dashboard').path(), color: 'blue' },
     { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
+    { icon: IconBook, label: 'Notebooks', path: getUrl('notebooks').path(), color: 'indigo' },
   ]
 
   return (

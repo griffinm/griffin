@@ -1,5 +1,6 @@
 import { Modal, TextInput, Textarea, Button, Group } from '@mantine/core';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCreateNotebook } from '@/hooks';
 
 interface CreateNotebookModalProps {
@@ -9,6 +10,7 @@ interface CreateNotebookModalProps {
 }
 
 export function CreateNotebookModal({ opened, onClose, parentId }: CreateNotebookModalProps) {
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const createNotebook = useCreateNotebook();
@@ -18,7 +20,7 @@ export function CreateNotebookModal({ opened, onClose, parentId }: CreateNoteboo
     if (!title.trim()) return;
 
     try {
-      await createNotebook.mutateAsync({
+      const newNotebook = await createNotebook.mutateAsync({
         title: title.trim(),
         description: description.trim() || undefined,
         parentId: parentId || null,
@@ -28,6 +30,9 @@ export function CreateNotebookModal({ opened, onClose, parentId }: CreateNoteboo
       setTitle('');
       setDescription('');
       onClose();
+
+      // Navigate to the newly created notebook
+      navigate(`/notebooks/${newNotebook.id}`);
     } catch (error) {
       console.error('Error creating notebook:', error);
     }

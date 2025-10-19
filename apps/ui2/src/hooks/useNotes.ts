@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
-import { fetchNotesByNotebook, fetchNoteById, createNote, updateNote, deleteNote, CreateOrUpdateNoteData } from '@/api/notesApi';
+import { fetchNotesByNotebook, fetchNoteById, createNote, updateNote, deleteNote, fetchRecentNotes, CreateOrUpdateNoteData } from '@/api/notesApi';
 import { Note } from '@/types/note';
+import { notifications } from '@mantine/notifications';
 
 // Hook for fetching notes by notebook ID
 export const useNotesByNotebook = (notebookId: string): UseQueryResult<Note[], Error> => {
@@ -73,7 +74,31 @@ export const useDeleteNote = (): UseMutationResult<void, Error, { id: string; no
       queryClient.invalidateQueries({ queryKey: ['notes', 'byNotebook', variables.notebookId] });
       // Also invalidate all notes queries
       queryClient.invalidateQueries({ queryKey: ['notes'] });
+      
+      // Show success notification
+      notifications.show({
+        title: 'Success',
+        message: 'Note deleted successfully',
+        color: 'green',
+      });
     },
+    onError: () => {
+      // Show error notification
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete note',
+        color: 'red',
+      });
+    },
+  });
+};
+
+// Hook for fetching recent notes
+export const useRecentNotes = (limit = 5): UseQueryResult<Note[], Error> => {
+  return useQuery({
+    queryKey: ['notes', 'recent', limit],
+    queryFn: () => fetchRecentNotes(limit),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 

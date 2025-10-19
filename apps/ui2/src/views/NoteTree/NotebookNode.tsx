@@ -238,7 +238,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
         onClose={() => setDeleteModalOpened(false)}
         onConfirm={handleDelete}
         title="Delete Notebook"
-        message={`Are you sure you want to delete "${notebook.title}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete "${notebook.title}"?`}
         confirmLabel="Delete"
         isLoading={deleteNotebook.isPending}
       />

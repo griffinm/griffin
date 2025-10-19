@@ -1,20 +1,28 @@
-import { useParams } from 'react-router-dom';
-import { Center, Loader, Text } from '@mantine/core';
-import { useNote, useUpdateNote } from '@/hooks/useNotes';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Center, Loader, Text, Menu, ActionIcon } from '@mantine/core';
+import { IconDots, IconTrash, IconCopy, IconFolderSymlink } from '@tabler/icons-react';
+import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/useNotes';
 import { Editor } from '@/components/Editor';
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { Editor as TiptapEditor } from '@tiptap/core';
+import { ConfirmationModal } from '../NoteTree/ConfirmationModal';
+import { MoveNoteModal } from './MoveNoteModal';
+import { notifications } from '@mantine/notifications';
 
 const SAVE_TIMEOUT = 250;
 
 export function NoteView() {
   const { noteId } = useParams<{ noteId: string }>();
+  const navigate = useNavigate();
   const { data: note, isLoading, error } = useNote(noteId || '');
   const updateNoteMutation = useUpdateNote();
+  const deleteNoteMutation = useDeleteNote();
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [moveModalOpened, setMoveModalOpened] = useState(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -116,6 +124,52 @@ export function NoteView() {
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle deleting the note
+  const handleDelete = async () => {
+    if (!noteId || !note) return;
+
+    try {
+      await deleteNoteMutation.mutateAsync({
+        id: noteId,
+        notebookId: note.notebookId,
+      });
+      setDeleteModalOpened(false);
+      // Navigate to the notebook after deleting the note
+      navigate(`/notebooks/${note.notebookId}`);
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    }
+  };
+
+  // Handle moving the note to a new notebook
+  const handleMoveNote = async (newNotebookId: string) => {
+    if (!noteId || !note) return;
+
+    try {
+      await updateNoteMutation.mutateAsync({
+        id: noteId,
+        note: {
+          title: note.title,
+          content: note.content,
+          notebookId: newNotebookId,
+        },
+      });
+      
+      notifications.show({
+        title: 'Success',
+        message: 'Note moved successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('Error moving note:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to move note',
+        color: 'red',
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <Center h="100%">
@@ -169,6 +223,9 @@ export function NoteView() {
           marginBottom: isScrolled ? 0 : '12px',
           borderBottom: isScrolled ? '1px solid #e0e0e0' : 'none',
           transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
         }}
       >
         {isEditingTitle ? (
@@ -180,7 +237,7 @@ export function NoteView() {
             onBlur={handleSaveTitle}
             onKeyDown={handleTitleKeyDown}
             style={{
-              width: '100%',
+              flex: 1,
               border: 'none',
               borderBottom: '2px solid #228be6',
               fontSize: isScrolled ? '16px' : '20px',
@@ -195,6 +252,7 @@ export function NoteView() {
           <h1
             onClick={() => setIsEditingTitle(true)}
             style={{
+              flex: 1,
               fontSize: isScrolled ? '16px' : '20px',
               fontWeight: '600',
               margin: 0,
@@ -206,6 +264,35 @@ export function NoteView() {
             {note.title || 'Untitled'}
           </h1>
         )}
+        
+        <Menu shadow="md" width={200}>
+          <Menu.Target>
+            <ActionIcon variant="subtle" color="gray" size="lg">
+              <IconDots size={20} />
+            </ActionIcon>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Label>Note actions</Menu.Label>
+            <Menu.Item 
+              leftSection={<IconFolderSymlink size={16} />}
+              onClick={() => setMoveModalOpened(true)}
+            >
+              Move to notebook
+            </Menu.Item>
+            <Menu.Item leftSection={<IconCopy size={16} />}>
+              Duplicate note
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item 
+              color="red" 
+              leftSection={<IconTrash size={16} />}
+              onClick={() => setDeleteModalOpened(true)}
+            >
+              Delete note
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
       </div>
 
       <div style={{ padding: '0 20px 20px' }}>
@@ -217,6 +304,23 @@ export function NoteView() {
           noteId={noteId}
         />
       </div>
+
+      <MoveNoteModal
+        opened={moveModalOpened}
+        onClose={() => setMoveModalOpened(false)}
+        onSelectNotebook={handleMoveNote}
+        currentNotebookId={note.notebookId}
+      />
+
+      <ConfirmationModal
+        opened={deleteModalOpened}
+        onClose={() => setDeleteModalOpened(false)}
+        onConfirm={handleDelete}
+        title="Delete Note"
+        message={`Are you sure you want to delete "${note.title || 'Untitled'}"?`}
+        confirmLabel="Delete"
+        isLoading={deleteNoteMutation.isPending}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
 export interface CreateOrUpdateNoteData {
   title: string;
   content?: string;
+  notebookId?: string;
 }
 
 export const createNote = async (notebookId: string, note: CreateOrUpdateNoteData): Promise<Note> => {
@@ -28,5 +29,10 @@ export const updateNote = async (id: string, note: CreateOrUpdateNoteData): Prom
 
 export const deleteNote = async (id: string): Promise<void> => {
   await baseClient.delete(`/notes/${id}`);
+};
+
+export const fetchRecentNotes = async (limit = 5): Promise<Note[]> => {
+  const response = await baseClient.get<Note[]>('/notes/recent');
+  return response.data.slice(0, limit);
 };
 

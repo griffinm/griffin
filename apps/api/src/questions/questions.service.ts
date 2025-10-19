@@ -2,7 +2,6 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuestionDto } from './dto/create.dto';
 import { UpdateQuestionDto } from './dto/update.dto';
-import { Question } from '@prisma/client';
 import { QuestionEntity } from './dto/question.entity';
 import { plainToInstance } from 'class-transformer';
 
@@ -14,8 +13,8 @@ export class QuestionsService {
     private prisma: PrismaService,
   ) {}
 
-  async getMany(userId: string, includeAnswered: boolean = false): Promise<QuestionEntity[]> {
-    this.logger.debug(`Getting questions for user ${userId}`);
+  async getMany(userId: string, includeAnswered = false): Promise<QuestionEntity[]> {
+    this.logger.debug(`Getting questions for user ${userId}, includeAnswered: ${includeAnswered}`);
     const questions = await this.prisma.question.findMany({
       where: {
         userId,
@@ -23,7 +22,8 @@ export class QuestionsService {
         note: {
           deletedAt: null,
         },
-
+        // Only include unanswered questions if includeAnswered is false
+        ...(includeAnswered ? {} : { answer: null }),
       },
     });
     this.logger.debug(`Found ${questions.length} questions for user ${userId}`);

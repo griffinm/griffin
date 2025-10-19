@@ -10,6 +10,7 @@ import {
   CreateOrUpdateNotebookData
 } from '@/api/notebooksApi';
 import { Notebook } from '@/types/notebook';
+import { notifications } from '@mantine/notifications';
 
 export const useNotebooks = (): UseQueryResult<Notebook[], Error> => {
   return useQuery({
@@ -87,6 +88,21 @@ export const useDeleteNotebook = () => {
     onSuccess: () => {
       // Invalidate all notebook queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['notebooks'] });
+      
+      // Show success notification
+      notifications.show({
+        title: 'Success',
+        message: 'Notebook deleted successfully',
+        color: 'green',
+      });
+    },
+    onError: () => {
+      // Show error notification
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete notebook',
+        color: 'red',
+      });
     },
   });
 };

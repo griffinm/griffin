@@ -109,9 +109,39 @@ export class NoteService {
 
   async update(id: string, data: UpdateDto, userId: string) {
     this.logger.debug(`Updating note ${id.substring(0, 7)} for user ${userId.substring(0, 7)}`);
+    this.logger.debug(`Update data: ${JSON.stringify(data)}`);
 
+    // First verify the note belongs to the user
+    const existingNote = await this.prisma.note.findFirst({
+      where: {
+        id,
+        notebook: {
+          user: { id: userId },
+        },
+      },
+    });
+
+    if (!existingNote) {
+      throw new Error('Note not found or access denied');
+    }
+
+    // If moving to a new notebook, verify the target notebook belongs to the user
+    if (data.notebookId && data.notebookId !== existingNote.notebookId) {
+      const targetNotebook = await this.prisma.notebook.findFirst({
+        where: {
+          id: data.notebookId,
+          user: { id: userId },
+        },
+      });
+
+      if (!targetNotebook) {
+        throw new Error('Target notebook not found or access denied');
+      }
+    }
+
+    // Now update the note
     const updatedNote = await this.prisma.note.update({
-      where: { id, notebook: { user: { id: userId } } },
+      where: { id },
       data,
     });
 

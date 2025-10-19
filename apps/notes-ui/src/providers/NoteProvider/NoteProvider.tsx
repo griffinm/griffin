@@ -19,6 +19,7 @@ import { useNavigate } from "react-router";
 import { urls } from "../../utils/urls";
 import { useUser } from "../UserProvider";
 import { AxiosResponse } from "axios";
+import { useToast } from "../ToastProvider";
 
 interface Props {
   children: React.ReactNode;
@@ -86,6 +87,7 @@ export function NoteProvider({ children }: Props) {
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const navigate = useNavigate();
   const { user } = useUser();
+  const { showMessage } = useToast();
 
   const sortedNotes = useMemo(() => {
     const newArray = [...notes]
@@ -198,6 +200,10 @@ export function NoteProvider({ children }: Props) {
         setNotes(notes.filter((note) => note.id !== noteId));
         setCurrentNote(null);
         navigate(urls.home);
+        showMessage('Note deleted successfully');
+      })
+      .catch(() => {
+        showMessage('Failed to delete note');
       })
       .finally(() => {setNoteLoading(false)})
   }
@@ -207,6 +213,10 @@ export function NoteProvider({ children }: Props) {
     deleteNotebookApi(notebookId)
       .then(() => {
         setNotebooks(notebooks.filter((notebook) => notebook.id !== notebookId));
+        showMessage('Notebook deleted successfully');
+      })
+      .catch(() => {
+        showMessage('Failed to delete notebook');
       })
       .finally(() => {setNotebooksLoading(false)})
   }

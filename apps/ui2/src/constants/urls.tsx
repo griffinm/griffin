@@ -8,6 +8,7 @@ const LogInPage = lazy(() => import('../pages/LogInPage').then(module => ({ defa
 const SignUpPage = lazy(() => import('../pages/SignUpPage').then(module => ({ default: module.SignUpPage })));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage/DashboardPage').then(module => ({ default: module.DashboardPage })));
 const TasksPage = lazy(() => import('@/pages/TasksPage/TasksPage'));
+const NotebooksPage = lazy(() => import('@/pages/NotebooksPage/NotebooksPage').then(module => ({ default: module.NotebooksPage })));
 const NotebookPage = lazy(() => import('@/pages/NotebookPage/NotebookPage'));
 const NotePage = lazy(() => import('@/pages/NotePage/NotePage'))
 
@@ -16,7 +17,7 @@ function pageTitle(pageName?: string) {
   return `${pageName} | ${APP_NAME}`;
 }
 
-export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'notebook' | 'note';
+export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'notebooks' | 'notebook' | 'note';
 
 export interface Url {
   name: UrlName;
@@ -58,6 +59,14 @@ export const urls: Url[] = [
     urlTemplate: '/tasks',
     pageComponent: TasksPage,
     title: pageTitle('Tasks'),
+    layoutComponent: AppLayout
+  },
+  {
+    name: 'notebooks',
+    path: () => '/notebooks',
+    urlTemplate: '/notebooks',
+    pageComponent: NotebooksPage,
+    title: pageTitle('Notebooks'),
     layoutComponent: AppLayout
   },
   {
