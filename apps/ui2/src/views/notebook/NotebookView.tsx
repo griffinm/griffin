@@ -58,12 +58,6 @@ export function NotebookView() {
       
       // Navigate to the new note
       navigate(`/notes/${newNote.id}`);
-      
-      notifications.show({
-        title: 'Success',
-        message: 'Note created successfully',
-        color: 'green',
-      });
     } catch (error) {
       console.error('Error creating note:', error);
       notifications.show({

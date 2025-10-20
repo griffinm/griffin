@@ -63,8 +63,12 @@ export class AuthController {
 
   @Post("sign-out")
   async signOut(@Res({ passthrough: true }) response: Response): Promise<{ message: string }> {
-    // Clear the JWT cookie
-    response.clearCookie('jwt');
+    // Clear the JWT cookie with the same options used when setting it
+    response.clearCookie('jwt', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
     return { message: 'Signed out successfully' };
   }
 }

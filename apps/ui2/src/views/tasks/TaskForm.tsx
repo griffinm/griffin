@@ -1,6 +1,6 @@
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 import { useState } from "react";
-import { TextInput, Button, Stack } from "@mantine/core";
+import { TextInput, Button, Stack, Textarea } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { PrioritySelect } from "./PrioritySelect";
 import { StatusSelect } from "./StatusSelect";
@@ -48,26 +48,30 @@ export function TaskForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <div className="flex flex-col sm:flex-row gap-4 flex-1 pb-20 sm:pb-4">
+      <div className="flex flex-col sm:flex-row gap-6 flex-1">
         {/* Left Column */}
-        <div>
-          <TextInput
-            value={title} 
+        <div className="flex flex-col gap-6">
+          <Textarea
+            value={title}
+            variant="unstyled"
             placeholder="Task Title"
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
             required
-            size="md"
-            label="Title"
+            size="2xl"
+            rows={1}
+            autosize
+            maxRows={3}
           />
+          <div>
+            <Editor
+              value={description}
+              onChange={setDescription}
+              minHeight="150px"
+              maxHeight="300px"
+            />
+          </div>
 
-          <label className="text-sm font-medium mb-1 block">Description</label>
-          <Editor
-            value={description}
-            onChange={setDescription}
-            minHeight="150px"
-            maxHeight="300px"
-          />
 
         </div>
 

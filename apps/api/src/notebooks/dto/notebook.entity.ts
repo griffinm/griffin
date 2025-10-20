@@ -16,7 +16,7 @@ export class NotebookEntity {
   id: string;
 
   @IsBoolean()
-  @IsNotEmpty()
+  @IsOptional()
   @Expose()
   isDefault: boolean;
 
