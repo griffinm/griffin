@@ -46,10 +46,8 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: () => {
-      // Clear user data from cache
-      queryClient.setQueryData(queryKeys.auth.currentUser(), null);
-      // Invalidate all auth queries
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
+      // Clear the entire react-query cache on logout
+      queryClient.clear();
     },
   });
 };

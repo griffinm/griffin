@@ -83,7 +83,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setMessages([]);
     try {
       await logoutMutation.mutateAsync();
-      setMessages(['Logout successful']);
+      // No success message needed for logout
     } catch (error: unknown) {
       const errorMessage = (error as AxiosError<{ message?: string }>)?.response?.data?.message || (error as Error)?.message || 'Logout failed';
       setMessages([errorMessage]);
