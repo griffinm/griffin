@@ -1,5 +1,9 @@
 name: prod-ui2
 
+networks:
+  prod:
+    driver: bridge
+
 services:
   api:
     container_name: ui2-api
@@ -10,6 +14,8 @@ services:
     ports:
       - "10101:8080"
     restart: on-failure
+    networks:
+      - prod
     environment:
       - USE_AWS_SECRETS=false
       - DATABASE_URL=postgresql://griffin:griffin@postgres-prod:5432/budgeting2_production
@@ -33,3 +39,5 @@ services:
     depends_on:
       - api
     restart: on-failure
+    networks:
+      - prod
