@@ -43,8 +43,8 @@ echo "Container Status:"
 docker compose -f docker-compose.prod.ui2.yml ps
 
 echo -e "\n${YELLOW}Service URLs:${NC}"
-echo "  UI2:  http://localhost:10201"
-echo "  API:  http://localhost:10201/api (proxied through nginx)"
+echo "  UI2:  http://localhost:10300"
+echo "  API:  http://localhost:10300/api (proxied through nginx)"
 echo "  API:  http://localhost:10301 (direct)"
 
 echo -e "\n${YELLOW}Useful Commands:${NC}"

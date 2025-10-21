@@ -77,8 +77,8 @@ After deployment:
 
 | Service        | URL                        | Purpose                             |
 | -------------- | -------------------------- | ----------------------------------- |
-| **UI2**        | http://localhost:10201     | Frontend application                |
-| **API**        | http://localhost:10201/api | Backend API (proxied through nginx) |
+| **UI2**        | http://localhost:10301     | Frontend application                |
+| **API**        | http://localhost:10301/api | Backend API (proxied through nginx) |
 | **API Direct** | http://localhost:10301     | Backend API (direct access)         |
 | **Typesense**  | http://localhost:8109      | Search engine                       |
 
@@ -185,7 +185,6 @@ docker image prune -a
 
 - All scripts include error checking and will stop if any step fails
 - The shared `prod-network` allows UI2 to coexist with other applications
-- UI2 uses ports 10101, 10201, 8109
 - Timestamp tags allow rollback to specific versions if needed
 
 ## 🔗 Shared Network

@@ -43,8 +43,8 @@ echo -e "${GREEN}   🚀 Deployment Complete!            ${NC}"
 echo -e "${BLUE}=======================================${NC}\n"
 
 echo -e "${YELLOW}Your application is now running:${NC}"
-echo "  UI2:  http://localhost:10201"
-echo "  API:  http://localhost:10201/api (proxied)"
+echo "  UI2:  http://localhost:10300"
+echo "  API:  http://localhost:10300/api (proxied)"
 echo "  API:  http://localhost:10301 (direct)"
 
 echo -e "\n${YELLOW}Quick Commands:${NC}"
