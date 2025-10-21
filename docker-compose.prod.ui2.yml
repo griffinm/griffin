@@ -7,13 +7,13 @@ networks:
 
 services:
   api:
-    container_name: ui2-api
+    container_name: notes-api
     image: griffin-api:latest
     build:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "10101:8080"
+      - "10301:8080"
     restart: on-failure
     networks:
       - prod
@@ -30,7 +30,7 @@ services:
       - TYPESENSE_API_KEY=xyz
 
   ui2:
-    container_name: ui2-ui
+    container_name: notes-ui
     image: griffin-ui2:latest
     build:
       context: .
