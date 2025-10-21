@@ -1,28 +1,4 @@
-name: prod-notes
-
-volumes:
-  typesense-data-prod:
-
-
-networks:
-  prod:
-    name: prod-network
-    external: true
-    driver: bridge
-
 services:
-  typesense:
-    container_name: notes-typesense
-    image: typesense/typesense:27.0
-    restart: on-failure
-    ports:
-      - "8108:8108"
-    volumes:
-      - ./typesense-data-prod:/data
-    command: '--data-dir /data --api-key=xyz --enable-cors'
-    networks:
-      - prod
-
   api:
     container_name: notes-api
     image: griffin-api:latest
@@ -30,9 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "10100:8080"
-    depends_on:
-      - typesense
+      - "10300:8080"
     restart: on-failure
     networks:
       - prod
