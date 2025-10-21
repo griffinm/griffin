@@ -14,15 +14,6 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Starting Production Containers (UI2)${NC}"
 echo -e "${BLUE}========================================${NC}\n"
 
-# Create the prod network if it doesn't exist
-if ! docker network inspect prod-network >/dev/null 2>&1; then
-    echo -e "${YELLOW}Creating shared 'prod-network' network...${NC}"
-    docker network create prod-network
-    echo -e "${GREEN}✓ Network 'prod-network' created${NC}\n"
-else
-    echo -e "${GREEN}✓ Network 'prod-network' already exists${NC}\n"
-fi
-
 # Check if images exist
 echo -e "\n${YELLOW}Checking for images...${NC}"
 if ! docker image inspect griffin-api:latest >/dev/null 2>&1; then
@@ -39,9 +30,8 @@ fi
 
 echo -e "${GREEN}✓ Images found${NC}\n"
 
-# Start containers (database and typesense will not be recreated if already running)
+# Start containers
 echo -e "${GREEN}Starting containers...${NC}"
-docker compose -f docker-compose.prod.ui2.yml up -d --no-recreate typesense
 docker compose -f docker-compose.prod.ui2.yml up -d api ui2
 
 echo -e "\n${BLUE}========================================${NC}"
@@ -55,8 +45,7 @@ docker compose -f docker-compose.prod.ui2.yml ps
 echo -e "\n${YELLOW}Service URLs:${NC}"
 echo "  UI2:  http://localhost:10201"
 echo "  API:  http://localhost:10201/api (proxied through nginx)"
-echo "  API:  http://localhost:10101 (direct)"
-echo "  Typesense: http://localhost:8109"
+echo "  API:  http://localhost:10301 (direct)"
 
 echo -e "\n${YELLOW}Useful Commands:${NC}"
 echo "  View logs:      docker compose -f docker-compose.prod.ui2.yml logs -f"

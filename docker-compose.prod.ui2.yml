@@ -1,28 +1,6 @@
 name: prod-ui2
 
-volumes:
-  typesense-data-prod-ui2:
-
-
-networks:
-  prod:
-    name: prod-network
-    external: true
-    driver: bridge
-
 services:
-  typesense:
-    container_name: ui2-typesense
-    image: typesense/typesense:27.0
-    restart: on-failure
-    ports:
-      - "8109:8108"
-    volumes:
-      - ./typesense-data-prod-ui2:/data
-    command: '--data-dir /data --api-key=xyz --enable-cors'
-    networks:
-      - prod
-
   api:
     container_name: ui2-api
     image: griffin-api:latest
@@ -31,11 +9,7 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "10101:8080"
-    depends_on:
-      - typesense
     restart: on-failure
-    networks:
-      - prod
     environment:
       - USE_AWS_SECRETS=false
       - DATABASE_URL=postgresql://griffin:griffin@postgres-prod:5432/budgeting2_production
@@ -59,5 +33,3 @@ services:
     depends_on:
       - api
     restart: on-failure
-    networks:
-      - prod

@@ -45,7 +45,7 @@ echo -e "${BLUE}=======================================${NC}\n"
 echo -e "${YELLOW}Your application is now running:${NC}"
 echo "  UI2:  http://localhost:10201"
 echo "  API:  http://localhost:10201/api (proxied)"
-echo "  API:  http://localhost:10101 (direct)"
+echo "  API:  http://localhost:10301 (direct)"
 
 echo -e "\n${YELLOW}Quick Commands:${NC}"
 echo "  View logs:   docker compose -f docker-compose.prod.ui2.yml logs -f"

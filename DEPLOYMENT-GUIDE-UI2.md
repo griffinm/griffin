@@ -79,7 +79,7 @@ After deployment:
 | -------------- | -------------------------- | ----------------------------------- |
 | **UI2**        | http://localhost:10201     | Frontend application                |
 | **API**        | http://localhost:10201/api | Backend API (proxied through nginx) |
-| **API Direct** | http://localhost:10101     | Backend API (direct access)         |
+| **API Direct** | http://localhost:10301     | Backend API (direct access)         |
 | **Typesense**  | http://localhost:8109      | Search engine                       |
 
 **Note:** The UI2 nginx server acts as a reverse proxy, forwarding all `/api/*` requests to the API container. This enables same-origin requests and avoids CORS issues.
