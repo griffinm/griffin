@@ -2,6 +2,7 @@ name: prod-ui2
 
 networks:
   prod:
+    name: prod
     driver: bridge
 
 services:
