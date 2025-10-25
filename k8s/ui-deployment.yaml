@@ -17,18 +17,18 @@ spec:
     spec:
       containers:
       - name: notes-ui
-        image: nas.malfin.com:10100/notes-ui:b68b806
+        image: nas.malfin.com:10100/notes-ui:6362ec3
         imagePullPolicy: Always
         ports:
         - containerPort: 80
           protocol: TCP
         resources:
           requests:
-            cpu: "2000m"
+            cpu: "100m"
             memory: "64Mi"
           limits:
-            cpu: "2000m"
-            memory: "128Mi"
+            cpu: "1000m"
+            memory: "256Mi"
         livenessProbe:
           httpGet:
             path: /
