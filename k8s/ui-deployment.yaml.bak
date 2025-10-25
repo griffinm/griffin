@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: notes-ui
-        image: nas.malfin.com:10100/notes-ui:26bd329
+        image: nas.malfin.com:10100/notes-ui:6362ec3
         imagePullPolicy: Always
         ports:
         - containerPort: 80

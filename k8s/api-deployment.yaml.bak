@@ -17,14 +17,14 @@ spec:
     spec:
       containers:
       - name: notes-api
-        image: nas.malfin.com:10100/notes-api:26bd329
+        image: nas.malfin.com:10100/notes-api:6362ec3
         imagePullPolicy: Always
         ports:
-        - containerPort: 3000
+        - containerPort: 80
           protocol: TCP
         env:
         - name: PORT
-          value: "3000"
+          value: "80"
         - name: NODE_ENV
           value: "production"
         - name: USE_AWS_SECRETS
@@ -58,7 +58,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /api/health
-            port: 3000
+            port: 80
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -66,7 +66,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /api/health
-            port: 3000
+            port: 80
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
