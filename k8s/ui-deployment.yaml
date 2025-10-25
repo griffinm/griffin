@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-ui
+  namespace: prod
+  labels:
+    app: notes-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notes-ui
+  template:
+    metadata:
+      labels:
+        app: notes-ui
+    spec:
+      containers:
+      - name: notes-ui
+        image: nas.malfin.com:10100/notes-ui:b68b806
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "2000m"
+            memory: "64Mi"
+          limits:
+            cpu: "2000m"
+            memory: "128Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+

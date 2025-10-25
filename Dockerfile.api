@@ -53,7 +53,7 @@ COPY docker-entrypoint-local.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose the port your app runs on
-EXPOSE 8080
+EXPOSE 80
 
 # Use entrypoint script to load secrets and start the application
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
