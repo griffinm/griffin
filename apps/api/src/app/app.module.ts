@@ -19,6 +19,7 @@ import { SearchModule } from '../search/search.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }), 
     UsersModule,
     NotebookModule,
