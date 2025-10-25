@@ -9,14 +9,19 @@ export class AppLoggerMiddleware implements NestMiddleware {
     const { ip, method, originalUrl: url } = request;
     const startTime = Date.now();
     
+    // Skip logging for health endpoint
+    const isHealthEndpoint = url.includes('/health');
+    
     response.on('close', () => {
-      const { statusCode } = response;
-      const contentLength = response.get('content-length');
-      const duration = Date.now() - startTime;
+      if (!isHealthEndpoint) {
+        const { statusCode } = response;
+        const contentLength = response.get('content-length');
+        const duration = Date.now() - startTime;
 
-      this.logger.log(
-        `${method} ${url} ${statusCode} CL:${contentLength} IP:${ip} DUR:${duration}ms`
-      );
+        this.logger.log(
+          `${method} ${url} ${statusCode} CL:${contentLength} IP:${ip} DUR:${duration}ms`
+        );
+      }
     });
 
     next();
