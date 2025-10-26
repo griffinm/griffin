@@ -23,7 +23,7 @@ export class QuestionsService {
         note: {
           deletedAt: null,
         },
-        ...this.getAnsweredWhereClause(includeAnswered),
+        // ...this.getAnsweredWhereClause(includeAnswered),
       },
     });
     this.logger.debug(`Found ${questions.length} questions for user ${userId}`);
@@ -112,7 +112,7 @@ export class QuestionsService {
     return {
       OR: [
         { answer: null },
-        { answer: '' }
+        { answer: '' },
       ],
     };
   }

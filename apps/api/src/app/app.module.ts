@@ -13,6 +13,7 @@ import { AppLoggerMiddleware } from './AppLogger.middleware';
 import { QuestionsModule } from '../questions/questions.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { SearchModule } from '../search/search.module';
+import { TagModule } from '../tag/tag.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SearchModule } from '../search/search.module';
     QuestionsModule,
     PrismaModule,
     SearchModule,
+    TagModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],
