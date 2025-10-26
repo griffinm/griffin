@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 
+declare const module: any;
+
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -33,6 +35,12 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   Logger.log(`🚀 Application is running on: http://localhost:${port}/${globalPrefix}`);
+
+  // Enable HMR in development
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
 }
 
 bootstrap();
