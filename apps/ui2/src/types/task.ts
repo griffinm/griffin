@@ -44,7 +44,7 @@ export enum SortOrder {
 }
 
 export interface TaskFilters {
-  status?: TaskStatus;
+  status?: TaskStatus | string; // Can be a single status or comma-separated list
   page?: number;
   resultsPerPage?: number;
   sortBy?: SortBy;

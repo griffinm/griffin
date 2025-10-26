@@ -14,7 +14,7 @@ export class TasksService {
   constructor(private prisma: PrismaService) {}
 
   async filter(userId: string, filter: FilterDto): Promise<TaskEntity[]> {
-    this.logger.debug(`Filtering tasks for user ${userId} with filter: ${JSON.stringify(filter)}`);
+    this.logger.debug(`Filtering tasks for user ${userId}; filter: ${JSON.stringify(filter)}`);
     const whereClause = {
       deletedAt: null,
     };
@@ -35,6 +35,15 @@ export class TasksService {
       ];
     }
 
+    // Handle multiple statuses (comma-separated)
+    let statusFilter = {};
+    if (filter.status) {
+      const statuses = filter.status.includes(',') 
+        ? filter.status.split(',').map(s => s.trim())
+        : [filter.status];
+      statusFilter = statuses.length > 1 ? { status: { in: statuses } } : { status: filter.status };
+    }
+
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 
@@ -43,7 +52,7 @@ export class TasksService {
         ...(filter.priority && { priority: filter.priority }),
         ...(filter.startDate && { dueDate: { gte: filter.startDate } }),
         ...(filter.endDate && { dueDate: { lte: filter.endDate } }),
-        ...(filter.status && { status: filter.status }),
+        ...statusFilter,
       },
       orderBy: this.ordering(filter.sortBy, filter.sortOrder, filter.status),
       take: filter.resultsPerPage,
