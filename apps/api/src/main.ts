@@ -4,10 +4,13 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const logLevels: LogLevel[] = process.env.LOG_LEVEL 
-    ? [process.env.LOG_LEVEL as LogLevel]
-    : ['log', 'error', 'warn'];
-    
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  let logLevels: LogLevel[] = ['log', 'error', 'warn'];
+  if (!isProduction) {
+    logLevels = ['log', 'error', 'warn', 'debug'];
+  }
+
   const app = await NestFactory.create(AppModule, {
     logger: logLevels
   });
