@@ -1,9 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import Typesense from "typesense";
 import { config } from "dotenv";
+import { existsSync } from "fs";
 
-// Load environment variables from .env.local
-config({ path: '.env.local' });
+// Load environment variables - try .env.local first, then .env, or use existing env vars
+if (existsSync('.env.local')) {
+  config({ path: '.env.local' });
+} else if (existsSync('.env')) {
+  config({ path: '.env' });
+}
 
 // Configure console logging level
 const logLevel = process.env.LOG_LEVEL || 'log';

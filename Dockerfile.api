@@ -45,6 +45,9 @@ COPY --from=builder /app/node_modules ./node_modules
 # Copy Prisma schema files
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
+# Copy scripts directory for maintenance tasks
+COPY --from=builder /app/apps/api/src/scripts ./apps/api/src/scripts
+
 # Copy the production environment file
 COPY .env.prod .env
 
