@@ -17,7 +17,7 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteTasksByStatus(status);
+  } = useInfiniteTasksByStatus([status]);
 
   // Flatten all pages into a single array of tasks
   const tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];

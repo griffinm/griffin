@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+.html-preview {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+
+  ul[data-type="taskList"] {
+    li {
+      @apply flex gap-2 items-center;
+    }
+  }
+}

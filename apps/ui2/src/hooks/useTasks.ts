@@ -46,17 +46,24 @@ export const useTasksByStatus = (status: TaskStatus): UseQueryResult<Task[], Err
   });
 };
 
-// Hook for infinite scroll tasks by status
-export const useInfiniteTasksByStatus = (status: TaskStatus): UseInfiniteQueryResult<PagedTaskList, Error> => {
-  // Determine sort criteria based on status
-  const sortBy = status === TaskStatus.COMPLETED ? SortBy.COMPLETED_AT : SortBy.DUE_DATE;
-  const sortOrder = status === TaskStatus.COMPLETED ? SortOrder.DESC : SortOrder.ASC;
+// Hook for infinite scroll tasks by status (supports single status or array of statuses)
+export const useInfiniteTasksByStatus = (statuses: TaskStatus | TaskStatus[]): UseInfiniteQueryResult<PagedTaskList, Error> => {
+  // Convert to array for consistent handling
+  const statusArray = Array.isArray(statuses) ? statuses : [statuses];
+  
+  // Determine sort criteria based on status (use first status if multiple)
+  const primaryStatus = statusArray[0];
+  const sortBy = primaryStatus === TaskStatus.COMPLETED ? SortBy.COMPLETED_AT : SortBy.DUE_DATE;
+  const sortOrder = primaryStatus === TaskStatus.COMPLETED ? SortOrder.DESC : SortOrder.ASC;
+  
+  // Convert array to comma-separated string for API
+  const statusParam = statusArray.join(',');
   
   return useInfiniteQuery({
-    queryKey: ['tasks', 'infinite', 'byStatus', status, sortBy, sortOrder],
+    queryKey: ['tasks', 'infinite', 'byStatus', statusArray, sortBy, sortOrder],
     queryFn: async ({ pageParam = 1 }) => {
       return await fetchTasks({ 
-        status, 
+        status: statusParam, 
         page: pageParam,
         resultsPerPage: 20,
         sortBy,
