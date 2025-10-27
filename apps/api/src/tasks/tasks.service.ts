@@ -6,12 +6,16 @@ import { UpdateTaskDto } from './dto/update.dto';
 import { NewTaskDto } from './dto/new.dto';
 import { FilterDto } from './dto/filter.dto';
 import { TaskEntity } from './dto/task.entity';
+import { SearchService } from '../search/search.service';
 
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
-  
-  constructor(private prisma: PrismaService) {}
+
+  constructor(
+    private prisma: PrismaService,
+    private searchService: SearchService,
+  ) {}
 
   async filter(userId: string, filter: FilterDto): Promise<TaskEntity[]> {
     this.logger.debug(`Filtering tasks for user ${userId}; filter: ${JSON.stringify(filter)}`);
@@ -125,11 +129,20 @@ export class TasksService {
         },
       });
     }
+
+    // Add the task to the search index
+    this.searchService.addObject({
+      userId,
+      type: 'task',
+      id: existingTask.id,
+      object: existingTask,
+    })
     
     return updatedTask;
   }
 
   async create(userId: string, task: NewTaskDto): Promise<Task> {
+    this.logger.debug("Adding new task")
     const createdTask = await this.prisma.task.create({
       data: { ...task, userId },
     });
@@ -141,6 +154,13 @@ export class TasksService {
         status: createdTask.status,
       },
     });
+
+    this.searchService.addObject({
+      userId,
+      type: 'task',
+      id: createdTask.id,
+      object: createdTask,
+    })
     
     return createdTask;
   }

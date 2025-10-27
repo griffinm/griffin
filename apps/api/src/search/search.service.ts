@@ -1,8 +1,13 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import Typesense from "typesense";
 import { noteSchema, taskSchema } from "./schemas";
-import { Note } from "@prisma/client";
+import { Note, Task } from "@prisma/client";
 import { SearchResultsDto, NoteResult } from "./dto/search-results.dto";
+
+const collectionNames = {
+  note: 'notes',
+  task: 'tasks',
+}
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -74,6 +79,41 @@ export class SearchService implements OnModuleInit {
     });
 
     return searchResults;
+  }
+
+
+  public async addObject({
+    type,
+    id,
+    object,
+    userId,
+  }: {
+    type: 'note' | 'task';
+    id: string;
+    object: Note | Task;
+    userId: string,
+  }) {
+    this.logger.debug(`Adding ${type} ${id.substring(0, 7)} to search index`);
+
+    const collectionName = collectionNames[type];
+
+    let params:any = { userId };
+    if (type === 'task') {
+      const task = (object as Task)
+      params.dueDate = task.dueDate
+      params.status = task.status
+      params.title = task.title
+      params.description = task.description
+      params.priority = task.priority
+    } else {
+      // This is a note
+      const note = (object as Note)
+      params.title = note.title
+      params.content = note.content
+    }
+
+    console.log("Params: ", params);
+    this.typesenseClient.collections(collectionName).documents().upsert(params);
   }
 
   async removeNote(noteId: string) {

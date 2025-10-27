@@ -38,6 +38,18 @@ export const taskSchema = {
     {
       name: 'userId',
       type: 'string',
+    },
+    {
+      name: 'dueDate',
+      type: 'datetime',
+    },
+    {
+      name: 'status',
+      type: 'string',
+    },
+    {
+      name: 'priority',
+      type: 'string',
     }
   ],
 };
