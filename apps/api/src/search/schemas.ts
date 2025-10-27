@@ -41,7 +41,7 @@ export const taskSchema = {
     },
     {
       name: 'dueDate',
-      type: 'datetime',
+      type: 'int64',
     },
     {
       name: 'status',

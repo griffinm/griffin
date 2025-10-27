@@ -3,6 +3,7 @@ import Typesense from "typesense";
 import { noteSchema, taskSchema } from "./schemas";
 import { Note, Task } from "@prisma/client";
 import { SearchResultsDto, NoteResult } from "./dto/search-results.dto";
+import { PrismaService } from "../prisma/prisma.service";
 
 const collectionNames = {
   note: 'notes',
@@ -13,6 +14,8 @@ const collectionNames = {
 export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private typesenseClient;
+
+  constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
     this.logger.log('Initializing search service');
@@ -81,6 +84,49 @@ export class SearchService implements OnModuleInit {
     return searchResults;
   }
 
+  public async rebuildIndex() {
+    this.logger.debug(`Rebuilding search index`);
+    
+    this.logger.debug(`Deleting collections ${noteSchema.name} and ${taskSchema.name}`);
+    await this.typesenseClient.collections(collectionNames.note).delete();
+    await this.typesenseClient.collections(collectionNames.task).delete();
+    this.logger.debug(`Creating collections ${noteSchema.name} and ${taskSchema.name}`);
+    await this.typesenseClient.collections().create(noteSchema);
+    await this.typesenseClient.collections().create(taskSchema);
+
+    // Add all notes to the note collection
+    const notes = await this.prisma.note.findMany({
+      include: {
+        notebook: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+    for (const note of notes) {
+      await this.addObject({
+        type: 'note',
+        id: note.id,
+        object: note,
+        userId: note.notebook.userId,
+      });
+    }
+
+    // Add all tasks to the task collection
+    const tasks = await this.prisma.task.findMany();
+    for (const task of tasks) {
+      await this.addObject({
+        type: 'task',
+        id: task.id,
+        object: task,
+        userId: task.userId,
+      });
+    }
+
+    await this.createCollections();
+    return true;
+  }
 
   public async addObject({
     type,
@@ -92,7 +138,7 @@ export class SearchService implements OnModuleInit {
     id: string;
     object: Note | Task;
     userId: string,
-  }) {
+  }): Promise<boolean> {
     this.logger.debug(`Adding ${type} ${id.substring(0, 7)} to search index`);
 
     const collectionName = collectionNames[type];
@@ -100,7 +146,7 @@ export class SearchService implements OnModuleInit {
     let params:any = { userId };
     if (type === 'task') {
       const task = (object as Task)
-      params.dueDate = task.dueDate
+      params.dueDate = task.dueDate ? Math.floor(task.dueDate.getTime() / 1000) : null
       params.status = task.status
       params.title = task.title
       params.description = task.description
@@ -112,8 +158,22 @@ export class SearchService implements OnModuleInit {
       params.content = note.content
     }
 
-    console.log("Params: ", params);
     this.typesenseClient.collections(collectionName).documents().upsert(params);
+
+    return true;
+  }
+
+  public async removeObject({
+    type,
+    id,
+  }: {
+    type: 'note' | 'task';
+    id: string;
+  }): Promise<boolean> {
+    this.logger.debug(`Removing ${type} ${id.substring(0, 7)} from search index`);
+    const collectionName = collectionNames[type];
+    this.typesenseClient.collections(collectionName).documents(id).delete();
+    return true;
   }
 
   async removeNote(noteId: string) {

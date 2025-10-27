@@ -13,16 +13,21 @@ import { RequestWithUser } from "@griffin/types";
 import { SearchResultsDto } from "./dto/search-results.dto";
 
 @Controller('search')
-@UseGuards(AuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
-
+  
   @Get()
+  @UseGuards(AuthGuard)
   async search(
     @Query('query') query: string,
     @Req() req: RequestWithUser
   ): Promise<SearchResultsDto> {
     return this.searchService.search(query, req.user.id);
+  }
+
+  @Get('rebuild')
+  async rebuildIndex() {
+    return this.searchService.rebuildIndex();
   }
 }
