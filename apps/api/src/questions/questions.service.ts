@@ -4,6 +4,7 @@ import { CreateQuestionDto } from './dto/create.dto';
 import { UpdateQuestionDto } from './dto/update.dto';
 import { QuestionEntity } from './dto/question.entity';
 import { plainToInstance } from 'class-transformer';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class QuestionsService {
@@ -22,8 +23,7 @@ export class QuestionsService {
         note: {
           deletedAt: null,
         },
-        // Only include unanswered questions if includeAnswered is false
-        ...(includeAnswered ? {} : { answer: null }),
+        // ...this.getAnsweredWhereClause(includeAnswered),
       },
     });
     this.logger.debug(`Found ${questions.length} questions for user ${userId}`);
@@ -102,5 +102,18 @@ export class QuestionsService {
     });
     this.logger.debug(`Question ${questionId} updated for user ${userId}`);
     return plainToInstance(QuestionEntity, question);
+  }
+
+  private getAnsweredWhereClause(includeAnswered: boolean): Prisma.QuestionWhereInput {
+    if (includeAnswered) {
+      return {};
+    }
+    this.logger.debug('Getting unanswered questions');
+    return {
+      OR: [
+        { answer: null },
+        { answer: '' },
+      ],
+    };
   }
 }

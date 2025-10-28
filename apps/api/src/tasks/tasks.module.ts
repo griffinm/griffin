@@ -4,6 +4,8 @@ import { TasksService } from "./tasks.service";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
 import { PrismaModule } from "../prisma/prisma.module";
+import { SearchModule } from "../search/search.module";
+import { TagModule } from "../tag/tag.module";
 
 @Module({
   controllers: [TasksController],
@@ -11,6 +13,12 @@ import { PrismaModule } from "../prisma/prisma.module";
     TasksService,
   ],
   exports: [TasksService],
-  imports: [PrismaModule, forwardRef(() => AuthModule), forwardRef(() => UsersModule)],
+  imports: [
+    PrismaModule,
+    SearchModule,
+    TagModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule)
+  ],
 })
 export class TasksModule {}

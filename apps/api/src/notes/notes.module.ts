@@ -5,10 +5,17 @@ import { PrismaModule } from "../prisma/prisma.module";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
 import { SearchModule } from "../search/search.module";
+import { TagModule } from "../tag/tag.module";
 
 @Module({
   controllers: [NotesController],
-  imports: [SearchModule, PrismaModule, forwardRef(() => AuthModule), forwardRef(() => UsersModule)],
+  imports: [
+    SearchModule,
+    PrismaModule,
+    TagModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule)
+  ],
   providers: [
     NoteService,
   ],

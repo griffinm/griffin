@@ -6,15 +6,56 @@ import { UpdateTaskDto } from './dto/update.dto';
 import { NewTaskDto } from './dto/new.dto';
 import { FilterDto } from './dto/filter.dto';
 import { TaskEntity } from './dto/task.entity';
+import { SearchService } from '../search/search.service';
 
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
-  
-  constructor(private prisma: PrismaService) {}
+
+  constructor(
+    private prisma: PrismaService,
+    private searchService: SearchService,
+  ) {}
+
+  /**
+   * Fetch tags for a list of tasks
+   */
+  private async addTagsToTasks(tasks: any[]): Promise<any[]> {
+    if (tasks.length === 0) return tasks;
+
+    const taskIds = tasks.map(task => task.id);
+    
+    // Fetch all object tags for these tasks
+    const objectTags = await this.prisma.objectTag.findMany({
+      where: {
+        objectType: 'task',
+        objectId: { in: taskIds },
+      },
+      include: {
+        tag: true,
+      },
+    });
+
+    // Group tags by task ID (filter out deleted tags)
+    const tagsByTaskId = objectTags.reduce((acc, ot) => {
+      if (!acc[ot.objectId]) {
+        acc[ot.objectId] = [];
+      }
+      if (ot.tag && ot.tag.deletedAt === null) {
+        acc[ot.objectId].push(ot.tag);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Add tags to each task
+    return tasks.map(task => ({
+      ...task,
+      tags: tagsByTaskId[task.id] || [],
+    }));
+  }
 
   async filter(userId: string, filter: FilterDto): Promise<TaskEntity[]> {
-    this.logger.debug(`Filtering tasks for user ${userId} with filter: ${JSON.stringify(filter)}`);
+    this.logger.debug(`Filtering tasks for user ${userId}; filter: ${JSON.stringify(filter)}`);
     const whereClause = {
       deletedAt: null,
     };
@@ -35,6 +76,33 @@ export class TasksService {
       ];
     }
 
+    // Handle multiple statuses (comma-separated)
+    let statusFilter = {};
+    if (filter.status) {
+      const statuses = filter.status.includes(',') 
+        ? filter.status.split(',').map(s => s.trim())
+        : [filter.status];
+      statusFilter = statuses.length > 1 ? { status: { in: statuses } } : { status: filter.status };
+    }
+
+    // Handle tag filtering
+    let tagFilter = {};
+    if (filter.tags) {
+      const tagIds = filter.tags.split(',').map(t => t.trim());
+      // Filter tasks that have at least one of the specified tags
+      tagFilter = {
+        id: {
+          in: await this.prisma.objectTag.findMany({
+            where: {
+              objectType: 'task',
+              tagId: { in: tagIds },
+            },
+            select: { objectId: true },
+          }).then(results => results.map(r => r.objectId)),
+        },
+      };
+    }
+
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 
@@ -43,14 +111,18 @@ export class TasksService {
         ...(filter.priority && { priority: filter.priority }),
         ...(filter.startDate && { dueDate: { gte: filter.startDate } }),
         ...(filter.endDate && { dueDate: { lte: filter.endDate } }),
-        ...(filter.status && { status: filter.status }),
+        ...statusFilter,
+        ...tagFilter,
       },
       orderBy: this.ordering(filter.sortBy, filter.sortOrder, filter.status),
       take: filter.resultsPerPage,
       skip: (filter.page - 1) * filter.resultsPerPage,
     });
     
-    const objs = tasks.map((task) => {
+    // Add tags to tasks
+    const tasksWithTags = await this.addTagsToTasks(tasks);
+    
+    const objs = tasksWithTags.map((task) => {
       return new TaskEntity(task);
     });
 
@@ -71,7 +143,10 @@ export class TasksService {
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-    return task;
+    
+    // Add tags
+    const tasksWithTags = await this.addTagsToTasks([task]);
+    return tasksWithTags[0] as Task;
   }
 
   async deleteById(id: string, userId: string): Promise<Task> {
@@ -87,7 +162,10 @@ export class TasksService {
       where: { userId, deletedAt: null },
       orderBy: this.ordering(),
     });
-    return tasks;
+    
+    // Add tags
+    const tasksWithTags = await this.addTagsToTasks(tasks);
+    return tasksWithTags as Task[];
   }
 
   async getCountForUser(userId: string): Promise<number> {
@@ -116,11 +194,20 @@ export class TasksService {
         },
       });
     }
+
+    // Add the task to the search index
+    this.searchService.addObject({
+      userId,
+      type: 'task',
+      id: existingTask.id,
+      object: existingTask,
+    })
     
     return updatedTask;
   }
 
   async create(userId: string, task: NewTaskDto): Promise<Task> {
+    this.logger.debug("Adding new task")
     const createdTask = await this.prisma.task.create({
       data: { ...task, userId },
     });
@@ -132,6 +219,13 @@ export class TasksService {
         status: createdTask.status,
       },
     });
+
+    this.searchService.addObject({
+      userId,
+      type: 'task',
+      id: createdTask.id,
+      object: createdTask,
+    })
     
     return createdTask;
   }

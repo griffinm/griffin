@@ -17,6 +17,7 @@ export class QuestionsController {
     @Req() request: RequestWithUser,
     @Query('includeAnswered', new ParseBoolPipe({ optional: true })) includeAnswered = false,
   ): Promise<QuestionEntity[]> {
+    // return [];
     return this.questionsService.getMany(request.user.id, includeAnswered);
   }
 

@@ -1,3 +1,5 @@
+import { Tag } from './tag';
+
 export interface Note {
   id: string;
   title: string;
@@ -5,6 +7,7 @@ export interface Note {
   notebookId: string;
   createdAt: Date;
   updatedAt: Date;
+  tags?: Tag[];
 }
 
 export interface NoteFilters {

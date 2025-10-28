@@ -8,12 +8,17 @@ import { Editor as TiptapEditor } from '@tiptap/core';
 import { ConfirmationModal } from '../NoteTree/ConfirmationModal';
 import { MoveNoteModal } from './MoveNoteModal';
 import { notifications } from '@mantine/notifications';
+import { TagManager } from '@/components/TagManager/TagManager';
+import { Tag } from '@/types/tag';
+import { addTagToNote, removeTagFromNote } from '@/api/notesApi';
+import { useQueryClient } from '@tanstack/react-query';
 
 const SAVE_TIMEOUT = 250;
 
 export function NoteView() {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: note, isLoading, error } = useNote(noteId || '');
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
@@ -170,6 +175,46 @@ export function NoteView() {
     }
   };
 
+  // Handle tag changes
+  const handleTagsChange = async (newTags: Tag[]) => {
+    if (!noteId || !note) return;
+
+    const originalTags = note.tags || [];
+    
+    // Find removed tags
+    const removedTags = originalTags.filter(
+      (tag) => !newTags.some((newTag) => newTag.id === tag.id)
+    );
+    
+    // Find added tags
+    const addedTags = newTags.filter(
+      (tag) => !originalTags.some((origTag) => origTag.id === tag.id)
+    );
+    
+    try {
+      // Remove tags
+      for (const tag of removedTags) {
+        await removeTagFromNote(noteId, tag.id);
+      }
+      
+      // Add tags
+      for (const tag of addedTags) {
+        await addTagToNote(noteId, tag.name);
+      }
+      
+      // Invalidate queries to refetch note with updated tags
+      await queryClient.invalidateQueries({ queryKey: ['note', noteId] });
+      await queryClient.invalidateQueries({ queryKey: ['notes'] });
+    } catch (error) {
+      console.error('Error updating tags:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update tags',
+        color: 'red',
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <Center h="100%">
@@ -223,76 +268,96 @@ export function NoteView() {
           marginBottom: isScrolled ? 0 : '12px',
           borderBottom: isScrolled ? '1px solid #e0e0e0' : 'none',
           transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
         }}
       >
-        {isEditingTitle ? (
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={titleValue}
-            onChange={(e) => setTitleValue(e.target.value)}
-            onBlur={handleSaveTitle}
-            onKeyDown={handleTitleKeyDown}
-            style={{
-              flex: 1,
-              border: 'none',
-              borderBottom: '2px solid #228be6',
-              fontSize: isScrolled ? '16px' : '20px',
-              fontWeight: '600',
-              padding: '4px 0',
-              outline: 'none',
-              background: 'transparent',
-              transition: 'font-size 0.2s ease',
-            }}
-          />
-        ) : (
-          <h1
-            onClick={() => setIsEditingTitle(true)}
-            style={{
-              flex: 1,
-              fontSize: isScrolled ? '16px' : '20px',
-              fontWeight: '600',
-              margin: 0,
-              padding: '4px 0',
-              cursor: 'text',
-              transition: 'font-size 0.2s ease',
-            }}
-          >
-            {note.title || 'Untitled'}
-          </h1>
-        )}
-        
-        <Menu shadow="md" width={200}>
-          <Menu.Target>
-            <ActionIcon variant="subtle" color="gray" size="lg">
-              <IconDots size={20} />
-            </ActionIcon>
-          </Menu.Target>
+        {/* Title row with tags and menu */}
+        <div style={{ 
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}>
+          {isEditingTitle ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={handleSaveTitle}
+              onKeyDown={handleTitleKeyDown}
+              style={{
+                flex: 1,
+                minWidth: '200px',
+                border: 'none',
+                borderBottom: '2px solid #228be6',
+                fontSize: isScrolled ? '16px' : '20px',
+                fontWeight: '600',
+                padding: '4px 0',
+                outline: 'none',
+                background: 'transparent',
+                transition: 'font-size 0.2s ease',
+              }}
+            />
+          ) : (
+            <h1
+              onClick={() => setIsEditingTitle(true)}
+              style={{
+                flex: 1,
+                minWidth: '200px',
+                fontSize: isScrolled ? '16px' : '20px',
+                fontWeight: '600',
+                margin: 0,
+                padding: '4px 0',
+                cursor: 'text',
+                transition: 'font-size 0.2s ease',
+              }}
+            >
+              {note.title || 'Untitled'}
+            </h1>
+          )}
+          
+          {/* Tags Section - between title and menu on desktop, below title on mobile */}
+          <div style={{ 
+            flexShrink: 0,
+            maxWidth: '400px',
+            minWidth: '200px',
+          }}>
+            <TagManager 
+              tags={note.tags || []} 
+              onChange={handleTagsChange}
+              placeholder="Add tags..."
+            />
+          </div>
 
-          <Menu.Dropdown>
-            <Menu.Label>Note actions</Menu.Label>
-            <Menu.Item 
-              leftSection={<IconFolderSymlink size={16} />}
-              onClick={() => setMoveModalOpened(true)}
-            >
-              Move to notebook
-            </Menu.Item>
-            <Menu.Item leftSection={<IconCopy size={16} />}>
-              Duplicate note
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item 
-              color="red" 
-              leftSection={<IconTrash size={16} />}
-              onClick={() => setDeleteModalOpened(true)}
-            >
-              Delete note
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <ActionIcon variant="subtle" color="gray" size="lg">
+                <IconDots size={20} />
+              </ActionIcon>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Note actions</Menu.Label>
+              <Menu.Item 
+                leftSection={<IconFolderSymlink size={16} />}
+                onClick={() => setMoveModalOpened(true)}
+              >
+                Move to notebook
+              </Menu.Item>
+              <Menu.Item leftSection={<IconCopy size={16} />}>
+                Duplicate note
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item 
+                color="red" 
+                leftSection={<IconTrash size={16} />}
+                onClick={() => setDeleteModalOpened(true)}
+              >
+                Delete note
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </div>
       </div>
 
       <div style={{ padding: '0 20px 20px' }}>

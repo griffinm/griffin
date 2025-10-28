@@ -1,4 +1,5 @@
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
+import { Tag } from "@/types/tag";
 import { useState } from "react";
 import { TextInput, Button, Stack, Textarea } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
@@ -9,6 +10,7 @@ import '@mantine/dates/styles.css';
 import { getDatePresets } from "./utils";
 import { Editor } from "@/components/Editor";
 import { StatusHistory } from "@/components/tasks/StatusHistory";
+import { TagManager } from "@/components/TagManager";
 
 export interface TaskFormData {
   title: string;
@@ -16,6 +18,7 @@ export interface TaskFormData {
   dueDate: Date;
   priority: TaskPriority;
   status: TaskStatus;
+  tags?: Tag[];
 }
 
 export function TaskForm({
@@ -32,6 +35,7 @@ export function TaskForm({
   const [dueDate, setDueDate] = useState(task?.dueDate ? new Date(task.dueDate) : new Date());
   const [priority, setPriority] = useState(task?.priority || TaskPriority.MEDIUM);
   const [status, setStatus] = useState(task?.status || TaskStatus.TODO);
+  const [tags, setTags] = useState<Tag[]>(task?.tags || []);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,6 +46,7 @@ export function TaskForm({
         dueDate,
         priority,
         status,
+        tags,
       });
     }
   };
@@ -87,16 +92,21 @@ export function TaskForm({
           />
           <PrioritySelect priority={priority} onChange={setPriority} size="sm" />
           <StatusSelect status={status} onChange={setStatus} size="sm" />
-
-          {/* TODO: This should be part of the view and not part of the form */}
-          {task?.statusHistory && task.statusHistory.length > 1 && (
-            <StatusHistory history={task.statusHistory} />
-          )}
+          
+          <div>
+            <label className="text-sm font-medium mb-1 block">Tags</label>
+            <TagManager tags={tags} onChange={setTags} placeholder="Add tags..." />
+          </div>
         </div>
       </div>
 
+      {/* Status History - Full Width */}
+      {task?.statusHistory && task.statusHistory.length > 1 && (
+        <StatusHistory history={task.statusHistory} />
+      )}
+
       {/* Action Footer */}
-      <div className="fixed sm:relative bottom-0 left-0 right-0 sm:bottom-auto sm:left-auto sm:right-auto flex justify-end gap-2 p-4 sm:p-0 bg-white dark:bg-gray-900 border-t sm:border-t-0 border-gray-200 dark:border-gray-700 z-10">
+      <div className="mt-3 fixed sm:relative bottom-0 left-0 right-0 sm:bottom-auto sm:left-auto sm:right-auto flex justify-end gap-2 p-4 sm:p-0 bg-white z-10">
         <Button 
           type="button" 
           size="sm" 

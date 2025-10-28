@@ -1,15 +1,29 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useInfiniteTasksByStatus } from '@/hooks/useTasks';
-import { TaskStatus, Task, PagedTaskList } from '@/types/task';
+import { TaskStatus, Task, PagedTaskList, TaskFilters } from '@/types/task';
 import { DraggableTask } from './DraggableTask';
 
 interface TaskColumnProps {
   status: TaskStatus;
   title: string;
+  searchTasks?: Task[];
+  selectedPriorities?: string[];
+  selectedTags?: string[];
 }
 
-export function TaskColumn({ status, title }: TaskColumnProps) {
+export function TaskColumn({ status, title, searchTasks, selectedPriorities, selectedTags }: TaskColumnProps) {
+  const isSearching = searchTasks !== undefined;
+  
+  // Build filters for API
+  const filters: Partial<TaskFilters> = {};
+  if (selectedPriorities && selectedPriorities.length > 0) {
+    filters.priority = selectedPriorities[0] as any; // For now, only support single priority
+  }
+  if (selectedTags && selectedTags.length > 0) {
+    filters.tags = selectedTags.join(',');
+  }
+  
   const {
     data,
     isLoading,
@@ -17,30 +31,54 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteTasksByStatus(status);
+  } = useInfiniteTasksByStatus([status], Object.keys(filters).length > 0 ? filters : undefined);
+  
+  const pages = (data as any)?.pages as PagedTaskList[] | undefined;
+  const totalRecords = pages?.[0]?.totalRecords ?? 0;
 
-  // Flatten all pages into a single array of tasks
-  const tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  let tasks: Task[];
+  if (isSearching) {
+    tasks = searchTasks.filter(task => task.status === status);
+  } else {
+    tasks = pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  }
 
-  // Make this column a drop zone
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: status,
   });
 
-  // Infinite scroll implementation
+  // Infinite scroll implementation (disabled during search)
   const observerRef = useRef<IntersectionObserver | undefined>(undefined);
   const lastTaskElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoading) return;
-    if (observerRef.current) observerRef.current.disconnect();
+    // Always disconnect previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = undefined;
+    }
+    
+    // Don't set up new observer if searching or loading
+    if (isSearching || isLoading) return;
+    
+    // Set up new observer
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasNextPage) {
         fetchNextPage();
       }
     });
     if (node) observerRef.current.observe(node);
-  }, [isLoading, hasNextPage, fetchNextPage]);
+  }, [isSearching, isLoading, hasNextPage, fetchNextPage]);
+  
+  // Clean up observer when searching state changes
+  useEffect(() => {
+    if (isSearching) {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = undefined;
+      }
+    }
+  }, [isSearching]);
 
-  if (isLoading) {
+  if (!isSearching && isLoading) {
     return (
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-x-hidden">
         <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">{title}</h2>
@@ -51,7 +89,7 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
     );
   }
 
-  if (error) {
+  if (!isSearching && error) {
     return (
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-x-hidden">
         <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">{title}</h2>
@@ -71,7 +109,7 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
       }`}
     >
       <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">
-        {title}
+        {title} <span className="text-gray-500 text-sm">({isSearching ? tasks.length : totalRecords})</span>
       </h2>
       <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {tasks.map((task: Task, index: number) => {
@@ -86,15 +124,15 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
           );
         })}
         
-        {isFetchingNextPage && (
+        {!isSearching && isFetchingNextPage && (
           <div className="flex justify-center py-4">
             <div className="text-gray-500 text-sm">Loading more tasks...</div>
           </div>
         )}
         
-        {tasks.length === 0 && !isLoading && (
+        {tasks.length === 0 && (isSearching || !isLoading) && (
           <p className="text-gray-400 italic text-center mt-5">
-            No tasks in this status
+            {isSearching ? 'No matching tasks' : 'No tasks in this status'}
           </p>
         )}
       </div>

@@ -6,17 +6,17 @@
   "tags": [],
   "targets": {
     "serve": {
-      "executor": "@nx/js:node",
+      "executor": "nx:run-commands",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "api:build"
+        "command": "webpack --config apps/api/webpack-hmr.config.js"
       },
       "configurations": {
         "development": {
-          "buildTarget": "api:build:development"
+          "command": "NODE_ENV=development webpack --config apps/api/webpack-hmr.config.js"
         },
         "production": {
-          "buildTarget": "api:build:production"
+          "command": "node dist/apps/api/main.js"
         }
       }
     },

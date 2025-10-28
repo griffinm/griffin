@@ -37,19 +37,15 @@ export function DashboardPage() {
   const { data: tasksData, isLoading: tasksLoading } = useTasks({
     sortBy: SortBy.DUE_DATE,
     sortOrder: SortOrder.ASC,
-    resultsPerPage: 50,
+    resultsPerPage: 6,
+    status: 'TODO,IN_PROGRESS', // API supports comma-separated statuses
   });
   const { data: questions, isLoading: questionsLoading } = useQuestions(false);
 
-  // Filter and process tasks
+  // Get upcoming tasks directly from API (already filtered and sorted)
   const upcomingTasks = useMemo(() => {
     if (!tasksData?.data) return [];
-    return tasksData.data
-      .filter(task => 
-        task.status === TaskStatus.TODO || 
-        task.status === TaskStatus.IN_PROGRESS
-      )
-      .slice(0, 10);
+    return tasksData.data;
   }, [tasksData]);
 
   // Limit questions to 10

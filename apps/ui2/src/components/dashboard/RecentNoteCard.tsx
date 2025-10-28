@@ -1,4 +1,4 @@
-import { Card, Text, Group, ActionIcon, HoverCard } from '@mantine/core';
+import { Card, Text, Group, ActionIcon, HoverCard, Pill } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Note } from '@/types/note';
@@ -75,6 +75,17 @@ export function RecentNoteCard({ note }: RecentNoteCardProps) {
       <Text size="sm" c="dimmed" lineClamp={2} mb="xs">
         {contentPreview}
       </Text>
+
+      {/* Tags */}
+      {note.tags && note.tags.length > 0 && (
+        <Group gap="xs" className="mb-2">
+          {note.tags.map(tag => (
+            <Pill key={tag.id} size="xs">
+              {tag.name}
+            </Pill>
+          ))}
+        </Group>
+      )}
 
       <Text size="xs" c="dimmed">
         {formatDistanceToNowStrict(new Date(note.updatedAt), { addSuffix: true })}

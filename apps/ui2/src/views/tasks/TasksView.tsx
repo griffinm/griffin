@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  DndContext,
-  DragEndEvent,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import { useUpdateTaskStatus } from '@/hooks/useTasks';
-import { TaskStatus, Task } from '@/types/task';
-import { TaskColumn, TaskDragOverlay, TaskModal } from '@/components/tasks';
-import { Button } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { Task } from '@/types/task';
+import { Tag } from '@/types/tag';
+import { TaskModal } from '@/components/tasks';
+import { TaskCols } from '@/components/tasks/TaskCols';
+import { TaskRows } from '@/components/tasks/TaskRows';
+import { TasksHeader, ViewMode } from '@/components/tasks/TasksHeader';
+import { TasksFilters } from '@/components/tasks/TasksFilters';
+import { useTasksSearch } from '@/hooks/useTasksSearch';
+import { searchTags } from '@/api/tagsApi';
 
 export function TasksView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const updateTaskStatusMutation = useUpdateTaskStatus();
+  const [viewMode, setViewMode] = useState<ViewMode>('cols');
+  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  
+  const { search, setSearch, searchTasks } = useTasksSearch();
 
   // Check for create=true query parameter on mount
   useEffect(() => {
@@ -30,87 +31,70 @@ export function TasksView() {
     }
   }, [searchParams, setSearchParams]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const task = event.active.data.current as Task;
-    setActiveTask(task);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over) return;
-
-    const taskId = active.id as string;
-    let newStatus: TaskStatus | null = null;
-
-    // Check if we're dropping directly on a column (status)
-    if (over.id === TaskStatus.TODO || over.id === TaskStatus.IN_PROGRESS || over.id === TaskStatus.COMPLETED) {
-      newStatus = over.id as TaskStatus;
-    } else {
-      const overElement = document.querySelector(`[data-task-id="${over.id}"]`);
-      if (overElement) {
-        const columnElement = overElement.closest('[data-column-status]');
-        if (columnElement) {
-          const columnStatus = columnElement.getAttribute('data-column-status');
-          if (columnStatus && (columnStatus === TaskStatus.TODO || columnStatus === TaskStatus.IN_PROGRESS || columnStatus === TaskStatus.COMPLETED)) {
-            newStatus = columnStatus as TaskStatus;
-          }
-        }
-      }
-      
-      if (!newStatus) {
-        setActiveTask(null);
-        return;
-      }
+  // Check for taskId query parameter to open a specific task
+  useEffect(() => {
+    const taskId = searchParams.get('taskId');
+    if (taskId) {
+      // We need to fetch the task and set it as active
+      // For now, we'll just trigger the modal open by creating a minimal task object
+      // The TaskModal should handle fetching the full task data
+      setActiveTask({ id: taskId } as Task);
+      // Remove the query parameter after opening the modal
+      searchParams.delete('taskId');
+      setSearchParams(searchParams, { replace: true });
     }
+  }, [searchParams, setSearchParams]);
 
-    // Update the task status
-    if (newStatus) {
-      updateTaskStatusMutation.mutate({
-        taskId,
-        status: newStatus,
-      });
-    }
-
-    setActiveTask(null);
-  };
+  // Load available tags
+  useEffect(() => {
+    searchTags().then(setAvailableTags).catch(console.error);
+  }, []);
 
   return (
     <div className="p-5 w-full max-w-full overflow-hidden">
-      <div className="flex justify-between items-center mb-4">
-        <Button 
-          leftSection={<IconPlus size={18} />}
-          onClick={() => setCreateModalOpen(true)}
-        >
-          Create Task
-        </Button>
-      </div>
+      <TasksHeader
+        onCreateClick={() => setCreateModalOpen(true)}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
+
+      <TasksFilters
+        search={search}
+        onSearchChange={setSearch}
+        selectedPriorities={selectedPriorities}
+        onPrioritiesChange={setSelectedPriorities}
+        selectedTags={selectedTags}
+        onTagsChange={setSelectedTags}
+        availableTags={availableTags}
+      />
       
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex flex-col lg:flex-row gap-3 md:gap-7 h-[calc(100vh-200px)] w-full max-w-full overflow-hidden overflow-x-hidden">
-          <TaskColumn status={TaskStatus.TODO} title="To Do" />
-          <TaskColumn status={TaskStatus.IN_PROGRESS} title="In Progress" />
-          <TaskColumn status={TaskStatus.COMPLETED} title="Completed" />
-        </div>
-        
-        <TaskDragOverlay activeTask={activeTask} />
-      </DndContext>
+      {viewMode === 'cols' && (
+        <TaskCols 
+          setActiveTask={setActiveTask}
+          activeTask={activeTask}
+          searchTasks={searchTasks}
+          selectedPriorities={selectedPriorities}
+          selectedTags={selectedTags}
+        />
+      )}
+      
+      {viewMode === 'rows' && (
+        <TaskRows
+          setActiveTask={setActiveTask}
+          activeTask={activeTask}
+          searchTasks={searchTasks}
+          selectedPriorities={selectedPriorities}
+          selectedTags={selectedTags}
+        />
+      )}
 
       <TaskModal 
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        task={activeTask || undefined}
+        open={createModalOpen || activeTask !== null}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setActiveTask(null);
+        }}
       />
     </div>
   );

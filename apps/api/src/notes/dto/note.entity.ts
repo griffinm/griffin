@@ -3,8 +3,10 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsArray,
 } from 'class-validator';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
+import { TagEntity } from '../../tag/entities/tag.entity';
 
 @Exclude()
 export class NoteEntity {
@@ -37,4 +39,10 @@ export class NoteEntity {
   @IsOptional()
   @Expose()
   updatedAt?: Date;
+
+  @IsArray()
+  @IsOptional()
+  @Expose()
+  @Type(() => TagEntity)
+  tags?: TagEntity[];
 }

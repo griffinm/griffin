@@ -1,0 +1,113 @@
+import { PagedTaskList, Task, TaskStatus, TaskFilters } from "@/types/task";
+import { useInfiniteTasksByStatus, useTasks } from "@/hooks/useTasks";
+import { TaskRow } from "./TaskRow";
+import { useEffect, useRef } from "react";
+
+export const TaskRows = ({
+  setActiveTask,
+  activeTask,
+  searchTasks,
+  selectedPriorities,
+  selectedTags,
+}: {
+  setActiveTask: (task: Task | null) => void;
+  activeTask: Task | null;
+  searchTasks?: Task[];
+  selectedPriorities?: string[];
+  selectedTags?: string[];
+}) => {
+  // Check if we're in search mode
+  const isSearching = searchTasks !== undefined;
+  
+  // Build filters for API
+  const filters: Partial<TaskFilters> = {};
+  if (selectedPriorities && selectedPriorities.length > 0) {
+    filters.priority = selectedPriorities[0] as any; // For now, only support single priority
+  }
+  if (selectedTags && selectedTags.length > 0) {
+    filters.tags = selectedTags.join(',');
+  }
+  
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteTasksByStatus([TaskStatus.TODO, TaskStatus.IN_PROGRESS], Object.keys(filters).length > 0 ? filters : undefined);
+  
+  let tasks: Task[];
+  if (isSearching) {
+    tasks = searchTasks.filter(task => 
+      task.status === TaskStatus.TODO || task.status === TaskStatus.IN_PROGRESS
+    );
+  } else {
+    // Flatten all pages into a single array of tasks from query
+    tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  }
+  
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Don't set up observer when searching
+    if (isSearching) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [isSearching, fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  if (!isSearching && isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-muted-foreground">Loading tasks...</div>
+      </div>
+    );
+  }
+
+  if (!isSearching && error) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-destructive">Error loading tasks</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 mt-4">
+      {tasks.map((task) => (
+        <TaskRow
+          key={task.id}
+          task={task}
+          setActiveTask={setActiveTask}
+          activeTask={activeTask}
+        />
+      ))}
+      
+      {!isSearching && <div ref={observerTarget} className="h-4" />}
+      
+      {!isSearching && isFetchingNextPage && (
+        <div className="flex items-center justify-center py-4">
+          <div className="text-muted-foreground text-sm">Loading more tasks...</div>
+        </div>
+      )}
+    </div>
+  )
+}

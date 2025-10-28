@@ -38,6 +38,36 @@ export const taskSchema = {
     {
       name: 'userId',
       type: 'string',
+    },
+    {
+      name: 'dueDate',
+      type: 'int64',
+    },
+    {
+      name: 'status',
+      type: 'string',
+    },
+    {
+      name: 'priority',
+      type: 'string',
+    }
+  ],
+};
+
+export const tagSchema = {
+  name: "tags",
+  fields: [
+    {
+      name: "id",
+      type: "string",
+    },
+    {
+      name: "name",
+      type: "string",
+    },
+    {
+      name: 'userId',
+      type: 'string',
     }
   ],
 };

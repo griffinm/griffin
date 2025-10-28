@@ -3,11 +3,16 @@ import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 
+declare const module: any;
+
 async function bootstrap() {
-  const logLevels: LogLevel[] = process.env.LOG_LEVEL 
-    ? [process.env.LOG_LEVEL as LogLevel]
-    : ['log', 'error', 'warn'];
-    
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  let logLevels: LogLevel[] = ['log', 'error', 'warn'];
+  if (!isProduction) {
+    logLevels = ['log', 'error', 'warn', 'debug'];
+  }
+
   const app = await NestFactory.create(AppModule, {
     logger: logLevels
   });
@@ -30,6 +35,12 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   Logger.log(`🚀 Application is running on: http://localhost:${port}/${globalPrefix}`);
+
+  // Enable HMR in development
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
 }
 
 bootstrap();

@@ -16,7 +16,7 @@ export enum SortOrder {
 export class FilterDto {
   @IsOptional()
   @IsString()
-  status?: TaskStatus;
+  status?: TaskStatus | string; // Can be a single status or comma-separated list
 
   @IsOptional()
   @IsNumber()
@@ -54,5 +54,9 @@ export class FilterDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @IsOptional()
+  @IsString()
+  tags?: string; // Comma-separated tag IDs
 }
 

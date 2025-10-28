@@ -1,6 +1,24 @@
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient, UseQueryResult, UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
-import { fetchTasks, fetchTaskById, updateTaskStatus } from '@/api/tasksApi';
-import { Task, PagedTaskList, TaskFilters, TaskStatus, SortBy, SortOrder } from '@/types/task';
+import { 
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryResult,
+  UseInfiniteQueryResult,
+  InfiniteData, 
+} from '@tanstack/react-query';
+import { fetchTasks,
+  fetchTaskById,
+  updateTaskStatus,
+} from '@/api/tasksApi';
+import {
+  Task,
+  PagedTaskList,
+  TaskFilters,
+  TaskStatus,
+  SortBy,
+  SortOrder,
+} from '@/types/task';
 
 export const useTasks = (filters?: TaskFilters): UseQueryResult<PagedTaskList, Error> => {
   return useQuery({
@@ -14,12 +32,11 @@ export const useTask = (id: string): UseQueryResult<Task, Error> => {
   return useQuery({
     queryKey: ['task', id],
     queryFn: () => fetchTaskById(id),
-    enabled: !!id, // Only run query if id is provided
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Hook for getting all tasks without pagination (useful for simple lists)
 export const useAllTasks = (): UseQueryResult<Task[], Error> => {
   return useQuery({
     queryKey: ['tasks', 'all'],
@@ -31,7 +48,6 @@ export const useAllTasks = (): UseQueryResult<Task[], Error> => {
   });
 };
 
-// Hook for loading tasks by status (for column view)
 export const useTasksByStatus = (status: TaskStatus): UseQueryResult<Task[], Error> => {
   return useQuery({
     queryKey: ['tasks', 'byStatus', status],
@@ -46,21 +62,28 @@ export const useTasksByStatus = (status: TaskStatus): UseQueryResult<Task[], Err
   });
 };
 
-// Hook for infinite scroll tasks by status
-export const useInfiniteTasksByStatus = (status: TaskStatus): UseInfiniteQueryResult<PagedTaskList, Error> => {
-  // Determine sort criteria based on status
-  const sortBy = status === TaskStatus.COMPLETED ? SortBy.COMPLETED_AT : SortBy.DUE_DATE;
-  const sortOrder = status === TaskStatus.COMPLETED ? SortOrder.DESC : SortOrder.ASC;
+export const useInfiniteTasksByStatus = (
+  statuses: TaskStatus | TaskStatus[],
+  additionalFilters?: Partial<TaskFilters>
+): UseInfiniteQueryResult<PagedTaskList, Error> => {
+  const statusArray = Array.isArray(statuses) ? statuses : [statuses];
+  
+  const primaryStatus = statusArray[0];
+  const sortBy = primaryStatus === TaskStatus.COMPLETED ? SortBy.COMPLETED_AT : SortBy.DUE_DATE;
+  const sortOrder = primaryStatus === TaskStatus.COMPLETED ? SortOrder.DESC : SortOrder.ASC;
+  
+  const statusParam = statusArray.join(',');
   
   return useInfiniteQuery({
-    queryKey: ['tasks', 'infinite', 'byStatus', status, sortBy, sortOrder],
+    queryKey: ['tasks', 'infinite', 'byStatus', statusArray, sortBy, sortOrder, additionalFilters],
     queryFn: async ({ pageParam = 1 }) => {
       return await fetchTasks({ 
-        status, 
+        status: statusParam, 
         page: pageParam,
         resultsPerPage: 20,
         sortBy,
         sortOrder,
+        ...additionalFilters,
       });
     },
     getNextPageParam: (lastPage) => {
@@ -82,33 +105,25 @@ export const useUpdateTaskStatus = () => {
     mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) => 
       updateTaskStatus(taskId, status),
     
-    // Optimistically update the cache before the mutation
     onMutate: async ({ taskId, status: newStatus }) => {
-      // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
 
-      // Snapshot the previous state for rollback
       const previousData = {
         byStatus: {} as Record<TaskStatus, InfiniteData<PagedTaskList, number>>,
       };
 
-      // Get all possible statuses
       const statuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED];
 
-      // Find the task and its old status
       let movedTask: Task | undefined;
       let oldStatus: TaskStatus | undefined;
 
-      // Loop through all status query caches to find and update the task
       statuses.forEach((status) => {
         const queryKey = ['tasks', 'byStatus', status];
         const data = queryClient.getQueryData<InfiniteData<PagedTaskList, number>>(queryKey);
         
         if (data) {
-          // Save snapshot
           previousData.byStatus[status] = data;
 
-          // Check if this status has the task we're moving
           const pages = data.pages || [];
           for (const page of pages) {
             const task = page.data?.find((t: Task) => t.id === taskId);
@@ -121,9 +136,7 @@ export const useUpdateTaskStatus = () => {
         }
       });
 
-      // If we found the task, update the cache optimistically
       if (movedTask && oldStatus !== undefined) {
-        // Remove task from old status column
         const oldQueryKey = ['tasks', 'byStatus', oldStatus];
         queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(oldQueryKey, (old) => {
           if (!old) return old;
@@ -174,14 +187,11 @@ export const useUpdateTaskStatus = () => {
         });
       }
 
-      // Return context with snapshot for potential rollback
       return { previousData };
     },
     
-    // If the mutation fails, rollback to the previous state
     onError: (err, variables, context) => {
       if (context?.previousData) {
-        // Restore all the snapshots
         Object.entries(context.previousData.byStatus).forEach(([status, data]) => {
           const queryKey = ['tasks', 'byStatus', status as TaskStatus];
           queryClient.setQueryData(queryKey, data);
@@ -189,10 +199,8 @@ export const useUpdateTaskStatus = () => {
       }
     },
     
-    // Always refetch after error or success to ensure consistency
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      // Also invalidate the individual task query to update status history
       queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
     },
   });

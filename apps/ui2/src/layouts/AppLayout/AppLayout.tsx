@@ -15,6 +15,7 @@ import {
   IconHome,
   IconCheck,
   IconBook,
+  IconTags,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
@@ -60,6 +61,7 @@ export const AppLayout = () => {
     { icon: IconHome, label: 'Dashboard', path: getUrl('dashboard').path(), color: 'blue' },
     { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
     { icon: IconBook, label: 'Notebooks', path: getUrl('notebooks').path(), color: 'indigo' },
+    { icon: IconTags, label: 'Tags', path: getUrl('tags').path(), color: 'violet' },
   ]
 
   return (
