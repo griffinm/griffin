@@ -12,6 +12,9 @@ export const TaskRows = ({
   activeTask: Task | null;
   searchTasks?: Task[];
 }) => {
+  // Check if we're in search mode
+  const isSearching = searchTasks !== undefined;
+  
   const {
     data,
     isLoading,
@@ -20,18 +23,25 @@ export const TaskRows = ({
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteTasksByStatus([TaskStatus.TODO, TaskStatus.IN_PROGRESS]);
-  let tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
   
-  // If searching, use only search results (rows view shows TODO and IN_PROGRESS)
-  if (searchTasks && searchTasks.length > 0) {
+  // Determine which tasks to display
+  let tasks: Task[];
+  if (isSearching) {
+    // Use search results (rows view shows TODO and IN_PROGRESS)
     tasks = searchTasks.filter(task => 
       task.status === TaskStatus.TODO || task.status === TaskStatus.IN_PROGRESS
     );
+  } else {
+    // Flatten all pages into a single array of tasks from query
+    tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
   }
   
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Don't set up observer when searching
+    if (isSearching) return;
+    
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -51,9 +61,9 @@ export const TaskRows = ({
         observer.unobserve(currentTarget);
       }
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [isSearching, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  if (isLoading) {
+  if (!isSearching && isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-muted-foreground">Loading tasks...</div>
@@ -61,7 +71,7 @@ export const TaskRows = ({
     );
   }
 
-  if (error) {
+  if (!isSearching && error) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-destructive">Error loading tasks</div>
@@ -80,10 +90,10 @@ export const TaskRows = ({
         />
       ))}
       
-      {/* Intersection observer target for infinite scroll */}
-      <div ref={observerTarget} className="h-4" />
+      {/* Intersection observer target for infinite scroll (hidden during search) */}
+      {!isSearching && <div ref={observerTarget} className="h-4" />}
       
-      {isFetchingNextPage && (
+      {!isSearching && isFetchingNextPage && (
         <div className="flex items-center justify-center py-4">
           <div className="text-muted-foreground text-sm">Loading more tasks...</div>
         </div>

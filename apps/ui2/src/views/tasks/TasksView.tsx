@@ -23,22 +23,7 @@ export function TasksView() {
   const [searchTasks, setSearchTasks] = useState<Task[] | undefined>();
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Debounced search
-  const debouncedSearch = useCallback(() => {
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-    updateTimeoutRef.current = setTimeout(() => {
-      if (search) {
-        handleSearch(search);
-      } else {
-        setSearchResults(undefined);
-        setSearchTasks(undefined);
-      }
-    }, SEARCH_TIMEOUT);
-  }, [search]);
-
-  const handleSearch = async (searchTerm: string) => {
+  const handleSearch = useCallback(async (searchTerm: string) => {
     try {
       const results = await fetchSearchResults({ query: searchTerm, collection: 'tasks' });
       setSearchResults(results);
@@ -57,11 +42,29 @@ export function TasksView() {
       setSearchResults(undefined);
       setSearchTasks(undefined);
     }
-  };
+  }, []);
 
+  // Debounced search effect
   useEffect(() => {
-    debouncedSearch();
-  }, [debouncedSearch]);
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+    
+    updateTimeoutRef.current = setTimeout(() => {
+      if (search) {
+        handleSearch(search);
+      } else {
+        setSearchResults(undefined);
+        setSearchTasks(undefined);
+      }
+    }, SEARCH_TIMEOUT);
+
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, [search, handleSearch]);
 
   // Check for create=true query parameter on mount
   useEffect(() => {

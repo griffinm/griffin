@@ -11,6 +11,9 @@ interface TaskColumnProps {
 }
 
 export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
+  // Check if we're in search mode
+  const isSearching = searchTasks !== undefined;
+  
   const {
     data,
     isLoading,
@@ -20,12 +23,14 @@ export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
     isFetchingNextPage,
   } = useInfiniteTasksByStatus([status]);
 
-  // Flatten all pages into a single array of tasks
-  let tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
-  
-  // If searching, use only search results filtered by this column's status
-  if (searchTasks && searchTasks.length > 0) {
+  // Determine which tasks to display
+  let tasks: Task[];
+  if (isSearching) {
+    // Use search results filtered by this column's status
     tasks = searchTasks.filter(task => task.status === status);
+  } else {
+    // Flatten all pages into a single array of tasks from query
+    tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
   }
 
   // Make this column a drop zone
@@ -33,10 +38,10 @@ export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
     id: status,
   });
 
-  // Infinite scroll implementation
+  // Infinite scroll implementation (disabled during search)
   const observerRef = useRef<IntersectionObserver | undefined>(undefined);
   const lastTaskElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoading) return;
+    if (isSearching || isLoading) return;
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasNextPage) {
@@ -44,9 +49,9 @@ export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
       }
     });
     if (node) observerRef.current.observe(node);
-  }, [isLoading, hasNextPage, fetchNextPage]);
+  }, [isSearching, isLoading, hasNextPage, fetchNextPage]);
 
-  if (isLoading) {
+  if (!isSearching && isLoading) {
     return (
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-x-hidden">
         <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">{title}</h2>
@@ -57,7 +62,7 @@ export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
     );
   }
 
-  if (error) {
+  if (!isSearching && error) {
     return (
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-x-hidden">
         <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">{title}</h2>
@@ -92,15 +97,15 @@ export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
           );
         })}
         
-        {isFetchingNextPage && (
+        {!isSearching && isFetchingNextPage && (
           <div className="flex justify-center py-4">
             <div className="text-gray-500 text-sm">Loading more tasks...</div>
           </div>
         )}
         
-        {tasks.length === 0 && !isLoading && (
+        {tasks.length === 0 && (isSearching || !isLoading) && (
           <p className="text-gray-400 italic text-center mt-5">
-            No tasks in this status
+            {isSearching ? 'No matching tasks' : 'No tasks in this status'}
           </p>
         )}
       </div>
