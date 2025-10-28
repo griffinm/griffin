@@ -11,6 +11,7 @@ export function Search() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchResults | undefined>();
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const debouncedSearch = useCallback(() => {
@@ -39,6 +40,25 @@ export function Search() {
   useEffect(() => {
     debouncedSearch();
   }, [debouncedSearch]);
+
+  // Handle clicks outside the search component to close results
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setSearchTerm('');
+        setSearchResults(undefined);
+      }
+    };
+
+    // Only add the event listener if search results are visible
+    if (searchTerm && searchResults) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [searchTerm, searchResults]);
   
   const renderResults = () => {
     if (!searchResults) {
@@ -114,7 +134,7 @@ export function Search() {
   };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div ref={searchContainerRef} className="relative w-full max-w-md">
       <TextInput
         placeholder="Search notes and tasks..."
         size="sm"
