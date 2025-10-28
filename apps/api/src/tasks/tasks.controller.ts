@@ -22,13 +22,17 @@ import { FilterDto } from './dto/filter.dto';
 import { TaskEntity } from './dto/task.entity';
 import { PagedTaskList } from './dto/paged.entity';
 import { StripeTimePipe } from './stripe-time.pipe';
+import { TagService } from '../tag/tag.service';
+import { TagEntity } from '../tag/entities/tag.entity';
+import { AddTagToObjectDto } from '../tag/dto/add-tag-to-object.dto';
 
 @Controller()
 @UseGuards(AuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
 export class TasksController {
   constructor(
-    private tasksService: TasksService
+    private tasksService: TasksService,
+    private tagService: TagService,
   ) {}
 
   @Get('tasks/:id')
@@ -86,5 +90,31 @@ export class TasksController {
     @Body(StripeTimePipe) task: UpdateTaskDto,
   ): Promise<Task> {
     return this.tasksService.update(id, request.user.id, task);
+  }
+
+  @Get('tasks/:id/tags')
+  async getTags(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<TagEntity[]> {
+    return this.tagService.getTagsForObject(request.user.id, 'task', id);
+  }
+
+  @Post('tasks/:id/tags')
+  async addTag(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+    @Body() body: AddTagToObjectDto,
+  ): Promise<TagEntity> {
+    return this.tagService.addToObject(request.user.id, body.name, 'task', id);
+  }
+
+  @Delete('tasks/:id/tags/:tagId')
+  async removeTag(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+    @Param('tagId') tagId: string,
+  ): Promise<void> {
+    return this.tagService.removeFromObject(request.user.id, tagId, 'task', id);
   }
 }

@@ -53,3 +53,21 @@ export const taskSchema = {
     }
   ],
 };
+
+export const tagSchema = {
+  name: "tags",
+  fields: [
+    {
+      name: "id",
+      type: "string",
+    },
+    {
+      name: "name",
+      type: "string",
+    },
+    {
+      name: 'userId',
+      type: 'string',
+    }
+  ],
+};

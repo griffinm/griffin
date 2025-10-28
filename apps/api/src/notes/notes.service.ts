@@ -5,6 +5,7 @@ import { UpdateDto } from "./dto/update.dto";
 import { SearchService } from "../search/search.service";
 import { associateTasks } from "./associateTasks";
 import { associateQuestions } from "./associateQuestions";
+import { Note } from "@prisma/client";
 
 @Injectable()
 export class NoteService {
@@ -14,6 +15,43 @@ export class NoteService {
     private prisma: PrismaService,
     private searchService: SearchService,
   ) {}
+
+  /**
+   * Fetch tags for a list of notes
+   */
+  private async addTagsToNotes(notes: any[]): Promise<any[]> {
+    if (notes.length === 0) return notes;
+
+    const noteIds = notes.map(note => note.id);
+    
+    // Fetch all object tags for these notes
+    const objectTags = await this.prisma.objectTag.findMany({
+      where: {
+        objectType: 'note',
+        objectId: { in: noteIds },
+      },
+      include: {
+        tag: true,
+      },
+    });
+
+    // Group tags by note ID (filter out deleted tags)
+    const tagsByNoteId = objectTags.reduce((acc, ot) => {
+      if (!acc[ot.objectId]) {
+        acc[ot.objectId] = [];
+      }
+      if (ot.tag && ot.tag.deletedAt === null) {
+        acc[ot.objectId].push(ot.tag);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Add tags to each note
+    return notes.map(note => ({
+      ...note,
+      tags: tagsByNoteId[note.id] || [],
+    }));
+  }
 
   /**
    * Truncate HTML content safely for preview purposes
@@ -45,10 +83,13 @@ export class NoteService {
     });
 
     // Truncate content for preview
-    return notes.map(note => ({
+    const notesWithTruncated = notes.map(note => ({
       ...note,
       content: this.truncateContentForPreview(note.content),
     }));
+
+    // Add tags
+    return this.addTagsToNotes(notesWithTruncated);
   }
 
   async recentNotes(userId: string) {
@@ -67,10 +108,13 @@ export class NoteService {
     });
 
     // Truncate content for preview
-    return notes.map(note => ({
+    const notesWithTruncated = notes.map(note => ({
       ...note,
       content: this.truncateContentForPreview(note.content),
     }));
+
+    // Add tags
+    return this.addTagsToNotes(notesWithTruncated);
   }
   
   async findAllForNotebook(notebookId: string, userId: string) {
@@ -90,21 +134,30 @@ export class NoteService {
     });
 
     // Truncate content for preview
-    return notes.map(note => ({
+    const notesWithTruncated = notes.map(note => ({
       ...note,
       content: this.truncateContentForPreview(note.content),
     }));
+
+    // Add tags
+    return this.addTagsToNotes(notesWithTruncated);
   }
 
   async findOneForUser(id: string, userId: string) {
-    return await this.prisma.note.findFirst({
+    const note = await this.prisma.note.findFirst({
       where: {
         id,
         notebook: {
           user: { id: userId },
         },
       },
-    })
+    });
+
+    if (!note) return note;
+
+    // Add tags
+    const notesWithTags = await this.addTagsToNotes([note]);
+    return notesWithTags[0];
   }
 
   async update(id: string, data: UpdateDto, userId: string) {

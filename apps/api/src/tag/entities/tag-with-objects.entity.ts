@@ -1,8 +1,10 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional, IsArray } from "class-validator";
+import { IsString, IsNotEmpty, IsDateString, IsArray, IsOptional } from "class-validator";
 import { Exclude, Expose, Type } from "class-transformer";
+import { NoteEntity } from "../../notes/dto/note.entity";
+import { TaskEntity } from "../../tasks/dto/task.entity";
 
 @Exclude()
-export class TagEntity {
+export class TagWithObjectsEntity {
  
   @IsString()
   @IsNotEmpty()
@@ -32,4 +34,17 @@ export class TagEntity {
   @IsNotEmpty()
   @Expose()
   userId: string;
+
+  @IsArray()
+  @IsOptional()
+  @Expose()
+  @Type(() => NoteEntity)
+  notes?: NoteEntity[];
+
+  @IsArray()
+  @IsOptional()
+  @Expose()
+  @Type(() => TaskEntity)
+  tasks?: TaskEntity[];
 }
+

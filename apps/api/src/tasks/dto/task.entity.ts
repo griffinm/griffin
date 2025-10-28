@@ -10,6 +10,7 @@ import {
   IsArray,
   ValidateNested,
 } from 'class-validator';
+import { TagEntity } from '../../tag/entities/tag.entity';
 
 @Exclude()
 export class TaskStatusHistoryEntity {
@@ -100,6 +101,12 @@ export class TaskEntity {
   @ValidateNested({ each: true })
   @Type(() => TaskStatusHistoryEntity)
   statusHistory?: TaskStatusHistoryEntity[];
+
+  @IsArray()
+  @IsOptional()
+  @Expose()
+  @Type(() => TagEntity)
+  tags?: TagEntity[];
 
   constructor(partial: Partial<TaskEntity>) {
     Object.assign(this, instanceToPlain(partial));

@@ -17,6 +17,43 @@ export class TasksService {
     private searchService: SearchService,
   ) {}
 
+  /**
+   * Fetch tags for a list of tasks
+   */
+  private async addTagsToTasks(tasks: any[]): Promise<any[]> {
+    if (tasks.length === 0) return tasks;
+
+    const taskIds = tasks.map(task => task.id);
+    
+    // Fetch all object tags for these tasks
+    const objectTags = await this.prisma.objectTag.findMany({
+      where: {
+        objectType: 'task',
+        objectId: { in: taskIds },
+      },
+      include: {
+        tag: true,
+      },
+    });
+
+    // Group tags by task ID (filter out deleted tags)
+    const tagsByTaskId = objectTags.reduce((acc, ot) => {
+      if (!acc[ot.objectId]) {
+        acc[ot.objectId] = [];
+      }
+      if (ot.tag && ot.tag.deletedAt === null) {
+        acc[ot.objectId].push(ot.tag);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Add tags to each task
+    return tasks.map(task => ({
+      ...task,
+      tags: tagsByTaskId[task.id] || [],
+    }));
+  }
+
   async filter(userId: string, filter: FilterDto): Promise<TaskEntity[]> {
     this.logger.debug(`Filtering tasks for user ${userId}; filter: ${JSON.stringify(filter)}`);
     const whereClause = {
@@ -63,7 +100,10 @@ export class TasksService {
       skip: (filter.page - 1) * filter.resultsPerPage,
     });
     
-    const objs = tasks.map((task) => {
+    // Add tags to tasks
+    const tasksWithTags = await this.addTagsToTasks(tasks);
+    
+    const objs = tasksWithTags.map((task) => {
       return new TaskEntity(task);
     });
 
@@ -84,7 +124,10 @@ export class TasksService {
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-    return task;
+    
+    // Add tags
+    const tasksWithTags = await this.addTagsToTasks([task]);
+    return tasksWithTags[0] as Task;
   }
 
   async deleteById(id: string, userId: string): Promise<Task> {
@@ -100,7 +143,10 @@ export class TasksService {
       where: { userId, deletedAt: null },
       orderBy: this.ordering(),
     });
-    return tasks;
+    
+    // Add tags
+    const tasksWithTags = await this.addTagsToTasks(tasks);
+    return tasksWithTags as Task[];
   }
 
   async getCountForUser(userId: string): Promise<number> {

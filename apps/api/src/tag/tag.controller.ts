@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -15,6 +16,7 @@ import { TagService } from "./tag.service";
 import { RequestWithUser } from "@griffin/types";
 import { AuthGuard } from "../auth/auth.guard";
 import { TagEntity } from "./entities/tag.entity";
+import { TagWithObjectsEntity } from "./entities/tag-with-objects.entity";
 import { CreateTagDto } from "./dto/create-tag.dto";
 import { UpdateTagDto } from "./dto/update-tag.dto";
 
@@ -25,17 +27,19 @@ export class TagController {
   constructor(private tagService: TagService) {}
 
   @Get('tags')
-  async getAll(@Req() request: RequestWithUser): Promise<TagEntity[]> {
-    return this.tagService.getAll(request.user.id);
+  async getAll(
+    @Req() request: RequestWithUser,
+    @Query('search') search?: string
+  ): Promise<TagEntity[]> {
+    return this.tagService.getAll(request.user.id, search);
   }
 
-  @Get('tags/:objectType/:objectId')
-  async getByObject(
+  @Get('tags/:id')
+  async getById(
     @Req() request: RequestWithUser,
-    @Param('objectType') objectType: 'note' | 'task',
-    @Param('objectId') objectId: string
-  ): Promise<TagEntity[]> {
-    return this.tagService.getByObject(request.user.id, objectType, objectId);
+    @Param('id') id: string
+  ): Promise<TagWithObjectsEntity> {
+    return this.tagService.getById(request.user.id, id);
   }
 
   @Post('tags')
@@ -46,20 +50,20 @@ export class TagController {
     return this.tagService.create(request.user.id, createTagDto);
   }
 
-  @Patch('tags/:tagId')
+  @Patch('tags/:id')
   async update(
     @Req() request: RequestWithUser,
-    @Param('tagId') tagId: string,
+    @Param('id') id: string,
     @Body() updateTagDto: UpdateTagDto
   ): Promise<TagEntity> {
-    return this.tagService.update(request.user.id, tagId, updateTagDto);
+    return this.tagService.update(request.user.id, id, updateTagDto);
   }
 
-  @Delete('tags/:tagId')
+  @Delete('tags/:id')
   async delete(
     @Req() request: RequestWithUser,
-    @Param('tagId') tagId: string
+    @Param('id') id: string
   ): Promise<TagEntity> {
-    return this.tagService.delete(request.user.id, tagId);
+    return this.tagService.delete(request.user.id, id);
   }
 }

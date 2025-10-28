@@ -1,13 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import Typesense from "typesense";
-import { noteSchema, taskSchema } from "./schemas";
-import { Note, Task } from "@prisma/client";
+import { noteSchema, taskSchema, tagSchema } from "./schemas";
+import { Note, Task, Tag } from "@prisma/client";
 import { SearchResultsDto, NoteResult, TaskResult } from "./dto/search-results.dto";
 import { PrismaService } from "../prisma/prisma.service";
 
 const collectionNames = {
   note: 'notes',
   task: 'tasks',
+  tag: 'tags',
 }
 
 @Injectable()
@@ -49,6 +50,13 @@ export class SearchService implements OnModuleInit {
       await this.typesenseClient.collections().create(taskSchema);
     } else {
       this.logger.log(`Collection ${taskSchema.name} already exists`);
+    }
+
+    if (!existingSchemaNames.includes(tagSchema.name)) {
+      this.logger.log(`Creating collection ${tagSchema.name}`);
+      await this.typesenseClient.collections().create(tagSchema);
+    } else {
+      this.logger.log(`Collection ${tagSchema.name} already exists`);
     }
   }
   
@@ -168,9 +176,9 @@ export class SearchService implements OnModuleInit {
     object,
     userId,
   }: {
-    type: 'note' | 'task';
+    type: 'note' | 'task' | 'tag';
     id: string;
-    object: Note | Task;
+    object: Note | Task | Tag;
     userId: string,
   }): Promise<boolean> {
     this.logger.debug(`Adding ${type} ${id.substring(0, 7)} to search index`);
@@ -185,11 +193,15 @@ export class SearchService implements OnModuleInit {
       params.title = task.title
       params.description = task.description
       params.priority = task.priority
-    } else {
+    } else if (type === 'note') {
       // This is a note
       const note = (object as Note)
       params.title = note.title
       params.content = note.content
+    } else if (type === 'tag') {
+      // This is a tag
+      const tag = (object as Tag)
+      params.name = tag.name
     }
 
     this.typesenseClient.collections(collectionName).documents().upsert(params);
@@ -201,7 +213,7 @@ export class SearchService implements OnModuleInit {
     type,
     id,
   }: {
-    type: 'note' | 'task';
+    type: 'note' | 'task' | 'tag';
     id: string;
   }): Promise<boolean> {
     this.logger.debug(`Removing ${type} ${id.substring(0, 7)} from search index`);

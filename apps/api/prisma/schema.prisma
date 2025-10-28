@@ -25,18 +25,30 @@ model User {
 }
 
 model Tag {
-  id         String    @id @default(uuid()) @map("id")
-  name       String    @map("name")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  deletedAt  DateTime? @map("deleted_at")
-  user       User      @relation(fields: [userId], references: [id])
-  userId     String    @map("user_id")
-  objectType String    @map("object_type") // 'note' or 'task'
-  objectId   String    @map("object_id") // ID of the note or task
+  id         String      @id @default(uuid()) @map("id")
+  name       String      @map("name")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  deletedAt  DateTime?   @map("deleted_at")
+  user       User        @relation(fields: [userId], references: [id])
+  userId     String      @map("user_id")
+  objectTags ObjectTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model ObjectTag {
+  id         String   @id @default(uuid()) @map("id")
+  tagId      String   @map("tag_id")
+  objectType String   @map("object_type") // 'note' or 'task'
+  objectId   String   @map("object_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@index([objectType, objectId])
-  @@map("tags")
+  @@index([tagId])
+  @@map("object_tags")
 }
 
 model Notebook {
