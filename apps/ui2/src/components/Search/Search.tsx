@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { TextInput } from '@mantine/core';
+import { TextInput, Badge } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { SearchResults } from '@/types/search';
 import { fetchSearchResults } from '@/api/searchApi';
@@ -28,7 +28,7 @@ export function Search() {
 
   const handleSearch = async (searchTerm: string) => {
     try {
-      const results = await fetchSearchResults({ query: searchTerm });
+      const results = await fetchSearchResults({ query: searchTerm, collection: 'all' });
       setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
@@ -45,7 +45,10 @@ export function Search() {
       return null;
     }
 
-    if (searchResults.noteResults?.length === 0) {
+    const hasNoteResults = searchResults.noteResults && searchResults.noteResults.length > 0;
+    const hasTaskResults = searchResults.taskResults && searchResults.taskResults.length > 0;
+
+    if (!hasNoteResults && !hasTaskResults) {
       return (
         <div className="p-3 text-gray-500 text-sm">
           No results found
@@ -53,33 +56,67 @@ export function Search() {
       );
     }
 
-    return searchResults.noteResults?.map((result) => {
-      return (
-        <div
-          key={result.id}
-          className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-50"
-          onClick={() => {
-            setSearchTerm('');
-            setSearchResults(undefined);
-            navigate(`/notes/${result.id}`);
-          }}
-        >
-          <div className="font-medium text-sm">{result.title}</div>
-          {result.snippet && (
-            <div 
-              className="text-xs text-gray-500 italic mt-1" 
-              dangerouslySetInnerHTML={{ __html: result.snippet }} 
-            />
-          )}
-        </div>
-      );
-    });
+    return (
+      <>
+        {/* Note Results */}
+        {searchResults.noteResults?.map((result) => {
+          return (
+            <div
+              key={`note-${result.id}`}
+              className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-50"
+              onClick={() => {
+                setSearchTerm('');
+                setSearchResults(undefined);
+                navigate(`/notes/${result.id}`);
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Badge size="xs" color="blue" variant="light">Note</Badge>
+                <div className="font-medium text-sm">{result.title}</div>
+              </div>
+              {result.snippet && (
+                <div 
+                  className="text-xs text-gray-500 italic mt-1" 
+                  dangerouslySetInnerHTML={{ __html: result.snippet }} 
+                />
+              )}
+            </div>
+          );
+        })}
+
+        {/* Task Results */}
+        {searchResults.taskResults?.map((result) => {
+          return (
+            <div
+              key={`task-${result.id}`}
+              className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-50"
+              onClick={() => {
+                setSearchTerm('');
+                setSearchResults(undefined);
+                navigate(`/tasks?taskId=${result.id}`);
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Badge size="xs" color="green" variant="light">Task</Badge>
+                <div className="font-medium text-sm">{result.title}</div>
+              </div>
+              {result.snippet && (
+                <div 
+                  className="text-xs text-gray-500 italic mt-1" 
+                  dangerouslySetInnerHTML={{ __html: result.snippet }} 
+                />
+              )}
+            </div>
+          );
+        })}
+      </>
+    );
   };
 
   return (
     <div className="relative w-full max-w-md">
       <TextInput
-        placeholder="Search notes..."
+        placeholder="Search notes and tasks..."
         size="sm"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

@@ -21,9 +21,10 @@ export class SearchController {
   @UseGuards(AuthGuard)
   async search(
     @Query('query') query: string,
+    @Query('collection') collection: 'notes' | 'tasks' | 'all' = 'notes',
     @Req() req: RequestWithUser
   ): Promise<SearchResultsDto> {
-    return this.searchService.search(query, req.user.id);
+    return this.searchService.search(query, req.user.id, collection);
   }
 
   @Get('rebuild')

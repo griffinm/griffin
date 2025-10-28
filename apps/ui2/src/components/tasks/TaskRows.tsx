@@ -6,9 +6,11 @@ import { useEffect, useRef } from "react";
 export const TaskRows = ({
   setActiveTask,
   activeTask,
+  searchTasks,
 }: {
   setActiveTask: (task: Task | null) => void;
   activeTask: Task | null;
+  searchTasks?: Task[];
 }) => {
   const {
     data,
@@ -18,7 +20,14 @@ export const TaskRows = ({
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteTasksByStatus([TaskStatus.TODO, TaskStatus.IN_PROGRESS]);
-  const tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  let tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  
+  // If searching, use only search results (rows view shows TODO and IN_PROGRESS)
+  if (searchTasks && searchTasks.length > 0) {
+    tasks = searchTasks.filter(task => 
+      task.status === TaskStatus.TODO || task.status === TaskStatus.IN_PROGRESS
+    );
+  }
   
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -61,7 +70,7 @@ export const TaskRows = ({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 mt-4">
       {tasks.map((task) => (
         <TaskRow
           key={task.id}

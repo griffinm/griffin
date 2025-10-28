@@ -7,9 +7,10 @@ import { DraggableTask } from './DraggableTask';
 interface TaskColumnProps {
   status: TaskStatus;
   title: string;
+  searchTasks?: Task[];
 }
 
-export function TaskColumn({ status, title }: TaskColumnProps) {
+export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
   const {
     data,
     isLoading,
@@ -20,7 +21,12 @@ export function TaskColumn({ status, title }: TaskColumnProps) {
   } = useInfiniteTasksByStatus([status]);
 
   // Flatten all pages into a single array of tasks
-  const tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  let tasks: Task[] = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  
+  // If searching, use only search results filtered by this column's status
+  if (searchTasks && searchTasks.length > 0) {
+    tasks = searchTasks.filter(task => task.status === status);
+  }
 
   // Make this column a drop zone
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({

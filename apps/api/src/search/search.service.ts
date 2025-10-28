@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import Typesense from "typesense";
 import { noteSchema, taskSchema } from "./schemas";
 import { Note, Task } from "@prisma/client";
-import { SearchResultsDto, NoteResult } from "./dto/search-results.dto";
+import { SearchResultsDto, NoteResult, TaskResult } from "./dto/search-results.dto";
 import { PrismaService } from "../prisma/prisma.service";
 
 const collectionNames = {
@@ -52,34 +52,68 @@ export class SearchService implements OnModuleInit {
     }
   }
   
-  async search(query: string, userId: string): Promise<SearchResultsDto> {
-    
-    const searchParams = {
-      q: query,
-      query_by: 'title, content',
-      num_typos: 4,
-      typo_tokens_threshold: 1,
-      per_page: 10,
-      filter_by: `userId:${userId}`,
-      highlight_affix_num_tokens: 4,
-      
-    }
-    this.logger.debug(`Searching for ${JSON.stringify(searchParams)}`);
-
-    const result = await this.typesenseClient.collections(["notes"]).documents().search(searchParams);
-
+  async search(query: string, userId: string, collection: 'notes' | 'tasks' | 'all' = 'notes'): Promise<SearchResultsDto> {
     const searchResults = new SearchResultsDto();
     searchResults.query = query;
-    searchResults.hits = result.hits.length;
-    searchResults.noteResults = result.hits.map((hit) => {
-      const noteResult = new NoteResult();
-      noteResult.id = hit.document.id;
-      noteResult.title = hit.document.title;
-      noteResult.matchedTokens = hit.matched_tokens;
-      noteResult.snippet = hit.highlights[0]?.snippet;
-      noteResult.matchedField = hit.highlights[0]?.field;
-      return noteResult;
-    });
+    searchResults.hits = 0;
+
+    // Search notes if requested
+    if (collection === 'notes' || collection === 'all') {
+      const noteSearchParams = {
+        q: query,
+        query_by: 'title, content',
+        num_typos: 4,
+        typo_tokens_threshold: 1,
+        per_page: 10,
+        filter_by: `userId:${userId}`,
+        highlight_affix_num_tokens: 4,
+      };
+      this.logger.debug(`Searching notes: ${JSON.stringify(noteSearchParams)}`);
+
+      const noteResult = await this.typesenseClient.collections(["notes"]).documents().search(noteSearchParams);
+      
+      searchResults.noteResults = noteResult.hits.map((hit) => {
+        const noteResult = new NoteResult();
+        noteResult.id = hit.document.id;
+        noteResult.title = hit.document.title;
+        noteResult.matchedTokens = hit.matched_tokens;
+        noteResult.snippet = hit.highlights[0]?.snippet;
+        noteResult.matchedField = hit.highlights[0]?.field;
+        return noteResult;
+      });
+      searchResults.hits += noteResult.hits.length;
+    }
+
+    // Search tasks if requested
+    if (collection === 'tasks' || collection === 'all') {
+      const taskSearchParams = {
+        q: query,
+        query_by: 'title, description',
+        num_typos: 4,
+        typo_tokens_threshold: 1,
+        per_page: 10,
+        filter_by: `userId:${userId}`,
+        highlight_affix_num_tokens: 4,
+      };
+      this.logger.debug(`Searching tasks: ${JSON.stringify(taskSearchParams)}`);
+
+      const taskResult = await this.typesenseClient.collections(["tasks"]).documents().search(taskSearchParams);
+      
+      searchResults.taskResults = taskResult.hits.map((hit) => {
+        const taskResult = new TaskResult();
+        taskResult.id = hit.document.id;
+        taskResult.title = hit.document.title;
+        taskResult.description = hit.document.description;
+        taskResult.status = hit.document.status;
+        taskResult.priority = hit.document.priority;
+        taskResult.dueDate = hit.document.dueDate;
+        taskResult.matchedTokens = hit.matched_tokens;
+        taskResult.snippet = hit.highlights[0]?.snippet;
+        taskResult.matchedField = hit.highlights[0]?.field;
+        return taskResult;
+      });
+      searchResults.hits += taskResult.hits.length;
+    }
 
     return searchResults;
   }
@@ -143,7 +177,7 @@ export class SearchService implements OnModuleInit {
 
     const collectionName = collectionNames[type];
 
-    let params:any = { userId };
+    let params:any = { id, userId };
     if (type === 'task') {
       const task = (object as Task)
       params.dueDate = task.dueDate ? Math.floor(task.dueDate.getTime() / 1000) : null
