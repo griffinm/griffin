@@ -26,10 +26,8 @@ export const TaskRows = ({
     isFetchingNextPage,
   } = useInfiniteTasksByStatus([TaskStatus.TODO, TaskStatus.IN_PROGRESS]);
   
-  // Determine which tasks to display
   let tasks: Task[];
   if (isSearching) {
-    // Use search results (rows view shows TODO and IN_PROGRESS)
     tasks = searchTasks.filter(task => 
       task.status === TaskStatus.TODO || task.status === TaskStatus.IN_PROGRESS
     );
@@ -97,7 +95,6 @@ export const TaskRows = ({
         />
       ))}
       
-      {/* Intersection observer target for infinite scroll (hidden during search) */}
       {!isSearching && <div ref={observerTarget} className="h-4" />}
       
       {!isSearching && isFetchingNextPage && (

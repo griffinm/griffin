@@ -12,7 +12,6 @@ interface TaskColumnProps {
 }
 
 export function TaskColumn({ status, title, searchTasks, selectedPriorities }: TaskColumnProps) {
-  // Check if we're in search mode
   const isSearching = searchTasks !== undefined;
   
   const {
@@ -23,23 +22,21 @@ export function TaskColumn({ status, title, searchTasks, selectedPriorities }: T
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteTasksByStatus([status]);
+  
+  const pages = (data as any)?.pages as PagedTaskList[] | undefined;
+  const totalRecords = pages?.[0]?.totalRecords ?? 0;
 
-  // Determine which tasks to display
   let tasks: Task[];
   if (isSearching) {
-    // Use search results filtered by this column's status
     tasks = searchTasks.filter(task => task.status === status);
   } else {
-    // Flatten all pages into a single array of tasks from query
-    tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+    tasks = pages?.flatMap((page: PagedTaskList) => page.data) || [];
   }
   
-  // Apply priority filter if priorities are selected
   if (selectedPriorities && selectedPriorities.length > 0) {
     tasks = tasks.filter(task => selectedPriorities.includes(task.priority));
   }
 
-  // Make this column a drop zone
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: status,
   });
@@ -88,7 +85,7 @@ export function TaskColumn({ status, title, searchTasks, selectedPriorities }: T
       }`}
     >
       <h2 className="mb-4 text-lg font-semibold text-gray-800 truncate">
-        {title}
+        {title} <span className="text-gray-500 text-sm">({isSearching ? tasks.length : totalRecords})</span>
       </h2>
       <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {tasks.map((task: Task, index: number) => {
