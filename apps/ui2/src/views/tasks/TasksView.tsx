@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Task } from '@/types/task';
+import { Task, TaskPriority } from '@/types/task';
 import { TaskModal } from '@/components/tasks';
-import { Button, Input, SegmentedControl } from '@mantine/core';
+import { Button, Input, SegmentedControl, MultiSelect } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { TaskCols } from '@/components/tasks/TaskCols';
 import { TaskRows } from '@/components/tasks/TaskRows';
@@ -21,6 +21,7 @@ export function TasksView() {
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults | undefined>();
   const [searchTasks, setSearchTasks] = useState<Task[] | undefined>();
+  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSearch = useCallback(async (searchTerm: string) => {
@@ -110,12 +111,30 @@ export function TasksView() {
         />
       </div>
 
-      <div className="flex">
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tasks"
-        />
+      <div className="flex gap-3 items-center border-b border-gray-200 pb-4">
+        <div>
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tasks"
+            style={{ flex: 1 }}
+          />
+        </div>
+        <div>
+          <MultiSelect
+            placeholder="Filter by priority"
+            data={[
+              { value: TaskPriority.HIGH, label: 'High' },
+              { value: TaskPriority.MEDIUM, label: 'Medium' },
+              { value: TaskPriority.LOW, label: 'Low' },
+            ]}
+            value={selectedPriorities}
+            onChange={setSelectedPriorities}
+            clearable
+            style={{ minWidth: 200 }}
+          />
+
+        </div>
       </div>
       
       {viewMode === 'cols' && (
@@ -123,6 +142,7 @@ export function TasksView() {
           setActiveTask={setActiveTask}
           activeTask={activeTask}
           searchTasks={searchTasks}
+          selectedPriorities={selectedPriorities}
         />
       )}
       
@@ -131,6 +151,7 @@ export function TasksView() {
           setActiveTask={setActiveTask}
           activeTask={activeTask}
           searchTasks={searchTasks}
+          selectedPriorities={selectedPriorities}
         />
       )}
 

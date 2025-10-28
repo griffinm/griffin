@@ -8,9 +8,10 @@ interface TaskColumnProps {
   status: TaskStatus;
   title: string;
   searchTasks?: Task[];
+  selectedPriorities?: string[];
 }
 
-export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
+export function TaskColumn({ status, title, searchTasks, selectedPriorities }: TaskColumnProps) {
   // Check if we're in search mode
   const isSearching = searchTasks !== undefined;
   
@@ -31,6 +32,11 @@ export function TaskColumn({ status, title, searchTasks }: TaskColumnProps) {
   } else {
     // Flatten all pages into a single array of tasks from query
     tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  }
+  
+  // Apply priority filter if priorities are selected
+  if (selectedPriorities && selectedPriorities.length > 0) {
+    tasks = tasks.filter(task => selectedPriorities.includes(task.priority));
   }
 
   // Make this column a drop zone

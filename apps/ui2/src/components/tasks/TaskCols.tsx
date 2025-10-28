@@ -15,10 +15,12 @@ export const TaskCols = ({
   setActiveTask,
   activeTask,
   searchTasks,
+  selectedPriorities,
 }: {
   setActiveTask: (task: Task | null) => void;
   activeTask: Task | null;
   searchTasks?: Task[];
+  selectedPriorities?: string[];
 }) => {
   const updateTaskStatusMutation = useUpdateTaskStatus();
   
@@ -83,9 +85,9 @@ export const TaskCols = ({
         onDragEnd={handleDragEnd}
       >
         <div className="flex flex-col lg:flex-row gap-3 md:gap-7 h-[calc(100vh-200px)] w-full max-w-full overflow-hidden overflow-x-hidden">
-          <TaskColumn status={TaskStatus.TODO} title="To Do" searchTasks={searchTasks} />
-          <TaskColumn status={TaskStatus.IN_PROGRESS} title="In Progress" searchTasks={searchTasks} />
-          <TaskColumn status={TaskStatus.COMPLETED} title="Completed" searchTasks={searchTasks} />
+          <TaskColumn status={TaskStatus.TODO} title="To Do" searchTasks={searchTasks} selectedPriorities={selectedPriorities} />
+          <TaskColumn status={TaskStatus.IN_PROGRESS} title="In Progress" searchTasks={searchTasks} selectedPriorities={selectedPriorities} />
+          <TaskColumn status={TaskStatus.COMPLETED} title="Completed" searchTasks={searchTasks} selectedPriorities={selectedPriorities} />
         </div>
         
         <TaskDragOverlay activeTask={activeTask} />

@@ -7,10 +7,12 @@ export const TaskRows = ({
   setActiveTask,
   activeTask,
   searchTasks,
+  selectedPriorities,
 }: {
   setActiveTask: (task: Task | null) => void;
   activeTask: Task | null;
   searchTasks?: Task[];
+  selectedPriorities?: string[];
 }) => {
   // Check if we're in search mode
   const isSearching = searchTasks !== undefined;
@@ -34,6 +36,11 @@ export const TaskRows = ({
   } else {
     // Flatten all pages into a single array of tasks from query
     tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
+  }
+  
+  // Apply priority filter if priorities are selected
+  if (selectedPriorities && selectedPriorities.length > 0) {
+    tasks = tasks.filter(task => selectedPriorities.includes(task.priority));
   }
   
   const observerTarget = useRef<HTMLDivElement>(null);
