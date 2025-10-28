@@ -85,6 +85,24 @@ export class TasksService {
       statusFilter = statuses.length > 1 ? { status: { in: statuses } } : { status: filter.status };
     }
 
+    // Handle tag filtering
+    let tagFilter = {};
+    if (filter.tags) {
+      const tagIds = filter.tags.split(',').map(t => t.trim());
+      // Filter tasks that have at least one of the specified tags
+      tagFilter = {
+        id: {
+          in: await this.prisma.objectTag.findMany({
+            where: {
+              objectType: 'task',
+              tagId: { in: tagIds },
+            },
+            select: { objectId: true },
+          }).then(results => results.map(r => r.objectId)),
+        },
+      };
+    }
+
     const tasks = await this.prisma.task.findMany({
       where: { 
         userId, 
@@ -94,6 +112,7 @@ export class TasksService {
         ...(filter.startDate && { dueDate: { gte: filter.startDate } }),
         ...(filter.endDate && { dueDate: { lte: filter.endDate } }),
         ...statusFilter,
+        ...tagFilter,
       },
       orderBy: this.ordering(filter.sortBy, filter.sortOrder, filter.status),
       take: filter.resultsPerPage,

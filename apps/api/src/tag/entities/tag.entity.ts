@@ -14,6 +14,11 @@ export class TagEntity {
   @Expose()
   name: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
+  color: string;
+
   @IsDateString()
   @IsNotEmpty()
   @Expose()

@@ -54,5 +54,9 @@ export class FilterDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @IsOptional()
+  @IsString()
+  tags?: string; // Comma-separated tag IDs
 }
 

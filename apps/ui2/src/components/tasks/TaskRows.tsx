@@ -1,4 +1,4 @@
-import { PagedTaskList, Task, TaskStatus } from "@/types/task";
+import { PagedTaskList, Task, TaskStatus, TaskFilters } from "@/types/task";
 import { useInfiniteTasksByStatus, useTasks } from "@/hooks/useTasks";
 import { TaskRow } from "./TaskRow";
 import { useEffect, useRef } from "react";
@@ -8,14 +8,25 @@ export const TaskRows = ({
   activeTask,
   searchTasks,
   selectedPriorities,
+  selectedTags,
 }: {
   setActiveTask: (task: Task | null) => void;
   activeTask: Task | null;
   searchTasks?: Task[];
   selectedPriorities?: string[];
+  selectedTags?: string[];
 }) => {
   // Check if we're in search mode
   const isSearching = searchTasks !== undefined;
+  
+  // Build filters for API
+  const filters: Partial<TaskFilters> = {};
+  if (selectedPriorities && selectedPriorities.length > 0) {
+    filters.priority = selectedPriorities[0] as any; // For now, only support single priority
+  }
+  if (selectedTags && selectedTags.length > 0) {
+    filters.tags = selectedTags.join(',');
+  }
   
   const {
     data,
@@ -24,7 +35,7 @@ export const TaskRows = ({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteTasksByStatus([TaskStatus.TODO, TaskStatus.IN_PROGRESS]);
+  } = useInfiniteTasksByStatus([TaskStatus.TODO, TaskStatus.IN_PROGRESS], Object.keys(filters).length > 0 ? filters : undefined);
   
   let tasks: Task[];
   if (isSearching) {
@@ -34,11 +45,6 @@ export const TaskRows = ({
   } else {
     // Flatten all pages into a single array of tasks from query
     tasks = (data as any)?.pages?.flatMap((page: PagedTaskList) => page.data) || [];
-  }
-  
-  // Apply priority filter if priorities are selected
-  if (selectedPriorities && selectedPriorities.length > 0) {
-    tasks = tasks.filter(task => selectedPriorities.includes(task.priority));
   }
   
   const observerTarget = useRef<HTMLDivElement>(null);

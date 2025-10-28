@@ -1,7 +1,7 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useInfiniteTasksByStatus } from '@/hooks/useTasks';
-import { TaskStatus, Task, PagedTaskList } from '@/types/task';
+import { TaskStatus, Task, PagedTaskList, TaskFilters } from '@/types/task';
 import { DraggableTask } from './DraggableTask';
 
 interface TaskColumnProps {
@@ -9,10 +9,20 @@ interface TaskColumnProps {
   title: string;
   searchTasks?: Task[];
   selectedPriorities?: string[];
+  selectedTags?: string[];
 }
 
-export function TaskColumn({ status, title, searchTasks, selectedPriorities }: TaskColumnProps) {
+export function TaskColumn({ status, title, searchTasks, selectedPriorities, selectedTags }: TaskColumnProps) {
   const isSearching = searchTasks !== undefined;
+  
+  // Build filters for API
+  const filters: Partial<TaskFilters> = {};
+  if (selectedPriorities && selectedPriorities.length > 0) {
+    filters.priority = selectedPriorities[0] as any; // For now, only support single priority
+  }
+  if (selectedTags && selectedTags.length > 0) {
+    filters.tags = selectedTags.join(',');
+  }
   
   const {
     data,
@@ -21,7 +31,7 @@ export function TaskColumn({ status, title, searchTasks, selectedPriorities }: T
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteTasksByStatus([status]);
+  } = useInfiniteTasksByStatus([status], Object.keys(filters).length > 0 ? filters : undefined);
   
   const pages = (data as any)?.pages as PagedTaskList[] | undefined;
   const totalRecords = pages?.[0]?.totalRecords ?? 0;
@@ -32,10 +42,6 @@ export function TaskColumn({ status, title, searchTasks, selectedPriorities }: T
   } else {
     tasks = pages?.flatMap((page: PagedTaskList) => page.data) || [];
   }
-  
-  if (selectedPriorities && selectedPriorities.length > 0) {
-    tasks = tasks.filter(task => selectedPriorities.includes(task.priority));
-  }
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: status,
@@ -44,8 +50,16 @@ export function TaskColumn({ status, title, searchTasks, selectedPriorities }: T
   // Infinite scroll implementation (disabled during search)
   const observerRef = useRef<IntersectionObserver | undefined>(undefined);
   const lastTaskElementRef = useCallback((node: HTMLDivElement | null) => {
+    // Always disconnect previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = undefined;
+    }
+    
+    // Don't set up new observer if searching or loading
     if (isSearching || isLoading) return;
-    if (observerRef.current) observerRef.current.disconnect();
+    
+    // Set up new observer
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasNextPage) {
         fetchNextPage();
@@ -53,6 +67,16 @@ export function TaskColumn({ status, title, searchTasks, selectedPriorities }: T
     });
     if (node) observerRef.current.observe(node);
   }, [isSearching, isLoading, hasNextPage, fetchNextPage]);
+  
+  // Clean up observer when searching state changes
+  useEffect(() => {
+    if (isSearching) {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = undefined;
+      }
+    }
+  }, [isSearching]);
 
   if (!isSearching && isLoading) {
     return (

@@ -16,6 +16,11 @@ export class TagWithObjectsEntity {
   @Expose()
   name: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
+  color: string;
+
   @IsDateString()
   @IsNotEmpty()
   @Expose()

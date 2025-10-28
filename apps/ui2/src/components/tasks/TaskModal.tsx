@@ -3,10 +3,11 @@ import { Task } from "@/types/task";
 import { TaskForm, TaskFormData } from "@/views/tasks";
 import { useMediaQuery } from "@mantine/hooks";
 import { theme } from "@/theme";
-import { createTask, updateTask } from "@/api/tasksApi";
+import { createTask, updateTask, addTagToTask, removeTagFromTask } from "@/api/tasksApi";
 import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTask } from "@/hooks/useTasks";
+import { useEffect } from "react";
 
 export function TaskModal({
   task,
@@ -26,8 +27,17 @@ export function TaskModal({
   // Use fullTask if available (editing), otherwise use the prop task (creating)
   const taskData = fullTask || task;
 
+  // Refetch task data when modal opens to ensure we have the latest data
+  useEffect(() => {
+    if (open && task?.id) {
+      queryClient.invalidateQueries({ queryKey: ['task', task.id] });
+    }
+  }, [open, task?.id, queryClient]);
+
   const handleSubmit = async (formData: TaskFormData) => {
     try {
+      let taskId: string;
+      
       if (taskData?.id) {
         // Update existing task
         await updateTask(taskData.id, {
@@ -37,6 +47,32 @@ export function TaskModal({
           priority: formData.priority,
           status: formData.status,
         });
+        taskId = taskData.id;
+        
+        // Sync tags for existing task
+        const originalTags = taskData.tags || [];
+        const newTags = formData.tags || [];
+        
+        // Find removed tags
+        const removedTags = originalTags.filter(
+          (tag) => !newTags.some((newTag) => newTag.id === tag.id)
+        );
+        
+        // Find added tags
+        const addedTags = newTags.filter(
+          (tag) => !originalTags.some((origTag) => origTag.id === tag.id)
+        );
+        
+        // Remove tags
+        for (const tag of removedTags) {
+          await removeTagFromTask(taskId, tag.id);
+        }
+        
+        // Add tags
+        for (const tag of addedTags) {
+          await addTagToTask(taskId, tag.name);
+        }
+        
         notifications.show({
           title: 'Success',
           message: 'Task updated successfully',
@@ -44,13 +80,22 @@ export function TaskModal({
         });
       } else {
         // Create new task
-        await createTask({
+        const newTask = await createTask({
           title: formData.title,
           description: formData.description,
           dueDate: formData.dueDate,
           priority: formData.priority,
           status: formData.status,
         });
+        taskId = newTask.id;
+        
+        // Add tags to new task
+        if (formData.tags && formData.tags.length > 0) {
+          for (const tag of formData.tags) {
+            await addTagToTask(taskId, tag.name);
+          }
+        }
+        
         notifications.show({
           title: 'Success',
           message: 'Task created successfully',
@@ -59,7 +104,12 @@ export function TaskModal({
       }
       
       // Invalidate all task queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      
+      // If we're editing a task, invalidate its specific query
+      if (taskData?.id) {
+        await queryClient.invalidateQueries({ queryKey: ['task', taskData.id] });
+      }
       
       onClose();
     } catch (error) {

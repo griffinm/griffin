@@ -11,6 +11,27 @@ import { SearchService } from "../search/search.service";
 export class TagService {
   private readonly logger = new Logger(TagService.name);
 
+  // Tailwind 300 and 700 color variants
+  private readonly AVAILABLE_COLORS = [
+    'bg-red-300', 'bg-red-700',
+    'bg-orange-300', 'bg-orange-700',
+    'bg-amber-300', 'bg-amber-700',
+    'bg-yellow-300', 'bg-yellow-700',
+    'bg-lime-300', 'bg-lime-700',
+    'bg-green-300', 'bg-green-700',
+    'bg-emerald-300', 'bg-emerald-700',
+    'bg-teal-300', 'bg-teal-700',
+    'bg-cyan-300', 'bg-cyan-700',
+    'bg-sky-300', 'bg-sky-700',
+    'bg-blue-300', 'bg-blue-700',
+    'bg-indigo-300', 'bg-indigo-700',
+    'bg-violet-300', 'bg-violet-700',
+    'bg-purple-300', 'bg-purple-700',
+    'bg-fuchsia-300', 'bg-fuchsia-700',
+    'bg-pink-300', 'bg-pink-700',
+    'bg-rose-300', 'bg-rose-700',
+  ];
+
   constructor(
     private prisma: PrismaService,
     private searchService: SearchService,
@@ -134,6 +155,32 @@ export class TagService {
     return tags.map((tag) => plainToInstance(TagEntity, tag));
   }
 
+  private async getRandomColor(userId: string): Promise<string> {
+    // Get all existing tag colors for this user
+    const existingTags = await this.prisma.tag.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+      select: {
+        color: true,
+      },
+    });
+
+    const usedColors = new Set(existingTags.map(tag => tag.color));
+    
+    // Find unused colors
+    const unusedColors = this.AVAILABLE_COLORS.filter(color => !usedColors.has(color));
+    
+    // If there are unused colors, pick one randomly
+    if (unusedColors.length > 0) {
+      return unusedColors[Math.floor(Math.random() * unusedColors.length)];
+    }
+    
+    // If all colors are used, pick any random color
+    return this.AVAILABLE_COLORS[Math.floor(Math.random() * this.AVAILABLE_COLORS.length)];
+  }
+
   async create(
     userId: string,
     createTagDto: CreateTagDto
@@ -151,10 +198,14 @@ export class TagService {
     });
 
     if (!tag) {
+      // Generate color if not provided
+      const color = createTagDto.color || await this.getRandomColor(userId);
+      
       // Create new tag
       tag = await this.prisma.tag.create({
         data: {
           name: createTagDto.name,
+          color,
           userId,
         },
       });
@@ -199,9 +250,12 @@ export class TagService {
     });
 
     if (!tag) {
+      const color = await this.getRandomColor(userId);
+      
       tag = await this.prisma.tag.create({
         data: {
           name: tagName,
+          color,
           userId,
         },
       });
@@ -361,6 +415,121 @@ export class TagService {
 
     this.logger.debug(`Tag ${tagId} deleted for user ${userId}`);
     return plainToInstance(TagEntity, tag);
+  }
+
+  async getObjectsByTags(
+    userId: string,
+    tagIds: string[],
+    logicMode: 'OR' | 'AND' = 'OR'
+  ): Promise<{ notes: any[]; tasks: any[] }> {
+    this.logger.debug(
+      `Getting objects for user ${userId} with tags ${tagIds.join(', ')} using ${logicMode} logic`
+    );
+
+    if (tagIds.length === 0) {
+      return { notes: [], tasks: [] };
+    }
+
+    let noteIds: string[] = [];
+    let taskIds: string[] = [];
+
+    if (logicMode === 'OR') {
+      // OR logic: Get all objects that have ANY of the specified tags
+      const objectTags = await this.prisma.objectTag.findMany({
+        where: {
+          tagId: { in: tagIds },
+        },
+        select: {
+          objectType: true,
+          objectId: true,
+        },
+      });
+
+      noteIds = objectTags
+        .filter(ot => ot.objectType === 'note')
+        .map(ot => ot.objectId);
+      
+      taskIds = objectTags
+        .filter(ot => ot.objectType === 'task')
+        .map(ot => ot.objectId);
+    } else {
+      // AND logic: Get objects that have ALL of the specified tags
+      // For each object, count how many of the specified tags it has
+      const objectTags = await this.prisma.objectTag.findMany({
+        where: {
+          tagId: { in: tagIds },
+        },
+        select: {
+          objectType: true,
+          objectId: true,
+          tagId: true,
+        },
+      });
+
+      // Group by objectType and objectId, count unique tags
+      const objectTagCounts = new Map<string, Set<string>>();
+      
+      for (const ot of objectTags) {
+        const key = `${ot.objectType}:${ot.objectId}`;
+        if (!objectTagCounts.has(key)) {
+          objectTagCounts.set(key, new Set());
+        }
+        objectTagCounts.get(key)!.add(ot.tagId);
+      }
+
+      // Filter to only objects that have all specified tags
+      for (const [key, tagSet] of objectTagCounts.entries()) {
+        if (tagSet.size === tagIds.length) {
+          const [objectType, objectId] = key.split(':');
+          if (objectType === 'note') {
+            noteIds.push(objectId);
+          } else if (objectType === 'task') {
+            taskIds.push(objectId);
+          }
+        }
+      }
+    }
+
+    // Fetch notes
+    const notes = noteIds.length > 0 ? await this.prisma.note.findMany({
+      where: {
+        id: { in: noteIds },
+        deletedAt: null,
+        notebook: {
+          userId,
+          deletedAt: null,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        notebookId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    }) : [];
+
+    // Fetch tasks
+    const tasks = taskIds.length > 0 ? await this.prisma.task.findMany({
+      where: {
+        id: { in: taskIds },
+        userId,
+        deletedAt: null,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    }) : [];
+
+    this.logger.debug(
+      `Found ${notes.length} notes and ${tasks.length} tasks for user ${userId}`
+    );
+
+    return { notes, tasks };
   }
 
   private async verifyObjectOwnership(

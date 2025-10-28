@@ -2,6 +2,8 @@ import { Task, TaskPriority } from "@/types/task";
 import { HtmlPreview } from '@/components/HtmlPreview';
 import { Priority } from "./Priority";
 import { DueDate } from "./DueDate";
+import { Group, Pill } from '@mantine/core';
+import { getTagColors } from '@/utils/tagColors';
 
 export function TaskRow({ 
   task,
@@ -27,6 +29,27 @@ export function TaskRow({
       </div>
       
       <HtmlPreview html={task.description || ''} maxHeight={true} />
+      
+      {/* Tags */}
+      {task.tags && task.tags.length > 0 && (
+        <Group gap="xs" className="mt-1">
+          {task.tags.map(tag => {
+            const colors = getTagColors(tag.color);
+            return (
+              <Pill 
+                key={tag.id} 
+                size="xs"
+                style={{
+                  backgroundColor: colors.bg,
+                  color: colors.text,
+                }}
+              >
+                {tag.name}
+              </Pill>
+            );
+          })}
+        </Group>
+      )}
     </div>
   )
 }

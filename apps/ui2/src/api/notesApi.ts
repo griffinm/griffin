@@ -1,5 +1,6 @@
 import { baseClient } from "./baseClient";
 import { Note } from "@/types/note";
+import { Tag } from "@/types/tag";
 
 export const fetchNotesByNotebook = async (notebookId: string): Promise<Note[]> => {
   const response = await baseClient.get<Note[]>(`/notebooks/${notebookId}/notes`);
@@ -34,5 +35,14 @@ export const deleteNote = async (id: string): Promise<void> => {
 export const fetchRecentNotes = async (limit = 5): Promise<Note[]> => {
   const response = await baseClient.get<Note[]>('/notes/recent');
   return response.data.slice(0, limit);
+};
+
+export const addTagToNote = async (noteId: string, tagName: string): Promise<Tag> => {
+  const response = await baseClient.post<Tag>(`/notes/${noteId}/tags`, { name: tagName });
+  return response.data;
+};
+
+export const removeTagFromNote = async (noteId: string, tagId: string): Promise<void> => {
+  await baseClient.delete(`/notes/${noteId}/tags/${tagId}`);
 };
 

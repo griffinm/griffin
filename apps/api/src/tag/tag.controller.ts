@@ -34,6 +34,16 @@ export class TagController {
     return this.tagService.getAll(request.user.id, search);
   }
 
+  @Get('tags/objects')
+  async getObjectsByTags(
+    @Req() request: RequestWithUser,
+    @Query('tagIds') tagIds: string,
+    @Query('logicMode') logicMode: 'OR' | 'AND' = 'OR'
+  ) {
+    const tagIdArray = tagIds ? tagIds.split(',') : [];
+    return this.tagService.getObjectsByTags(request.user.id, tagIdArray, logicMode);
+  }
+
   @Get('tags/:id')
   async getById(
     @Req() request: RequestWithUser,

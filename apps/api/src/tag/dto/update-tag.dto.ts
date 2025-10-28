@@ -4,5 +4,9 @@ export class UpdateTagDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string;
 }
 

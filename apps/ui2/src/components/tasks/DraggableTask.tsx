@@ -6,6 +6,8 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import classNames from 'classnames';
 import { useState } from 'react';
 import { TaskModal } from './TaskModal';
+import { Group, Pill } from '@mantine/core';
+import { getTagColors } from '@/utils/tagColors';
 
 interface DraggableTaskProps {
   task: Task;
@@ -101,7 +103,30 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
         <div className={priorityClasses} />
 
         <div className="flex flex-col h-full justify-between flex-1 p-2 min-w-0 overflow-hidden">
-          <p className="text-md font-medium mb-1 break-words">{task.title}</p>
+          <div>
+            <p className="text-md font-medium mb-1 break-words">{task.title}</p>
+            
+            {/* Tags */}
+            {task.tags && task.tags.length > 0 && (
+              <Group gap="xs" className="mt-2">
+                {task.tags.map(tag => {
+                  const colors = getTagColors(tag.color);
+                  return (
+                    <Pill 
+                      key={tag.id} 
+                      size="xs"
+                      style={{
+                        backgroundColor: colors.bg,
+                        color: colors.text,
+                      }}
+                    >
+                      {tag.name}
+                    </Pill>
+                  );
+                })}
+              </Group>
+            )}
+          </div>
 
           {/* Due Date Footer */}
           <div className="flex justify-between items-center mt-2">

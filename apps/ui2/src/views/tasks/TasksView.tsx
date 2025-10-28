@@ -1,71 +1,25 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Task, TaskPriority } from '@/types/task';
+import { Task } from '@/types/task';
+import { Tag } from '@/types/tag';
 import { TaskModal } from '@/components/tasks';
-import { Button, Input, SegmentedControl, MultiSelect } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
 import { TaskCols } from '@/components/tasks/TaskCols';
 import { TaskRows } from '@/components/tasks/TaskRows';
-import { fetchSearchResults } from '@/api/searchApi';
-import { SearchResults } from '@/types/search';
-
-type ViewMode = 'cols' | 'rows';
-
-const SEARCH_TIMEOUT = 300;
+import { TasksHeader, ViewMode } from '@/components/tasks/TasksHeader';
+import { TasksFilters } from '@/components/tasks/TasksFilters';
+import { useTasksSearch } from '@/hooks/useTasksSearch';
+import { searchTags } from '@/api/tagsApi';
 
 export function TasksView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cols');
-  const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResults | undefined>();
-  const [searchTasks, setSearchTasks] = useState<Task[] | undefined>();
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
-  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleSearch = useCallback(async (searchTerm: string) => {
-    try {
-      const results = await fetchSearchResults({ query: searchTerm, collection: 'tasks' });
-      setSearchResults(results);
-      // Convert search results to Task objects and set them directly
-      const searchTasksList = results.taskResults?.map(taskResult => ({
-        id: taskResult.id,
-        title: taskResult.title,
-        description: taskResult.description || '',
-        status: taskResult.status as any,
-        priority: taskResult.priority as any,
-        dueDate: taskResult.dueDate ? new Date(taskResult.dueDate * 1000) : undefined,
-      } as Task)) || [];
-      setSearchTasks(searchTasksList.length > 0 ? searchTasksList : undefined);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults(undefined);
-      setSearchTasks(undefined);
-    }
-  }, []);
-
-  // Debounced search effect
-  useEffect(() => {
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-    
-    updateTimeoutRef.current = setTimeout(() => {
-      if (search) {
-        handleSearch(search);
-      } else {
-        setSearchResults(undefined);
-        setSearchTasks(undefined);
-      }
-    }, SEARCH_TIMEOUT);
-
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, [search, handleSearch]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  
+  const { search, setSearch, searchTasks } = useTasksSearch();
 
   // Check for create=true query parameter on mount
   useEffect(() => {
@@ -91,51 +45,28 @@ export function TasksView() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Load available tags
+  useEffect(() => {
+    searchTags().then(setAvailableTags).catch(console.error);
+  }, []);
+
   return (
     <div className="p-5 w-full max-w-full overflow-hidden">
-      
-      <div className="flex justify-between items-center mb-4">
-        <Button 
-          leftSection={<IconPlus size={18} />}
-          onClick={() => setCreateModalOpen(true)}
-        >
-          Create Task
-        </Button>
-        <SegmentedControl
-          value={viewMode}
-          onChange={(value: string) => setViewMode(value as ViewMode)}
-          data={[
-            { label: 'Columns', value: 'cols' },
-            { label: 'Rows', value: 'rows' },
-          ]}
-        />
-      </div>
+      <TasksHeader
+        onCreateClick={() => setCreateModalOpen(true)}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
 
-      <div className="flex gap-3 items-center border-b border-gray-200 pb-4">
-        <div>
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tasks"
-            style={{ flex: 1 }}
-          />
-        </div>
-        <div>
-          <MultiSelect
-            placeholder="Filter by priority"
-            data={[
-              { value: TaskPriority.HIGH, label: 'High' },
-              { value: TaskPriority.MEDIUM, label: 'Medium' },
-              { value: TaskPriority.LOW, label: 'Low' },
-            ]}
-            value={selectedPriorities}
-            onChange={setSelectedPriorities}
-            clearable
-            style={{ minWidth: 200 }}
-          />
-
-        </div>
-      </div>
+      <TasksFilters
+        search={search}
+        onSearchChange={setSearch}
+        selectedPriorities={selectedPriorities}
+        onPrioritiesChange={setSelectedPriorities}
+        selectedTags={selectedTags}
+        onTagsChange={setSelectedTags}
+        availableTags={availableTags}
+      />
       
       {viewMode === 'cols' && (
         <TaskCols 
@@ -143,6 +74,7 @@ export function TasksView() {
           activeTask={activeTask}
           searchTasks={searchTasks}
           selectedPriorities={selectedPriorities}
+          selectedTags={selectedTags}
         />
       )}
       
@@ -152,6 +84,7 @@ export function TasksView() {
           activeTask={activeTask}
           searchTasks={searchTasks}
           selectedPriorities={selectedPriorities}
+          selectedTags={selectedTags}
         />
       )}
 

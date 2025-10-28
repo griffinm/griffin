@@ -27,6 +27,7 @@ model User {
 model Tag {
   id         String      @id @default(uuid()) @map("id")
   name       String      @map("name")
+  color      String      @default("bg-blue-300") @map("color")
   createdAt  DateTime    @default(now()) @map("created_at")
   updatedAt  DateTime    @updatedAt @map("updated_at")
   deletedAt  DateTime?   @map("deleted_at")

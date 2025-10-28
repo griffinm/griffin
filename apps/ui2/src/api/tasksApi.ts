@@ -1,5 +1,6 @@
 import { baseClient } from "./baseClient";
 import { Task, PagedTaskList, TaskFilters } from "@/types/task";
+import { Tag } from "@/types/tag";
 
 export const fetchTasks = async (filters?: TaskFilters): Promise<PagedTaskList> => {
   const params = new URLSearchParams();
@@ -45,4 +46,13 @@ export const createTask = async (task: CreateOrUpdateTaskData): Promise<Task> =>
 export const updateTask = async (id: string, task: CreateOrUpdateTaskData): Promise<Task> => {
   const response = await baseClient.patch<Task>(`/tasks/${id}`, task);
   return response.data;
+};
+
+export const addTagToTask = async (taskId: string, tagName: string): Promise<Tag> => {
+  const response = await baseClient.post<Tag>(`/tasks/${taskId}/tags`, { name: tagName });
+  return response.data;
+};
+
+export const removeTagFromTask = async (taskId: string, tagId: string): Promise<void> => {
+  await baseClient.delete(`/tasks/${taskId}/tags/${tagId}`);
 };

@@ -1,3 +1,5 @@
+import { Tag } from './tag';
+
 export interface TaskStatusHistory {
   id: string;
   taskId: string;
@@ -18,6 +20,7 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   statusHistory?: TaskStatusHistory[];
+  tags?: Tag[];
 }
 
 export enum TaskPriority {
@@ -53,6 +56,7 @@ export interface TaskFilters {
   priority?: TaskPriority;
   startDate?: string;
   endDate?: string;
+  tags?: string; // Comma-separated tag IDs
 }
 
 export interface PagedTaskList {

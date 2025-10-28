@@ -1,6 +1,8 @@
-import { Card, Text, Group } from '@mantine/core';
+import { Card, Text, Group, Pill } from '@mantine/core';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Note } from '@/types/note';
+import { getTagColors } from '@/utils/tagColors';
+import { HtmlPreview } from '@/components/HtmlPreview';
 
 interface NoteCardProps {
   note: Note;
@@ -8,14 +10,6 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ note, onClick }: NoteCardProps) {
-  // Content is already pre-processed and truncated by the server
-  // Additional client-side truncation for display consistency
-  const contentPreview = note.content
-    ? note.content.length > 200
-      ? `${note.content.substring(0, 200)}...`
-      : note.content
-    : '';
-
   return (
     <Card
       shadow="sm"
@@ -30,12 +24,33 @@ export function NoteCard({ note, onClick }: NoteCardProps) {
           {note.title || 'Untitled Note'}
         </Text>
 
-        {contentPreview && (
-          <Text size="sm" c="dimmed" lineClamp={4} className="mb-4">
-            {contentPreview}
-          </Text>
+        {note.content && (
+          <div className="mb-4">
+            <HtmlPreview html={note.content} maxHeight={true} />
+          </div>
         )}
       </div>
+
+      {/* Tags */}
+      {note.tags && note.tags.length > 0 && (
+        <Group gap="xs" className="mb-2">
+          {note.tags.map(tag => {
+            const colors = getTagColors(tag.color);
+            return (
+              <Pill 
+                key={tag.id} 
+                size="xs"
+                style={{
+                  backgroundColor: colors.bg,
+                  color: colors.text,
+                }}
+              >
+                {tag.name}
+              </Pill>
+            );
+          })}
+        </Group>
+      )}
 
       <Group justify="space-between" mt="auto" pt="md">
         <Text size="xs" c="dimmed">

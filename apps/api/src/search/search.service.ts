@@ -129,12 +129,14 @@ export class SearchService implements OnModuleInit {
   public async rebuildIndex() {
     this.logger.debug(`Rebuilding search index`);
     
-    this.logger.debug(`Deleting collections ${noteSchema.name} and ${taskSchema.name}`);
+    this.logger.debug(`Deleting collections ${noteSchema.name}, ${taskSchema.name}, and ${tagSchema.name}`);
     await this.typesenseClient.collections(collectionNames.note).delete();
     await this.typesenseClient.collections(collectionNames.task).delete();
-    this.logger.debug(`Creating collections ${noteSchema.name} and ${taskSchema.name}`);
+    await this.typesenseClient.collections(collectionNames.tag).delete();
+    this.logger.debug(`Creating collections ${noteSchema.name}, ${taskSchema.name}, and ${tagSchema.name}`);
     await this.typesenseClient.collections().create(noteSchema);
     await this.typesenseClient.collections().create(taskSchema);
+    await this.typesenseClient.collections().create(tagSchema);
 
     // Add all notes to the note collection
     const notes = await this.prisma.note.findMany({
@@ -163,6 +165,17 @@ export class SearchService implements OnModuleInit {
         id: task.id,
         object: task,
         userId: task.userId,
+      });
+    }
+
+    // Add all tags to the tag collection
+    const tags = await this.prisma.tag.findMany();
+    for (const tag of tags) {
+      await this.addObject({
+        type: 'tag',
+        id: tag.id,
+        object: tag,
+        userId: tag.userId,
       });
     }
 

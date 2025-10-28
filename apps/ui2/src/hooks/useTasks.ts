@@ -62,7 +62,10 @@ export const useTasksByStatus = (status: TaskStatus): UseQueryResult<Task[], Err
   });
 };
 
-export const useInfiniteTasksByStatus = (statuses: TaskStatus | TaskStatus[]): UseInfiniteQueryResult<PagedTaskList, Error> => {
+export const useInfiniteTasksByStatus = (
+  statuses: TaskStatus | TaskStatus[],
+  additionalFilters?: Partial<TaskFilters>
+): UseInfiniteQueryResult<PagedTaskList, Error> => {
   const statusArray = Array.isArray(statuses) ? statuses : [statuses];
   
   const primaryStatus = statusArray[0];
@@ -72,7 +75,7 @@ export const useInfiniteTasksByStatus = (statuses: TaskStatus | TaskStatus[]): U
   const statusParam = statusArray.join(',');
   
   return useInfiniteQuery({
-    queryKey: ['tasks', 'infinite', 'byStatus', statusArray, sortBy, sortOrder],
+    queryKey: ['tasks', 'infinite', 'byStatus', statusArray, sortBy, sortOrder, additionalFilters],
     queryFn: async ({ pageParam = 1 }) => {
       return await fetchTasks({ 
         status: statusParam, 
@@ -80,6 +83,7 @@ export const useInfiniteTasksByStatus = (statuses: TaskStatus | TaskStatus[]): U
         resultsPerPage: 20,
         sortBy,
         sortOrder,
+        ...additionalFilters,
       });
     },
     getNextPageParam: (lastPage) => {
