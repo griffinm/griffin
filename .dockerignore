@@ -9,7 +9,6 @@ dist
 .env
 .env.local
 .env.*
-!.env.prod
 coverage
 .nx
 .angular

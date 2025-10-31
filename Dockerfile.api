@@ -18,8 +18,6 @@ RUN (cd apps/api && npx prisma generate)
 RUN npx nx reset
 RUN npx nx run api:build:production --verbose
 
-
-
 # Stage 2: Production image
 FROM node:20-slim AS runner
 
@@ -46,17 +44,14 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
 # Copy scripts directory for maintenance tasks
-COPY --from=builder /app/apps/api/src/scripts ./apps/api/src/scripts
-
-# Copy the production environment file
-COPY .env.prod .env
+# COPY --from=builder /app/apps/api/src/scripts ./apps/api/src/scripts
 
 # Copy the entrypoint script
 COPY docker-entrypoint-local.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose the port your app runs on
-EXPOSE 80
+EXPOSE 3000
 
 # Use entrypoint script to load secrets and start the application
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
