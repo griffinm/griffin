@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber, Min, IsIn } from 'class-validator';
 
 export class UploadAudioDto {
   @IsOptional()
@@ -17,5 +17,17 @@ export class UploadAudioDto {
   @IsOptional()
   @IsString()
   format?: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
+
+  @IsOptional()
+  @IsString()
+  prompt?: string;
+
+  @IsOptional()
+  @IsIn(['json', 'text', 'srt', 'verbose_json', 'vtt'])
+  responseFormat?: 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt';
 }
 

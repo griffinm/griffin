@@ -1,6 +1,8 @@
 import { 
   Controller, 
-  Post, 
+  Post,
+  Get,
+  Delete,
   Body, 
   UseGuards, 
   UseInterceptors, 
@@ -8,11 +10,18 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Req,
+  Query,
+  Param,
+  HttpException,
+  HttpStatus,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { AudioService } from "./audio.service";
 import { AuthGuard } from "../auth/auth.guard";
 import { UploadAudioDto, AudioResponseDto } from "./dto";
+import { RequestWithUser } from "@griffin/types";
+import { AudioTranscription } from "@prisma/client";
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -22,6 +31,7 @@ export class AudioController {
   @Post('audio')
   @UseInterceptors(FileInterceptor('audio'))
   async transcribe(
+    @Req() request: RequestWithUser,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -34,13 +44,81 @@ export class AudioController {
     file: Express.Multer.File,
     @Body() uploadAudioDto: UploadAudioDto,
   ): Promise<AudioResponseDto> {
-    // File and metadata are now available
-    // file.buffer contains the audio data
-    // file.originalname, file.mimetype, file.size are available
-    // uploadAudioDto contains any additional metadata sent from frontend
+    const startTime = Date.now();
     
+    try {
+      const transcriptionRecord = await this.audioService.transcribeAudio(
+        request.user.id,
+        file,
+        uploadAudioDto
+      );
+      const processingTime = Date.now() - startTime;
+
+      return {
+        success: true,
+        id: transcriptionRecord.id,
+        transcription: transcriptionRecord.transcription,
+        language: transcriptionRecord.language,
+        duration: transcriptionRecord.duration,
+        processingTime,
+        fileName: transcriptionRecord.fileName,
+        fileSize: transcriptionRecord.fileSize,
+        createdAt: transcriptionRecord.createdAt,
+      };
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      
+      return {
+        success: false,
+        message: error.message || 'Transcription failed',
+        transcription: '',
+        processingTime,
+      };
+    }
+  }
+
+  @Get('audio/history')
+  async getTranscriptionHistory(
+    @Req() request: RequestWithUser,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ): Promise<AudioTranscription[]> {
+    const parsedLimit = limit ? parseInt(limit, 10) : 50;
+    const parsedOffset = offset ? parseInt(offset, 10) : 0;
+
+    return this.audioService.getTranscriptionHistory(
+      request.user.id,
+      parsedLimit,
+      parsedOffset
+    );
+  }
+
+  @Get('audio/:id')
+  async getTranscriptionById(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<AudioTranscription> {
+    const transcription = await this.audioService.getTranscriptionById(
+      request.user.id,
+      id
+    );
+
+    if (!transcription) {
+      throw new HttpException('Transcription not found', HttpStatus.NOT_FOUND);
+    }
+
+    return transcription;
+  }
+
+  @Delete('audio/:id')
+  async deleteTranscription(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<{ success: boolean; message: string }> {
+    await this.audioService.deleteTranscription(request.user.id, id);
     return {
       success: true,
+      message: 'Transcription deleted successfully',
     };
   }
 }

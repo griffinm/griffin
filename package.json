@@ -5,6 +5,7 @@
   "scripts": {
     "prisma:seed": "tsx apps/api/prisma/seed.ts",
     "prisma:push": "cd apps/api && npx prisma db push",
+    "prisma:studio": "cd apps/api && npx prisma studio",
     "refresh-typesense": "tsx apps/api/src/scripts/refresh-typesense.ts",
     "dev": "NODE_ENV=development npx run-many -t serve --configuration=development",
     "prod": "nx run api:serve:production",
@@ -19,6 +20,7 @@
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@langchain/core": "^1.0.2",
+    "@langchain/openai": "^1.0.0",
     "@mantine/core": "^8.3.5",
     "@mantine/dates": "^8.3.5",
     "@mantine/hooks": "^8.3.5",
@@ -79,7 +81,8 @@
     "tsx": "^4.16.3",
     "typesense": "^1.8.2",
     "universal-cookie": "^7.2.0",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.0.1",

@@ -1,8 +1,13 @@
 export class AudioResponseDto {
   success: boolean;
   message?: string;
-  audioId?: string;
-  url?: string;
-  transcription?: string;
+  id?: string;
+  transcription: string;
+  language?: string;
+  duration?: number;
+  processingTime?: number;
+  fileName?: string;
+  fileSize?: number;
+  createdAt?: Date;
 }
 

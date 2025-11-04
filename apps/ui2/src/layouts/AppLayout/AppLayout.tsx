@@ -7,6 +7,8 @@ import {
   Stack,
   Divider,
   Badge,
+  ActionIcon,
+  Tooltip,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import {
@@ -16,12 +18,14 @@ import {
   IconCheck,
   IconBook,
   IconTags,
+  IconMicrophone,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
 import { getUrl } from '@/constants/urls';
 import { NoteTree } from '@/views/NoteTree';
 import { Search } from '@/components/Search/Search';
+import { TranscriptionModal } from '@/components/TranscriptionModal';
 
 const HEADER_HEIGHT = 40;
 const LEFT_NAVBAR_WIDTH_DESKTOP = 250;
@@ -30,6 +34,7 @@ export const AppLayout = () => {
   const theme = useMantineTheme()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [opened, setOpened] = useState(true)
+  const [transcriptionModalOpened, setTranscriptionModalOpened] = useState(false)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
@@ -40,6 +45,24 @@ export const AppLayout = () => {
       setOpened(false)
     }
   }, [location.pathname, isMobile])
+
+  // Check for transcription URL parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('transcribe') === 'true') {
+      setTranscriptionModalOpened(true);
+      // Remove the parameter from URL
+      searchParams.delete('transcribe');
+      const newSearch = searchParams.toString();
+      navigate(
+        {
+          pathname: location.pathname,
+          search: newSearch ? `?${newSearch}` : '',
+        },
+        { replace: true }
+      );
+    }
+  }, [location.search, location.pathname, navigate])
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -92,6 +115,16 @@ export const AppLayout = () => {
 
         <Group style={{ flex: 1 }} justify="space-between">
           <Search />
+          <Tooltip label="Voice Transcription">
+            <ActionIcon
+              variant="light"
+              color="blue"
+              size="lg"
+              onClick={() => setTranscriptionModalOpened(true)}
+            >
+              <IconMicrophone size={20} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       </div>
 
@@ -206,6 +239,11 @@ export const AppLayout = () => {
           <Outlet />
         </div>
       </div>
+
+      <TranscriptionModal
+        opened={transcriptionModalOpened}
+        onClose={() => setTranscriptionModalOpened(false)}
+      />
     </div>
   )
 }
