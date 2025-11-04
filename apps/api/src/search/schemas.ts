@@ -1,4 +1,6 @@
-export const noteSchema = {
+import { CollectionCreateSchema } from 'typesense/lib/Typesense/Collections';
+
+export const noteSchema: CollectionCreateSchema = {
   name: "notes",
   fields: [
     {
@@ -20,7 +22,7 @@ export const noteSchema = {
   ],
 };
 
-export const taskSchema = {
+export const taskSchema: CollectionCreateSchema = {
   name: "tasks",
   fields: [
     {
@@ -55,7 +57,7 @@ export const taskSchema = {
   ],
 };
 
-export const tagSchema = {
+export const tagSchema: CollectionCreateSchema = {
   name: "tags",
   fields: [
     {

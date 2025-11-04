@@ -200,7 +200,7 @@ export class LlmService {
           conversationId,
           role: ConversationItemRole.ASSISTANT,
           content: typeof aiMessageContent === 'string' ? aiMessageContent : JSON.stringify(aiMessageContent),
-          toolCalls: aiResponse.tool_calls,
+          toolCalls: JSON.parse(JSON.stringify(aiResponse.tool_calls)),
         },
       });
 
@@ -210,7 +210,7 @@ export class LlmService {
         if (tool) {
           try {
             this.logger.debug(`Executing tool: ${toolCall.name} with args: ${JSON.stringify(toolCall.args)}`);
-            const toolResult = await tool.invoke(toolCall.args);
+            const toolResult = await tool.invoke(toolCall);
             this.logger.debug(`Tool result: ${JSON.stringify(toolResult)}`);
 
             // Save tool result
