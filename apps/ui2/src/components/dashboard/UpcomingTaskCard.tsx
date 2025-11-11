@@ -136,6 +136,7 @@ export function UpcomingTaskCard({ task, onClick }: UpcomingTaskCardProps) {
             </Group>
           </HoverCard.Dropdown>
         </HoverCard>
+        </Group>
       </Group>
 
       <Group gap="xs" mb="xs">

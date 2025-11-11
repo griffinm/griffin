@@ -134,7 +134,7 @@ export function Search() {
   };
 
   return (
-    <div ref={searchContainerRef} className="relative w-full max-w-md">
+    <div ref={searchContainerRef} className="relative w-full max-w-md" style={{ flexShrink: 1 }}>
       <TextInput
         placeholder="Search notes and tasks..."
         size="sm"

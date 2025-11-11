@@ -4,6 +4,10 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
+  "peerDependencies": {
+    "@prisma/client": "^5.0.0",
+    "express": "^4.0.0"
+  },
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",

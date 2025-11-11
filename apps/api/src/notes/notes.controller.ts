@@ -8,6 +8,7 @@ import {
   UseGuards,
   Delete,
   Post,
+  Query,
  } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { NoteService } from './notes.service';
@@ -32,8 +33,12 @@ export class NotesController {
   }
 
   @Get('recent')
-  async recentNotes(@Req() request: RequestWithUser): Promise<NoteEntity[]> {
-    return this.noteService.recentNotes(request.user.id);
+  async recentNotes(
+    @Req() request: RequestWithUser,
+    @Query('limit') limit?: string,
+  ): Promise<NoteEntity[]> {
+    const limitNumber = limit ? parseInt(limit, 10) : 5;
+    return this.noteService.recentNotes(request.user.id, limitNumber);
   }
 
   @Get(':id')

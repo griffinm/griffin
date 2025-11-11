@@ -104,6 +104,7 @@
     "@swc/helpers": "~0.5.11",
     "@testing-library/react": "^16.1.0",
     "@types/cookie-parser": "^1.4.7",
+    "@types/express": "^5.0.5",
     "@types/jest": "^29.4.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/multer": "^1.4.11",
