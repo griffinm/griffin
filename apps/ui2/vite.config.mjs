@@ -8,7 +8,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@griffin/types': path.resolve(__dirname, '../../libs/types/src/index.ts'),
+      '@nestjs/common': path.resolve(__dirname, './src/mocks/nestjs-common.ts'),
+      '@prisma/client': path.resolve(__dirname, './src/mocks/prisma-client.ts'),
     },
+  },
+  optimizeDeps: {
+    exclude: ['@griffin/types'],
   },
   server: {
     proxy: {
