@@ -168,7 +168,7 @@ export class LlmService {
           if (item.toolCalls) {
             return new AIMessage({
               content: item.content,
-              tool_calls: item.toolCalls,
+              tool_calls: item.toolCalls as any, // Type assertion needed for Prisma JSON type
             });
           }
           return new AIMessage(item.content);
@@ -217,7 +217,7 @@ export class LlmService {
         if (tool) {
           try {
             this.logger.debug(`Executing tool: ${toolCall.name} with args: ${JSON.stringify(toolCall.args)}`);
-            const toolResult = await tool.invoke(toolCall);
+            const toolResult = await (tool as any).invoke(toolCall);
             this.logger.debug(`Tool result: ${JSON.stringify(toolResult)}`);
 
             // Extract componentData if present
