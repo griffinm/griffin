@@ -19,6 +19,7 @@ import {
   IconBook,
   IconTags,
   IconMicrophone,
+  IconMessagePlus,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
@@ -26,6 +27,8 @@ import { getUrl } from '@/constants/urls';
 import { NoteTree } from '@/views/NoteTree';
 import { Search } from '@/components/Search/Search';
 import { TranscriptionModal } from '@/components/TranscriptionModal';
+import { ChatDrawer } from '@/components/ChatDrawer';
+import { createConversation } from '@/api/conversationApi';
 
 const HEADER_HEIGHT = 40;
 const LEFT_NAVBAR_WIDTH_DESKTOP = 250;
@@ -35,6 +38,8 @@ export const AppLayout = () => {
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [opened, setOpened] = useState(true)
   const [transcriptionModalOpened, setTranscriptionModalOpened] = useState(false)
+  const [chatDrawerOpened, setChatDrawerOpened] = useState(false)
+  const [activeChatConversationId, setActiveChatConversationId] = useState<string | null>(null)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
@@ -80,6 +85,31 @@ export const AppLayout = () => {
     }
   };
 
+  const openChatDrawer = (conversationId: string) => {
+    setActiveChatConversationId(conversationId);
+    setChatDrawerOpened(true);
+  };
+
+  const closeChatDrawer = () => {
+    setChatDrawerOpened(false);
+    // Keep conversation ID for a moment to allow smooth closing animation
+    setTimeout(() => setActiveChatConversationId(null), 300);
+  };
+
+  const handleNewChat = async () => {
+    try {
+      // Create a new conversation
+      const conversation = await createConversation({
+        title: `Chat - ${new Date().toLocaleString()}`,
+      });
+
+      // Open the chat drawer with the new conversation
+      openChatDrawer(conversation.id);
+    } catch (error) {
+      console.error('Error creating new chat:', error);
+    }
+  };
+
   const navigationData = [
     { icon: IconHome, label: 'Dashboard', path: getUrl('dashboard').path(), color: 'blue' },
     { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
@@ -115,16 +145,28 @@ export const AppLayout = () => {
 
         <Group style={{ flex: 1 }} justify="space-between">
           <Search />
-          <Tooltip label="Voice Transcription">
-            <ActionIcon
-              variant="light"
-              color="blue"
-              size="lg"
-              onClick={() => setTranscriptionModalOpened(true)}
-            >
-              <IconMicrophone size={20} />
-            </ActionIcon>
-          </Tooltip>
+          <Group gap="xs">
+            <Tooltip label="New Chat">
+              <ActionIcon
+                variant="light"
+                color="teal"
+                size="lg"
+                onClick={handleNewChat}
+              >
+                <IconMessagePlus size={20} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Voice Transcription">
+              <ActionIcon
+                variant="light"
+                color="blue"
+                size="lg"
+                onClick={() => setTranscriptionModalOpened(true)}
+              >
+                <IconMicrophone size={20} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
         </Group>
       </div>
 
@@ -243,6 +285,13 @@ export const AppLayout = () => {
       <TranscriptionModal
         opened={transcriptionModalOpened}
         onClose={() => setTranscriptionModalOpened(false)}
+        onOpenChat={openChatDrawer}
+      />
+
+      <ChatDrawer
+        opened={chatDrawerOpened}
+        onClose={closeChatDrawer}
+        conversationId={activeChatConversationId}
       />
     </div>
   )

@@ -13,6 +13,10 @@ export interface ConversationItem {
   toolCalls?: any;
   toolCallId?: string | null;
   toolName?: string | null;
+  componentData?: {
+    type: 'task' | 'note';
+    data: any | any[];
+  };
   createdAt: Date;
 }
 
@@ -31,6 +35,7 @@ export interface ConversationWithItems extends Conversation {
 export interface SendMessageResponse {
   userMessage: ConversationItem;
   aiMessage: ConversationItem;
+  actionTaken: boolean;
 }
 
 export interface ConversationListResponse {

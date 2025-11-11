@@ -99,6 +99,7 @@ export class LlmController {
   ): Promise<{
     userMessage: ConversationItemEntity;
     aiMessage: ConversationItemEntity;
+    actionTaken: boolean;
   }> {
     const result = await this.llmService.sendMessage(
       id,
@@ -109,6 +110,7 @@ export class LlmController {
     return {
       userMessage: new ConversationItemEntity(result.userMessage),
       aiMessage: new ConversationItemEntity(result.aiMessage),
+      actionTaken: result.actionTaken,
     };
   }
 

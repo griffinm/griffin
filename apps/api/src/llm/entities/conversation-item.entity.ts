@@ -9,6 +9,7 @@ export class ConversationItemEntity implements ConversationItem {
   toolCalls: any;
   toolCallId: string | null;
   toolName: string | null;
+  componentData: any;
   createdAt: Date;
 
   constructor(partial: Partial<ConversationItemEntity>) {

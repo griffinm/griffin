@@ -212,6 +212,7 @@ model ConversationItem {
   toolCalls      Json?                @map("tool_calls")
   toolCallId     String?              @map("tool_call_id")
   toolName       String?              @map("tool_name")
+  componentData  Json?                @map("component_data")
   createdAt      DateTime             @default(now()) @map("created_at")
   conversation   Conversation         @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 

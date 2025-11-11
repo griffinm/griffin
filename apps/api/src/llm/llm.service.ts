@@ -164,6 +164,13 @@ export class LlmService {
         case ConversationItemRole.USER:
           return new HumanMessage(item.content);
         case ConversationItemRole.ASSISTANT:
+          // If the assistant message has tool_calls, include them in the AIMessage
+          if (item.toolCalls) {
+            return new AIMessage({
+              content: item.content,
+              tool_calls: item.toolCalls,
+            });
+          }
           return new AIMessage(item.content);
         case ConversationItemRole.SYSTEM:
           return new SystemMessage(item.content);
@@ -213,6 +220,9 @@ export class LlmService {
             const toolResult = await tool.invoke(toolCall);
             this.logger.debug(`Tool result: ${JSON.stringify(toolResult)}`);
 
+            // Extract componentData if present
+            const componentData = toolResult.componentData || null;
+
             // Save tool result
             await this.prisma.conversationItem.create({
               data: {
@@ -221,6 +231,7 @@ export class LlmService {
                 content: JSON.stringify(toolResult),
                 toolCallId: toolCall.id,
                 toolName: toolCall.name,
+                componentData: componentData ? JSON.parse(JSON.stringify(componentData)) : null,
               },
             });
 
@@ -279,6 +290,7 @@ export class LlmService {
       return {
         userMessage,
         aiMessage: finalAiMessage,
+        actionTaken: true, // Tool was executed, action was taken
       };
     } else {
       // No tool calls, just save the AI response
@@ -303,6 +315,7 @@ export class LlmService {
       return {
         userMessage,
         aiMessage,
+        actionTaken: false, // No tool call, conversational response only
       };
     }
   }
@@ -355,7 +368,147 @@ export class LlmService {
       },
     });
 
-    return [createTaskTool];
+    const searchTasksTool = new DynamicStructuredTool({
+      name: 'search_tasks',
+      description: 'Search and filter tasks. Use this to find tasks by status, due date, priority, or text search. Perfect for queries like "show me tasks due today", "what are my high priority tasks", etc.',
+      schema: z.object({
+        search: z.string().optional().describe('Search term to look for in task title or description'),
+        status: z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED']).optional().describe('Filter tasks by status'),
+        dueBefore: z.string().optional().describe('Find tasks due before this date (ISO 8601 format, e.g., 2024-12-31T23:59:59Z)'),
+        dueAfter: z.string().optional().describe('Find tasks due after this date (ISO 8601 format)'),
+        priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional().describe('Filter tasks by priority level'),
+        limit: z.number().optional().describe('Maximum number of results to return (default: 10)'),
+      }),
+      func: async ({ search, status, dueBefore, dueAfter, priority, limit }) => {
+        this.logger.debug(`Searching tasks with filters: ${JSON.stringify({ search, status, dueBefore, dueAfter, priority, limit })}`);
+        try {
+          const filter: any = {
+            search,
+            status,
+            priority,
+            resultsPerPage: limit || 10,
+          };
+
+          if (dueBefore) {
+            filter.endDate = dueBefore;
+          }
+          if (dueAfter) {
+            filter.startDate = dueAfter;
+          }
+
+          const tasks = await this.tasksService.filter(userId, filter);
+
+          if (tasks.length === 0) {
+            return {
+              success: true,
+              message: 'No tasks found matching the criteria.',
+              componentData: null,
+            };
+          }
+
+          return {
+            success: true,
+            message: `Found ${tasks.length} task${tasks.length === 1 ? '' : 's'}.`,
+            componentData: {
+              type: 'task',
+              data: tasks,
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error searching tasks: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to search tasks: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const updateTaskTool = new DynamicStructuredTool({
+      name: 'update_task',
+      description: 'Update an existing task. Use this to mark tasks as complete, change status, update title, description, priority, or due date. You must know the task ID.',
+      schema: z.object({
+        taskId: z.string().describe('The ID of the task to update'),
+        status: z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED']).optional().describe('New status for the task'),
+        title: z.string().optional().describe('New title for the task'),
+        description: z.string().optional().describe('New description for the task'),
+        priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional().describe('New priority level'),
+        dueDate: z.string().optional().describe('New due date in ISO 8601 format'),
+      }),
+      func: async ({ taskId, status, title, description, priority, dueDate }) => {
+        this.logger.debug(`Updating task ${taskId} with: ${JSON.stringify({ status, title, description, priority, dueDate })}`);
+        try {
+          const updateData: any = {};
+          if (status) updateData.status = status;
+          if (title) updateData.title = title;
+          if (description !== undefined) updateData.description = description;
+          if (priority) updateData.priority = priority;
+          if (dueDate) updateData.dueDate = new Date(dueDate);
+
+          const updatedTask = await this.tasksService.update(taskId, userId, updateData);
+
+          return {
+            success: true,
+            message: `Task "${updatedTask.title}" has been updated successfully.`,
+            componentData: {
+              type: 'task',
+              data: updatedTask,
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error updating task: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to update task: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const getTaskTool = new DynamicStructuredTool({
+      name: 'get_task',
+      description: 'Look up and display detailed information about a task by searching its title or description. Use this when the user asks about a specific task.',
+      schema: z.object({
+        search: z.string().describe('Search term to find the task by title or description'),
+      }),
+      func: async ({ search }) => {
+        this.logger.debug(`Looking up task with search: ${search}`);
+        try {
+          const tasks = await this.tasksService.filter(userId, {
+            search,
+            resultsPerPage: 5,
+          });
+
+          if (tasks.length === 0) {
+            return {
+              success: true,
+              message: `No tasks found matching "${search}".`,
+              componentData: null,
+            };
+          }
+
+          return {
+            success: true,
+            message: `Found ${tasks.length} task${tasks.length === 1 ? '' : 's'} matching "${search}".`,
+            componentData: {
+              type: 'task',
+              data: tasks.length === 1 ? tasks[0] : tasks,
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error looking up task: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to look up task: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    return [createTaskTool, searchTasksTool, updateTaskTool, getTaskTool];
   }
 }
 

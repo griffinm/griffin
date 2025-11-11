@@ -27,11 +27,12 @@ import { notifications } from '@mantine/notifications';
 interface TranscriptionModalProps {
   opened: boolean;
   onClose: () => void;
+  onOpenChat: (conversationId: string) => void;
 }
 
 type RecordingState = 'idle' | 'recording' | 'processing' | 'success' | 'error';
 
-export const TranscriptionModal = ({ opened, onClose }: TranscriptionModalProps) => {
+export const TranscriptionModal = ({ opened, onClose, onOpenChat }: TranscriptionModalProps) => {
   const [state, setState] = useState<RecordingState>('idle');
   const [transcription, setTranscription] = useState('');
   const [error, setError] = useState('');
@@ -271,7 +272,10 @@ ${transcriptionText}
 ---
 
 Available tools you can use:
-- create_task: Create a new task for the user with title, description, due date (in ISO 8601 format), and priority
+- create_task: Create a new task with title, description, due date (in ISO 8601 format), and priority
+- search_tasks: Search and filter tasks by status, due date, priority, or text search
+- update_task: Update an existing task (mark as complete, change status, etc.)
+- get_task: Look up and display detailed information about a specific task
 
 Note: When the user mentions relative dates like "tomorrow", "next week", or "in 3 days", calculate the actual date based on the current date/time provided above.`;
 
@@ -286,14 +290,21 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
       // Hide processing notification
       notifications.hide(processingNotification);
 
-      // Show AI response notification
-      notifications.show({
-        title: 'AI Assistant Response',
-        message: messageResponse.aiMessage.content,
-        color: 'teal',
-        autoClose: 12000,
-        icon: <IconCheck size={18} />,
-      });
+      // Check if an action was taken
+      if (messageResponse.actionTaken) {
+        // Action was taken (e.g., task created), show notification only
+        notifications.show({
+          title: 'Action Completed',
+          message: messageResponse.aiMessage.content,
+          color: 'teal',
+          autoClose: 8000,
+          icon: <IconCheck size={18} />,
+        });
+      } else {
+        // No action taken, open chat drawer for conversation
+        onOpenChat(conversation.id);
+        onClose(); // Close transcription modal
+      }
     } catch (err) {
       console.error('Error processing with LLM:', err);
       
