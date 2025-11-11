@@ -2,7 +2,7 @@ import { TaskStatusHistory, TaskStatus } from "@/types/task";
 import { formatDistanceToNow, format } from "date-fns";
 import { IconCircleCheck, IconClock, IconProgress, IconChevronDown, IconChevronsUp, IconChevronsDown, IconChevronUp } from "@tabler/icons-react";
 import { useState } from "react";
-import { Button } from "@mantine/core";
+import { Button, Box, Group, Text, Stack, ThemeIcon, Collapse, ActionIcon } from "@mantine/core";
 
 interface StatusHistoryProps {
   history?: TaskStatusHistory[];
@@ -11,20 +11,17 @@ interface StatusHistoryProps {
 const statusConfig = {
   [TaskStatus.TODO]: {
     icon: IconClock,
-    color: "text-gray-500",
-    bgColor: "bg-gray-100",
+    color: "gray",
     label: "To Do",
   },
   [TaskStatus.IN_PROGRESS]: {
     icon: IconProgress,
-    color: "text-blue-600",
-    bgColor: "bg-blue-100",
+    color: "blue",
     label: "In Progress",
   },
   [TaskStatus.COMPLETED]: {
     icon: IconCircleCheck,
-    color: "text-green-600",
-    bgColor: "bg-green-100",
+    color: "green",
     label: "Completed",
   },
 };
@@ -33,7 +30,7 @@ const MAX_VISIBLE_ITEMS = 3;
 
 export function StatusHistory({ history }: StatusHistoryProps) {
   const [showAll, setShowAll] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   if (!history || history.length === 0) {
     return null;
@@ -43,64 +40,73 @@ export function StatusHistory({ history }: StatusHistoryProps) {
   const hasMore = history.length > MAX_VISIBLE_ITEMS;
 
   return (
-    <div className="pt-3">
-      <button
-        type="button"
+    <Box>
+      <Group 
+        gap="xs" 
+        style={{ cursor: 'pointer' }}
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 w-full text-left hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+        mb="sm"
       >
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-          Status History
-        </h3>
-        {isExpanded ? (
-          <IconChevronUp size={14} className="text-gray-500" />
-        ) : (
-          <IconChevronDown size={14} className="text-gray-500" />
-        )}
-      </button>
+        <ActionIcon 
+          variant="subtle" 
+          color="gray" 
+          size="sm"
+        >
+          {isExpanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+        </ActionIcon>
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+          Status History ({history.length})
+        </Text>
+      </Group>
       
-      {isExpanded && (
-        <>
-          <div className="space-y-1 mt-2">
-            {visibleHistory.map((entry, index) => {
-              const config = statusConfig[entry.status];
-              const Icon = config.icon;
-              const isLatest = index === 0;
+      <Collapse in={isExpanded}>
+        <Stack gap="xs" mb="sm">
+          {visibleHistory.map((entry, index) => {
+            const config = statusConfig[entry.status];
+            const Icon = config.icon;
+            const isLatest = index === 0;
 
-              return (
-                <div
-                  key={entry.id}
-                  className={`flex items-center gap-2 text-xs py-1 px-2 rounded ${
-                    isLatest ? "bg-gray-50 border border-gray-200" : ""
-                  }`}
+            return (
+              <Group
+                key={entry.id}
+                gap="sm"
+                p="xs"
+                style={{
+                  borderRadius: '8px',
+                  backgroundColor: isLatest ? 'var(--mantine-color-gray-0)' : 'transparent',
+                  border: isLatest ? '1px solid var(--mantine-color-gray-3)' : 'none',
+                }}
+              >
+                <ThemeIcon 
+                  variant="light" 
+                  color={config.color}
+                  size="sm"
                 >
-                  <div className={`${config.bgColor} p-1 rounded`}>
-                    <Icon size={14} className={config.color} />
-                  </div>
-                  <span className="font-medium text-gray-700">
-                    {config.label}
-                  </span>
-                  <span className="text-gray-500 text-[11px]">
-                    {format(new Date(entry.changedAt), "MMM d, h:mm a")}
-                  </span>
-                  <span className="text-gray-400 text-[11px] ml-auto">
-                    {formatDistanceToNow(new Date(entry.changedAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                  <Icon size={14} />
+                </ThemeIcon>
+                <Text size="sm" fw={500}>
+                  {config.label}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {format(new Date(entry.changedAt), "MMM d, h:mm a")}
+                </Text>
+                <Text size="xs" c="dimmed" ml="auto">
+                  {formatDistanceToNow(new Date(entry.changedAt), {
+                    addSuffix: true,
+                  })}
+                </Text>
+              </Group>
+            );
+          })}
+        </Stack>
 
-          <ViewMoreButton
-            onClick={() => setShowAll(!showAll)}
-            hasMore={hasMore}
-            showAll={showAll}
-          />
-        </>
-      )}
-    </div>
+        <ViewMoreButton
+          onClick={() => setShowAll(!showAll)}
+          hasMore={hasMore}
+          showAll={showAll}
+        />
+      </Collapse>
+    </Box>
   );
 }
 

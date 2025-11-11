@@ -7,11 +7,13 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
 import { ConversationItemRole } from '@prisma/client';
+import { TavilySearch } from '@langchain/tavily';
 
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
   private chatModel: ChatOpenAI;
+  private tavilyApiKey: string;
 
   constructor(
     private prisma: PrismaService,
@@ -29,6 +31,12 @@ export class LlmService {
       modelName: 'gpt-4o-mini',
       temperature: 0.7,
     });
+
+    const tavilyKey = this.configService.get<string>('TAVILY_API_KEY');
+    if (!tavilyKey) {
+      throw new Error('TAVILY_API_KEY is not configured');
+    }
+    this.tavilyApiKey = tavilyKey;
   }
 
   /**
@@ -508,7 +516,15 @@ export class LlmService {
       },
     });
 
-    return [createTaskTool, searchTasksTool, updateTaskTool, getTaskTool];
+    const searchInternetTool = new TavilySearch({
+      name: 'search_internet',
+      description: 'Search the internet for current information, news, facts, or answers to questions. Use this when you need up-to-date information that you may not have in your training data.',
+      maxResults: 5,
+      tavilyApiKey: this.tavilyApiKey,
+      includeRawContent: true,
+    });
+
+    return [createTaskTool, searchTasksTool, updateTaskTool, getTaskTool, searchInternetTool];
   }
 }
 

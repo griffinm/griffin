@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Task, TaskPriority } from '@/types/task';
+import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { TruncatedDescription } from './TruncatedDescriptoin';
 import { formatDistanceToNowStrict } from 'date-fns';
 import classNames from 'classnames';
@@ -10,6 +10,11 @@ import { Group, Pill, ActionIcon } from '@mantine/core';
 import { getTagColors } from '@/utils/tagColors';
 import { useNavigate } from 'react-router-dom';
 import { IconExternalLink } from '@tabler/icons-react';
+import { TaskStatusBadge } from './TaskStatusBadge';
+import { TaskPriorityBadge } from './TaskPriorityBadge';
+import { updateTask } from '@/api/tasksApi';
+import { notifications } from '@mantine/notifications';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface DraggableTaskProps {
   task: Task;
@@ -66,6 +71,7 @@ export function DraggableTask({ task, isLastTask, lastTaskElementRef }: Draggabl
 
 function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventHandler<HTMLDivElement> }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isNotCompleted = !task?.completedAt;
   const priorityClasses = classNames('h-full w-[10px] rounded-l-md', {
     'bg-red-400': task.priority === TaskPriority.HIGH,
@@ -77,6 +83,62 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
     e.stopPropagation();
     e.preventDefault();
     navigate(`/tasks/${task.id}`);
+  };
+
+  const handleStatusChange = async (newStatus: TaskStatus) => {
+    try {
+      await updateTask(task.id, {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        priority: task.priority,
+        status: newStatus,
+      });
+
+      notifications.show({
+        title: 'Success',
+        message: 'Task status updated successfully',
+        color: 'green',
+      });
+
+      // Invalidate queries to refetch data
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update task status',
+        color: 'red',
+      });
+    }
+  };
+
+  const handlePriorityChange = async (newPriority: TaskPriority) => {
+    try {
+      await updateTask(task.id, {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        priority: newPriority,
+        status: task.status,
+      });
+
+      notifications.show({
+        title: 'Success',
+        message: 'Task priority updated successfully',
+        color: 'green',
+      });
+
+      // Invalidate queries to refetch data
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update task priority',
+        color: 'red',
+      });
+    }
   };
 
   function renderCompletedTaskFooter() {
@@ -126,6 +188,12 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
                 <IconExternalLink size={16} />
               </ActionIcon>
             </div>
+            
+            {/* Status and Priority Badges */}
+            <Group gap="xs" className="mt-2" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+              <TaskStatusBadge status={task.status} onChange={handleStatusChange} />
+              <TaskPriorityBadge priority={task.priority} onChange={handlePriorityChange} />
+            </Group>
             
             {/* Tags */}
             {task.tags && task.tags.length > 0 && (

@@ -21,6 +21,7 @@
     "@emotion/styled": "^11.13.0",
     "@langchain/core": "^1.0.2",
     "@langchain/openai": "^1.0.0",
+    "@langchain/tavily": "^1.0.0",
     "@mantine/core": "^8.3.5",
     "@mantine/dates": "^8.3.5",
     "@mantine/hooks": "^8.3.5",

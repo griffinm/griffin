@@ -1,55 +1,77 @@
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
-import { Stack, Text, Group, Badge, Pill } from '@mantine/core';
+import { Stack, Text, Group, Pill } from '@mantine/core';
 import { format } from 'date-fns';
 import { HtmlPreview } from '@/components/HtmlPreview';
 import { getTagColors } from '@/utils/tagColors';
 import { StatusHistory } from './StatusHistory';
+import { TaskStatusBadge } from './TaskStatusBadge';
+import { TaskPriorityBadge } from './TaskPriorityBadge';
+import { updateTask } from '@/api/tasksApi';
+import { notifications } from '@mantine/notifications';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TaskViewModeProps {
   task: Task;
 }
 
 export function TaskViewMode({ task }: TaskViewModeProps) {
-  const getPriorityColor = (priority: TaskPriority) => {
-    switch (priority) {
-      case TaskPriority.HIGH:
-        return 'red';
-      case TaskPriority.MEDIUM:
-        return 'yellow';
-      case TaskPriority.LOW:
-        return 'green';
-      default:
-        return 'gray';
+  const queryClient = useQueryClient();
+
+  const handleStatusChange = async (newStatus: TaskStatus) => {
+    try {
+      await updateTask(task.id, {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        priority: task.priority,
+        status: newStatus,
+      });
+
+      notifications.show({
+        title: 'Success',
+        message: 'Task status updated successfully',
+        color: 'green',
+      });
+
+      // Invalidate queries to refetch data
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['task', task.id] });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update task status',
+        color: 'red',
+      });
     }
   };
 
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TODO:
-        return 'blue';
-      case TaskStatus.IN_PROGRESS:
-        return 'orange';
-      case TaskStatus.COMPLETED:
-        return 'green';
-      case TaskStatus.CANCELLED:
-        return 'gray';
-      default:
-        return 'gray';
-    }
-  };
+  const handlePriorityChange = async (newPriority: TaskPriority) => {
+    try {
+      await updateTask(task.id, {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        priority: newPriority,
+        status: task.status,
+      });
 
-  const getStatusLabel = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TODO:
-        return 'To Do';
-      case TaskStatus.IN_PROGRESS:
-        return 'In Progress';
-      case TaskStatus.COMPLETED:
-        return 'Completed';
-      case TaskStatus.CANCELLED:
-        return 'Cancelled';
-      default:
-        return status;
+      notifications.show({
+        title: 'Success',
+        message: 'Task priority updated successfully',
+        color: 'green',
+      });
+
+      // Invalidate queries to refetch data
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['task', task.id] });
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update task priority',
+        color: 'red',
+      });
     }
   };
 
@@ -66,16 +88,12 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
       <Group gap="md">
         <div>
           <Text size="xs" c="dimmed" mb={4}>Status</Text>
-          <Badge color={getStatusColor(task.status)} variant="light">
-            {getStatusLabel(task.status)}
-          </Badge>
+          <TaskStatusBadge status={task.status} onChange={handleStatusChange} />
         </div>
         
         <div>
           <Text size="xs" c="dimmed" mb={4}>Priority</Text>
-          <Badge color={getPriorityColor(task.priority)} variant="light">
-            {task.priority}
-          </Badge>
+          <TaskPriorityBadge priority={task.priority} onChange={handlePriorityChange} />
         </div>
         
         {task.dueDate && (
@@ -128,11 +146,8 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
       )}
 
       {/* Status History */}
-      {task.statusHistory && task.statusHistory.length > 1 && (
-        <div>
-          <Text size="xs" c="dimmed" mb={8}>Status History</Text>
-          <StatusHistory history={task.statusHistory} />
-        </div>
+      {task.statusHistory && task.statusHistory.length > 0 && (
+        <StatusHistory history={task.statusHistory} />
       )}
 
       {/* Timestamps */}
