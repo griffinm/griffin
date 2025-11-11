@@ -92,7 +92,7 @@ export class NoteService {
     return this.addTagsToNotes(notesWithTruncated);
   }
 
-  async recentNotes(userId: string) {
+  async recentNotes(userId: string, limit = 5) {
     const notes = await this.prisma.note.findMany({
       where: {
         deletedAt: null,
@@ -104,7 +104,7 @@ export class NoteService {
       orderBy: {
         updatedAt: 'desc',
       },
-      take: 5,
+      take: limit,
     });
 
     // Truncate content for preview

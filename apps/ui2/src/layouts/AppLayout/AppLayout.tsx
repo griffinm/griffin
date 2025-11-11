@@ -133,6 +133,7 @@ export const AppLayout = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: isMobile ? theme.spacing.xs : theme.spacing.md,
         }}
       >
         <Burger
@@ -140,30 +141,32 @@ export const AppLayout = () => {
           onClick={() => setOpened((o) => !o)}
           size="sm"
           color={theme.colors.gray[6]}
-          mr="xl"
+          mr={isMobile ? "xs" : "xl"}
         />
 
-        <Group style={{ flex: 1 }} justify="space-between">
-          <Search />
-          <Group gap="xs">
+        <Group style={{ flex: 1, minWidth: 0 }} justify="space-between" gap={isMobile ? "xs" : "md"}>
+          <div style={{ flex: 1, minWidth: 0, maxWidth: isMobile ? 'none' : '500px' }}>
+            <Search />
+          </div>
+          <Group gap="xs" style={{ flexShrink: 0 }}>
             <Tooltip label="New Chat">
               <ActionIcon
                 variant="light"
                 color="teal"
-                size="lg"
+                size={isMobile ? "md" : "lg"}
                 onClick={handleNewChat}
               >
-                <IconMessagePlus size={20} />
+                <IconMessagePlus size={isMobile ? 18 : 20} />
               </ActionIcon>
             </Tooltip>
             <Tooltip label="Voice Transcription">
               <ActionIcon
                 variant="light"
                 color="blue"
-                size="lg"
+                size={isMobile ? "md" : "lg"}
                 onClick={() => setTranscriptionModalOpened(true)}
               >
-                <IconMicrophone size={20} />
+                <IconMicrophone size={isMobile ? 18 : 20} />
               </ActionIcon>
             </Tooltip>
           </Group>

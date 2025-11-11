@@ -33,8 +33,10 @@ export const deleteNote = async (id: string): Promise<void> => {
 };
 
 export const fetchRecentNotes = async (limit = 5): Promise<Note[]> => {
-  const response = await baseClient.get<Note[]>('/notes/recent');
-  return response.data.slice(0, limit);
+  const response = await baseClient.get<Note[]>('/notes/recent', {
+    params: { limit }
+  });
+  return response.data;
 };
 
 export const addTagToNote = async (noteId: string, tagName: string): Promise<Tag> => {

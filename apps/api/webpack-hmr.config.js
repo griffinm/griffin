@@ -20,6 +20,13 @@ module.exports = {
     minimize: false,
     concatenateModules: true,
   },
+  ignoreWarnings: [
+    // Ignore warnings about TypeScript type-only exports not being found at runtime
+    {
+      module: /@griffin\/types/,
+      message: /export .* was not found/,
+    },
+  ],
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',
