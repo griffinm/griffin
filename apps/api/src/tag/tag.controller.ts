@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { TagService } from "./tag.service";
-import { RequestWithUser } from "@griffin/types";
+import type { RequestWithUser } from "@griffin/types";
 import { AuthGuard } from "../auth/auth.guard";
 import { TagEntity } from "./entities/tag.entity";
 import { TagWithObjectsEntity } from "./entities/tag-with-objects.entity";

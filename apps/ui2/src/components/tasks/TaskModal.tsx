@@ -1,4 +1,4 @@
-import { Modal } from "@mantine/core";
+import { Modal, Button, Group } from "@mantine/core";
 import { Task } from "@/types/task";
 import { TaskForm, TaskFormData } from "@/views/tasks";
 import { useMediaQuery } from "@mantine/hooks";
@@ -8,6 +8,8 @@ import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTask } from "@/hooks/useTasks";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { IconExternalLink } from "@tabler/icons-react";
 
 export function TaskModal({
   task,
@@ -20,12 +22,20 @@ export function TaskModal({
 }) {
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints?.sm})`);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   // Fetch full task data including statusHistory when editing an existing task
   const { data: fullTask } = useTask(task?.id || '');
   
   // Use fullTask if available (editing), otherwise use the prop task (creating)
   const taskData = fullTask || task;
+
+  const handleOpenInPage = () => {
+    if (taskData?.id) {
+      onClose();
+      navigate(`/tasks/${taskData.id}`);
+    }
+  };
 
   // Refetch task data when modal opens to ensure we have the latest data
   useEffect(() => {
@@ -131,6 +141,18 @@ export function TaskModal({
       size="80%"
       fullScreen={isMobile}
     >
+      {taskData?.id && (
+        <Group justify="flex-end" p="md" pb={0}>
+          <Button
+            variant="subtle"
+            size="xs"
+            leftSection={<IconExternalLink size={14} />}
+            onClick={handleOpenInPage}
+          >
+            Open in Page
+          </Button>
+        </Group>
+      )}
       <TaskForm task={taskData} onSubmit={handleSubmit} onCancel={onClose} />
     </Modal>
   );

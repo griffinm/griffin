@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { SignInResponse } from '@griffin/types';
+import type { SignInResponse } from '@griffin/types';
 import { Response } from 'express';
 
 @Controller("auth")

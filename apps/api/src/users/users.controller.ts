@@ -13,10 +13,9 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserEntity } from './dto/user.entity';
 import { UpdateDto } from './dto/update.dto';
-import { RequestWithUser } from '@griffin/types';
+import type { RequestWithUser, CreateUserResponse } from '@griffin/types';
 import { CreateDto } from './dto/create.dto';
 import { AuthService } from '../auth/auth.service';
-import { CreateUserResponse } from '@griffin/types';
 
 @Controller('users')
 export class UsersController {

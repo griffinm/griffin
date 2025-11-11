@@ -1,7 +1,7 @@
 import { Body, ClassSerializerInterceptor, Controller, Get, Param, ParseBoolPipe, Patch, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { QuestionsService } from "./questions.service";
-import { RequestWithUser } from "@griffin/types";
+import type { RequestWithUser } from "@griffin/types";
 import { CreateQuestionDto } from "./dto/create.dto";
 import { UpdateQuestionDto } from "./dto/update.dto";
 import { QuestionEntity } from "./dto/question.entity";

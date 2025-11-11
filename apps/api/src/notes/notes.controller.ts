@@ -13,7 +13,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { NoteService } from './notes.service';
 import { NoteEntity } from './dto/note.entity';
 import { UpdateDto } from './dto/update.dto';
-import { RequestWithUser } from '@griffin/types';
+import type { RequestWithUser } from '@griffin/types';
 import { TagService } from '../tag/tag.service';
 import { TagEntity } from '../tag/entities/tag.entity';
 import { AddTagToObjectDto } from '../tag/dto/add-tag-to-object.dto';

@@ -1,7 +1,8 @@
 import { Card, Text, Group, Badge, ActionIcon, HoverCard } from '@mantine/core';
-import { IconEye, IconCalendar } from '@tabler/icons-react';
+import { IconEye, IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { formatDistanceToNowStrict, isPast } from 'date-fns';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
+import { useNavigate } from 'react-router-dom';
 
 interface UpcomingTaskCardProps {
   task: Task;
@@ -9,6 +10,8 @@ interface UpcomingTaskCardProps {
 }
 
 export function UpcomingTaskCard({ task, onClick }: UpcomingTaskCardProps) {
+  const navigate = useNavigate();
+
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
       case TaskPriority.HIGH:
@@ -50,11 +53,17 @@ export function UpcomingTaskCard({ task, onClick }: UpcomingTaskCardProps) {
   const dueDateInfo = getDueDateText();
 
   const handleClick = (e: React.MouseEvent) => {
-    // Don't trigger onClick if clicking on the preview icon
-    if ((e.target as HTMLElement).closest('[data-preview-icon]')) {
+    // Don't trigger onClick if clicking on the preview icon or open-in-page icon
+    if ((e.target as HTMLElement).closest('[data-preview-icon]') || 
+        (e.target as HTMLElement).closest('[data-open-in-page]')) {
       return;
     }
     onClick();
+  };
+
+  const handleOpenInPage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/tasks/${task.id}`);
   };
 
   return (
@@ -82,17 +91,27 @@ export function UpcomingTaskCard({ task, onClick }: UpcomingTaskCardProps) {
         <Text size="md" fw={600} lineClamp={1} style={{ flex: 1 }}>
           {task.title}
         </Text>
-        <HoverCard width={400} shadow="md" openDelay={200}>
-          <HoverCard.Target>
-            <ActionIcon 
-              variant="subtle" 
-              size="sm"
-              data-preview-icon
-              onClick={(e) => e.stopPropagation()}
-            >
-              <IconEye size={16} />
-            </ActionIcon>
-          </HoverCard.Target>
+        <Group gap={4}>
+          <ActionIcon 
+            variant="subtle" 
+            size="sm"
+            data-open-in-page
+            onClick={handleOpenInPage}
+            title="Open in page"
+          >
+            <IconExternalLink size={16} />
+          </ActionIcon>
+          <HoverCard width={400} shadow="md" openDelay={200}>
+            <HoverCard.Target>
+              <ActionIcon 
+                variant="subtle" 
+                size="sm"
+                data-preview-icon
+                onClick={(e) => e.stopPropagation()}
+              >
+                <IconEye size={16} />
+              </ActionIcon>
+            </HoverCard.Target>
           <HoverCard.Dropdown>
             <Text size="sm" fw={600} mb="xs">
               {task.title}

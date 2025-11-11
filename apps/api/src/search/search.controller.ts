@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { RequestWithUser } from "@griffin/types";
+import type { RequestWithUser } from "@griffin/types";
 import { SearchResultsDto } from "./dto/search-results.dto";
 
 @Controller('search')

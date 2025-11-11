@@ -56,3 +56,7 @@ export const addTagToTask = async (taskId: string, tagName: string): Promise<Tag
 export const removeTagFromTask = async (taskId: string, tagId: string): Promise<void> => {
   await baseClient.delete(`/tasks/${taskId}/tags/${tagId}`);
 };
+
+export const deleteTask = async (id: string): Promise<void> => {
+  await baseClient.delete(`/tasks/${id}`);
+};

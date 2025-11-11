@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { LlmService } from './llm.service';
-import { RequestWithUser } from '@griffin/types';
+import type { RequestWithUser } from '@griffin/types';
 import { NewConversationDto } from './dto/new-conversation.dto';
 import { ConversationMessageDto } from './dto/conversation-message.dto';
 import { ConversationEntity } from './entities/conversation.entity';

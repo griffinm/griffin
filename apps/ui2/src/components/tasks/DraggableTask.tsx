@@ -6,8 +6,10 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import classNames from 'classnames';
 import { useState } from 'react';
 import { TaskModal } from './TaskModal';
-import { Group, Pill } from '@mantine/core';
+import { Group, Pill, ActionIcon } from '@mantine/core';
 import { getTagColors } from '@/utils/tagColors';
+import { useNavigate } from 'react-router-dom';
+import { IconExternalLink } from '@tabler/icons-react';
 
 interface DraggableTaskProps {
   task: Task;
@@ -63,12 +65,19 @@ export function DraggableTask({ task, isLastTask, lastTaskElementRef }: Draggabl
 }
 
 function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventHandler<HTMLDivElement> }) {
+  const navigate = useNavigate();
   const isNotCompleted = !task?.completedAt;
   const priorityClasses = classNames('h-full w-[10px] rounded-l-md', {
     'bg-red-400': task.priority === TaskPriority.HIGH,
     'bg-yellow-400': task.priority === TaskPriority.MEDIUM,
     'bg-green-400': task.priority === TaskPriority.LOW,
   });
+
+  const handleOpenInPage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    navigate(`/tasks/${task.id}`);
+  };
 
   function renderCompletedTaskFooter() {
     if (!task.completedAt) {
@@ -104,7 +113,19 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
 
         <div className="flex flex-col h-full justify-between flex-1 p-2 min-w-0 overflow-hidden">
           <div>
-            <p className="text-md font-medium mb-1 break-words">{task.title}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-md font-medium mb-1 break-words flex-1">{task.title}</p>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={handleOpenInPage}
+                className="flex-shrink-0"
+                title="Open in page"
+              >
+                <IconExternalLink size={16} />
+              </ActionIcon>
+            </div>
             
             {/* Tags */}
             {task.tags && task.tags.length > 0 && (

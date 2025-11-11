@@ -12,6 +12,7 @@ const NotebooksPage = lazy(() => import('@/pages/NotebooksPage/NotebooksPage').t
 const NotebookPage = lazy(() => import('@/pages/NotebookPage/NotebookPage'));
 const CreateNotePage = lazy(() => import('@/pages/CreateNotePage').then(module => ({ default: module.CreateNotePage })));
 const NotePage = lazy(() => import('@/pages/NotePage/NotePage'));
+const TaskPage = lazy(() => import('@/pages/TaskPage/TaskPage'));
 const TagsPage = lazy(() => import('@/pages/TagsPage/TagsPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
 
@@ -20,7 +21,7 @@ function pageTitle(pageName?: string) {
   return `${pageName} | ${APP_NAME}`;
 }
 
-export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'notebooks' | 'notebook' | 'createNote' | 'note' | 'tags' | 'settings';
+export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'task' | 'notebooks' | 'notebook' | 'createNote' | 'note' | 'tags' | 'settings';
 
 export interface Url {
   name: UrlName;
@@ -62,6 +63,14 @@ export const urls: Url[] = [
     urlTemplate: '/tasks',
     pageComponent: TasksPage,
     title: pageTitle('Tasks'),
+    layoutComponent: AppLayout
+  },
+  {
+    name: 'task',
+    path: (taskId?: string) => taskId ? `/tasks/${taskId}` : '/tasks/:taskId',
+    urlTemplate: '/tasks/:taskId',
+    pageComponent: TaskPage,
+    title: pageTitle('Task'),
     layoutComponent: AppLayout
   },
   {

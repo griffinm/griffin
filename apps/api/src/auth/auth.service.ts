@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '@prisma/client';
-import { JwtPayload } from '@griffin/types';
+import type { JwtPayload } from '@griffin/types';
 import { NotebookService } from '../notebooks/notebook.service';
 
 @Injectable()

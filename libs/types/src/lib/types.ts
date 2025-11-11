@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 import { Request } from '@nestjs/common';
+=======
+import { Request } from 'express';
+>>>>>>> Stashed changes
 import { User } from '@prisma/client';
 
 export interface RequestWithUser extends Request {

@@ -20,7 +20,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { AudioService } from "./audio.service";
 import { AuthGuard } from "../auth/auth.guard";
 import { UploadAudioDto, AudioResponseDto } from "./dto";
-import { RequestWithUser } from "@griffin/types";
+import type { RequestWithUser } from "@griffin/types";
 import { AudioTranscription } from "@prisma/client";
 
 @Controller()

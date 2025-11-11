@@ -17,7 +17,7 @@ import { TasksService } from './tasks.service';
 import { Task } from '@prisma/client';
 import { NewTaskDto } from './dto/new.dto';
 import { UpdateTaskDto } from './dto/update.dto';
-import { RequestWithUser } from "@griffin/types";
+import type { RequestWithUser } from "@griffin/types";
 import { FilterDto } from './dto/filter.dto';
 import { TaskEntity } from './dto/task.entity';
 import { PagedTaskList } from './dto/paged.entity';
