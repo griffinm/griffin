@@ -14,6 +14,8 @@ import { QuestionsModule } from '../questions/questions.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { SearchModule } from '../search/search.module';
 import { TagModule } from '../tag/tag.module';
+import { AudioModule } from '../audio/audio.module';
+import { LlmModule } from '../llm/llm.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { TagModule } from '../tag/tag.module';
       envFilePath: ['.env.local', '.env'],
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }), 
+    AudioModule,
     UsersModule,
     NotebookModule,
     NoteModule,
@@ -32,6 +35,7 @@ import { TagModule } from '../tag/tag.module';
     PrismaModule,
     SearchModule,
     TagModule,
+    LlmModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],

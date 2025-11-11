@@ -15,8 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@griffin/types": ["libs/types/src/index.ts"],
       "@griffin/api/*": ["apps/api/src/*"],
+      "@griffin/open-ai": ["libs/open-ai/src/index.ts"],
+      "@griffin/types": ["libs/types/src/index.ts"],
       "@ui2/*": ["apps/ui2/src/*"]
     }
   },

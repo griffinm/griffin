@@ -1,0 +1,2 @@
+export { TranscriptionModal } from './TranscriptionModal';
+

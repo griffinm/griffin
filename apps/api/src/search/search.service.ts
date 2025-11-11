@@ -201,11 +201,14 @@ export class SearchService implements OnModuleInit {
     let params:any = { id, userId };
     if (type === 'task') {
       const task = (object as Task)
-      params.dueDate = task.dueDate ? Math.floor(task.dueDate.getTime() / 1000) : null
       params.status = task.status
       params.title = task.title
       params.description = task.description
       params.priority = task.priority
+      // Only include dueDate if it exists
+      if (task.dueDate) {
+        params.dueDate = Math.floor(task.dueDate.getTime() / 1000)
+      }
     } else if (type === 'note') {
       // This is a note
       const note = (object as Note)

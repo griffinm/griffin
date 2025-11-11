@@ -50,6 +50,19 @@
           "type": "image/png"
         }
       ]
+    },
+    {
+      "name": "Voice Transcription",
+      "short_name": "Transcribe",
+      "description": "Record and transcribe audio",
+      "url": "/dashboard?transcribe=true",
+      "icons": [
+        {
+          "src": "/web-app-manifest-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
