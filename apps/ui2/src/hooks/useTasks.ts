@@ -108,82 +108,127 @@ export const useUpdateTaskStatus = () => {
     onMutate: async ({ taskId, status: newStatus }) => {
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
 
-      const previousData = {
-        byStatus: {} as Record<TaskStatus, InfiniteData<PagedTaskList, number>>,
-      };
+      const previousData = new Map<string, InfiniteData<PagedTaskList, number>>();
 
       const statuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED];
 
       let movedTask: Task | undefined;
       let oldStatus: TaskStatus | undefined;
 
+      // Find the task in any of the infinite query caches
       statuses.forEach((status) => {
-        const queryKey = ['tasks', 'byStatus', status];
-        const data = queryClient.getQueryData<InfiniteData<PagedTaskList, number>>(queryKey);
-        
-        if (data) {
-          previousData.byStatus[status] = data;
+        // Get all query keys that match the infinite query pattern for this status
+        queryClient.getQueriesData<InfiniteData<PagedTaskList, number>>({ 
+          queryKey: ['tasks', 'infinite', 'byStatus'],
+          exact: false 
+        }).forEach(([queryKey, data]) => {
+          // Check if this query is for the current status
+          const statusArray = (queryKey as any[])[3];
+          if (data && Array.isArray(statusArray) && statusArray.includes(status)) {
+            const keyString = JSON.stringify(queryKey);
+            previousData.set(keyString, data);
 
-          const pages = data.pages || [];
-          for (const page of pages) {
-            const task = page.data?.find((t: Task) => t.id === taskId);
-            if (task) {
-              movedTask = task;
-              oldStatus = status;
-              break;
+            if (!movedTask) {
+              const pages = data.pages || [];
+              for (const page of pages) {
+                const task = page.data?.find((t: Task) => t.id === taskId);
+                if (task) {
+                  movedTask = task;
+                  oldStatus = status;
+                  break;
+                }
+              }
             }
           }
-        }
+        });
       });
 
       if (movedTask && oldStatus !== undefined) {
-        const oldQueryKey = ['tasks', 'byStatus', oldStatus];
-        queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(oldQueryKey, (old) => {
-          if (!old) return old;
-          
-          return {
-            ...old,
-            pages: old.pages.map((page: PagedTaskList) => ({
-              ...page,
-              data: page.data.filter((t: Task) => t.id !== taskId),
-              totalRecords: page.totalRecords - 1,
-            })),
-          };
-        });
+        // Update the task with new status and completedAt if completing
+        const updatedTask: Task = { 
+          ...movedTask, 
+          status: newStatus,
+          completedAt: newStatus === TaskStatus.COMPLETED ? new Date() : null,
+        };
 
-        // Add task to new status column with updated status
-        const newQueryKey = ['tasks', 'byStatus', newStatus];
-        const updatedTask = { ...movedTask, status: newStatus };
-        
-        queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(newQueryKey, (old) => {
-          if (!old) {
-            // If there's no data for this status yet, create a new structure
-            return {
-              pages: [{
-                data: [updatedTask],
-                page: 1,
-                resultsPerPage: 20,
-                totalPages: 1,
-                totalRecords: 1,
-              }],
-              pageParams: [1],
-            };
+        // Update all relevant query caches
+        queryClient.getQueriesData<InfiniteData<PagedTaskList, number>>({ 
+          queryKey: ['tasks', 'infinite', 'byStatus'],
+          exact: false 
+        }).forEach(([queryKey, data]) => {
+          if (!data) return;
+
+          const statusArray = (queryKey as any[])[3] as TaskStatus[];
+          const sortBy = (queryKey as any[])[4] as SortBy;
+          const sortOrder = (queryKey as any[])[5] as SortOrder;
+
+          // Remove from old status queries
+          if (statusArray.includes(oldStatus)) {
+            queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(queryKey, {
+              ...data,
+              pages: data.pages.map((page: PagedTaskList) => ({
+                ...page,
+                data: page.data.filter((t: Task) => t.id !== taskId),
+                totalRecords: Math.max(0, page.totalRecords - 1),
+              })),
+            });
           }
-          
-          return {
-            ...old,
-            pages: old.pages.map((page: PagedTaskList, index: number) => {
-              // Add to the first page
-              if (index === 0) {
+
+          // Add to new status queries
+          if (statusArray.includes(newStatus)) {
+            queryClient.setQueryData<InfiniteData<PagedTaskList, number>>(queryKey, (old) => {
+              if (!old) {
                 return {
-                  ...page,
-                  data: [updatedTask, ...page.data],
-                  totalRecords: page.totalRecords + 1,
+                  pages: [{
+                    data: [updatedTask],
+                    page: 1,
+                    resultsPerPage: 20,
+                    totalPages: 1,
+                    totalRecords: 1,
+                  }],
+                  pageParams: [1],
                 };
               }
-              return page;
-            }),
-          };
+
+              // Insert task in sorted position within first page
+              return {
+                ...old,
+                pages: old.pages.map((page: PagedTaskList, index: number) => {
+                  if (index === 0) {
+                    const newData = [...page.data];
+                    
+                    // Find correct position based on sort order
+                    let insertIndex = 0;
+                    if (sortBy === SortBy.COMPLETED_AT && sortOrder === SortOrder.DESC) {
+                      // For completed tasks sorted by completedAt DESC, insert at beginning
+                      insertIndex = 0;
+                    } else if (sortBy === SortBy.DUE_DATE && sortOrder === SortOrder.ASC) {
+                      // For other tasks sorted by dueDate ASC, find correct position
+                      const newDueDate = updatedTask.dueDate;
+                      if (newDueDate) {
+                        insertIndex = newData.findIndex(t => {
+                          return t.dueDate && new Date(t.dueDate) > new Date(newDueDate);
+                        });
+                        if (insertIndex === -1) insertIndex = newData.length;
+                      } else {
+                        // Tasks without due date go to the end
+                        insertIndex = newData.length;
+                      }
+                    }
+
+                    newData.splice(insertIndex, 0, updatedTask);
+
+                    return {
+                      ...page,
+                      data: newData,
+                      totalRecords: page.totalRecords + 1,
+                    };
+                  }
+                  return page;
+                }),
+              };
+            });
+          }
         });
       }
 
@@ -192,8 +237,9 @@ export const useUpdateTaskStatus = () => {
     
     onError: (err, variables, context) => {
       if (context?.previousData) {
-        Object.entries(context.previousData.byStatus).forEach(([status, data]) => {
-          const queryKey = ['tasks', 'byStatus', status as TaskStatus];
+        // Restore all previous query data
+        context.previousData.forEach((data, keyString) => {
+          const queryKey = JSON.parse(keyString);
           queryClient.setQueryData(queryKey, data);
         });
       }

@@ -179,10 +179,24 @@ export class TasksService {
     // Get the existing task to check if status has changed
     const existingTask = await this.getById(id, userId);
     
+    // Prepare the data to update
+    const updateData: any = { ...task };
+    
+    // Automatically set/unset completedAt based on status changes
+    if (task.status && task.status !== existingTask.status) {
+      if (task.status === 'COMPLETED' && !updateData.completedAt) {
+        // Task is being marked as completed, set completedAt to now
+        updateData.completedAt = new Date();
+      } else if (task.status !== 'COMPLETED' && existingTask.status === 'COMPLETED') {
+        // Task is being unmarked from completed, clear completedAt
+        updateData.completedAt = null;
+      }
+    }
+    
     // Update the task
     const updatedTask = await this.prisma.task.update({
       where: { id, userId },
-      data: task,
+      data: updateData,
     });
     
     // If status has changed, create a status history entry
@@ -236,7 +250,15 @@ export class TasksService {
       const order = (sortOrder || 'asc') as 'asc' | 'desc';
       const primarySort = { [sortBy]: { sort: order, nulls: 'last' } };
       
-      // Always include priority and createdAt as secondary sorts
+      // For completed status with completedAt sort, use createdAt desc as secondary
+      if (sortBy === 'completedAt' && (status === 'COMPLETED' || status?.includes('COMPLETED'))) {
+        return [
+          primarySort as Prisma.TaskOrderByWithRelationInput,
+          { createdAt: 'desc' },
+        ];
+      }
+      
+      // Always include priority and createdAt as secondary sorts for other cases
       return [
         primarySort as Prisma.TaskOrderByWithRelationInput,
         { priority: 'desc' },
@@ -249,8 +271,7 @@ export class TasksService {
     if (status === 'COMPLETED') {
       return [
         { completedAt: { sort: 'desc', nulls: 'last' } },
-        { priority: 'desc' },
-        { createdAt: 'asc' },
+        { createdAt: 'desc' },
       ];
     }
     
