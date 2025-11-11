@@ -1,21 +1,29 @@
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
-import { Stack, Text, Group, Pill } from '@mantine/core';
+import { Stack, Text, Group, Pill, Button } from '@mantine/core';
 import { format } from 'date-fns';
 import { HtmlPreview } from '@/components/HtmlPreview';
 import { getTagColors } from '@/utils/tagColors';
 import { StatusHistory } from './StatusHistory';
 import { TaskStatusBadge } from './TaskStatusBadge';
 import { TaskPriorityBadge } from './TaskPriorityBadge';
-import { updateTask } from '@/api/tasksApi';
+import { updateTask, enhanceTaskWithAI, EnhanceTaskResponse } from '@/api/tasksApi';
 import { notifications } from '@mantine/notifications';
 import { useQueryClient } from '@tanstack/react-query';
+import { IconSparkles } from '@tabler/icons-react';
+import { useState } from 'react';
+import { TaskEnhancementModal } from './TaskEnhancementModal';
 
 interface TaskViewModeProps {
   task: Task;
+  onSwitchToEdit?: (enhancedDescription?: string) => void;
 }
 
-export function TaskViewMode({ task }: TaskViewModeProps) {
+export function TaskViewMode({ task, onSwitchToEdit }: TaskViewModeProps) {
   const queryClient = useQueryClient();
+  const [enhancementModalOpened, setEnhancementModalOpened] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancementError, setEnhancementError] = useState<string | null>(null);
+  const [enhancementData, setEnhancementData] = useState<EnhanceTaskResponse | null>(null);
 
   const handleStatusChange = async (newStatus: TaskStatus) => {
     try {
@@ -75,6 +83,29 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
     }
   };
 
+  const handleEnhanceWithAI = async () => {
+    setEnhancementModalOpened(true);
+    setIsEnhancing(true);
+    setEnhancementError(null);
+    setEnhancementData(null);
+
+    try {
+      const result = await enhanceTaskWithAI(task.id);
+      setEnhancementData(result);
+    } catch (error) {
+      console.error('Error enhancing task:', error);
+      setEnhancementError('Failed to enhance task description. Please try again.');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleApplyEnhancement = (enhancedDescription: string) => {
+    if (onSwitchToEdit) {
+      onSwitchToEdit(enhancedDescription);
+    }
+  };
+
   return (
     <Stack gap="lg">
       {/* Title */}
@@ -131,9 +162,19 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
       )}
 
       {/* Description */}
-      {task.description && (
-        <div>
-          <Text size="xs" c="dimmed" mb={8}>Description</Text>
+      <div>
+        <Group justify="space-between" mb={8}>
+          <Text size="xs" c="dimmed">Description</Text>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconSparkles size={14} />}
+            onClick={handleEnhanceWithAI}
+          >
+            Enhance with AI
+          </Button>
+        </Group>
+        {task.description ? (
           <div style={{ 
             border: '1px solid #e9ecef',
             borderRadius: '8px',
@@ -142,8 +183,17 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
           }}>
             <HtmlPreview html={task.description} />
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{ 
+            border: '1px solid #e9ecef',
+            borderRadius: '8px',
+            padding: '12px',
+            minHeight: '100px',
+          }}>
+            <Text size="sm" c="dimmed" fs="italic">No description provided</Text>
+          </div>
+        )}
+      </div>
 
       {/* Status History */}
       {task.statusHistory && task.statusHistory.length > 0 && (
@@ -175,6 +225,16 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
           </div>
         )}
       </Group>
+
+      <TaskEnhancementModal
+        opened={enhancementModalOpened}
+        onClose={() => setEnhancementModalOpened(false)}
+        onApply={handleApplyEnhancement}
+        isLoading={isEnhancing}
+        error={enhancementError}
+        enhancementData={enhancementData}
+        originalDescription={task.description}
+      />
     </Stack>
   );
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Task } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
@@ -7,6 +7,7 @@ import { NewTaskDto } from './dto/new.dto';
 import { FilterDto } from './dto/filter.dto';
 import { TaskEntity } from './dto/task.entity';
 import { SearchService } from '../search/search.service';
+import { LlmService } from '../llm/llm.service';
 
 @Injectable()
 export class TasksService {
@@ -15,6 +16,8 @@ export class TasksService {
   constructor(
     private prisma: PrismaService,
     private searchService: SearchService,
+    @Inject(forwardRef(() => LlmService))
+    private llmService: LlmService,
   ) {}
 
   /**
@@ -242,6 +245,17 @@ export class TasksService {
     })
     
     return createdTask;
+  }
+
+  async enhanceTask(id: string, userId: string): Promise<{
+    enhancedDescription: string;
+    resources: Array<{ title: string; url: string; snippet: string }>;
+  }> {
+    // Get the task and verify ownership
+    const task = await this.getById(id, userId);
+
+    // Call LLM service to enhance the task
+    return this.llmService.enhanceTaskDescription(task);
   }
 
   private ordering(sortBy?: string, sortOrder?: string, status?: string): Prisma.TaskOrderByWithRelationInput[] {

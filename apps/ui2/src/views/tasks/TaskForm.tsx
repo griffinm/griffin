@@ -1,16 +1,18 @@
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 import { Tag } from "@/types/tag";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextInput, Button, Stack, Textarea } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { PrioritySelect } from "./PrioritySelect";
 import { StatusSelect } from "./StatusSelect";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconCheck, IconX, IconSparkles } from "@tabler/icons-react";
 import '@mantine/dates/styles.css';
 import { getDatePresets } from "./utils";
 import { Editor } from "@/components/Editor";
 import { StatusHistory } from "@/components/tasks/StatusHistory";
 import { TagManager } from "@/components/TagManager";
+import { enhanceTaskWithAI, EnhanceTaskResponse } from "@/api/tasksApi";
+import { TaskEnhancementModal } from "@/components/tasks/TaskEnhancementModal";
 
 export interface TaskFormData {
   title: string;
@@ -25,10 +27,12 @@ export function TaskForm({
   task,
   onSubmit,
   onCancel,
+  enhancedDescription,
 }: {
   task?: Task,
   onSubmit?: (_data: TaskFormData) => void,
   onCancel?: () => void,
+  enhancedDescription?: string,
 }) {
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
@@ -36,6 +40,18 @@ export function TaskForm({
   const [priority, setPriority] = useState(task?.priority || TaskPriority.MEDIUM);
   const [status, setStatus] = useState(task?.status || TaskStatus.TODO);
   const [tags, setTags] = useState<Tag[]>(task?.tags || []);
+  const [enhancementModalOpened, setEnhancementModalOpened] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancementError, setEnhancementError] = useState<string | null>(null);
+  const [enhancementData, setEnhancementData] = useState<EnhanceTaskResponse | null>(null);
+  const [originalDescription, setOriginalDescription] = useState(task?.description || '');
+
+  // Apply enhanced description when provided
+  useEffect(() => {
+    if (enhancedDescription) {
+      setDescription(enhancedDescription);
+    }
+  }, [enhancedDescription]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,6 +65,30 @@ export function TaskForm({
         tags,
       });
     }
+  };
+
+  const handleEnhanceWithAI = async () => {
+    if (!task?.id) return;
+
+    setOriginalDescription(description);
+    setEnhancementModalOpened(true);
+    setIsEnhancing(true);
+    setEnhancementError(null);
+    setEnhancementData(null);
+
+    try {
+      const result = await enhanceTaskWithAI(task.id);
+      setEnhancementData(result);
+    } catch (error) {
+      console.error('Error enhancing task:', error);
+      setEnhancementError('Failed to enhance task description. Please try again.');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleApplyEnhancement = (enhancedDesc: string) => {
+    setDescription(enhancedDesc);
   };
 
   return (
@@ -69,6 +109,19 @@ export function TaskForm({
             maxRows={3}
           />
           <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label className="text-sm font-medium">Description</label>
+              {task?.id && (
+                <Button
+                  size="xs"
+                  variant="light"
+                  leftSection={<IconSparkles size={14} />}
+                  onClick={handleEnhanceWithAI}
+                >
+                  Enhance with AI
+                </Button>
+              )}
+            </div>
             <Editor
               value={description}
               onChange={setDescription}
@@ -124,6 +177,16 @@ export function TaskForm({
           Save
         </Button>
       </div>
+
+      <TaskEnhancementModal
+        opened={enhancementModalOpened}
+        onClose={() => setEnhancementModalOpened(false)}
+        onApply={handleApplyEnhancement}
+        isLoading={isEnhancing}
+        error={enhancementError}
+        enhancementData={enhancementData}
+        originalDescription={originalDescription}
+      />
     </form>
   );
 }

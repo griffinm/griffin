@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
@@ -17,6 +17,7 @@ export class LlmService {
 
   constructor(
     private prisma: PrismaService,
+    @Inject(forwardRef(() => TasksService))
     private tasksService: TasksService,
     private configService: ConfigService,
   ) {
@@ -525,6 +526,95 @@ export class LlmService {
     });
 
     return [createTaskTool, searchTasksTool, updateTaskTool, getTaskTool, searchInternetTool];
+  }
+
+  /**
+   * Enhance a task description with AI
+   */
+  async enhanceTaskDescription(task: any): Promise<{
+    enhancedDescription: string;
+    resources: Array<{ title: string; url: string; snippet: string }>;
+  }> {
+    this.logger.debug(`Enhancing task: ${task.title}`);
+
+    // Initialize Tavily search
+    const tavilySearch = new TavilySearch({
+      maxResults: 5,
+      tavilyApiKey: this.tavilyApiKey,
+      includeRawContent: false,
+    });
+
+    // Search for relevant resources based on task title and description
+    const searchQuery = task.description 
+      ? `${task.title} ${task.description.replace(/<[^>]*>/g, '')}`.substring(0, 200)
+      : task.title;
+    
+    this.logger.debug(`Searching for resources with query: ${searchQuery}`);
+    
+    let resources: Array<{ title: string; url: string; snippet: string }> = [];
+    try {
+      const searchResults = await tavilySearch.invoke(searchQuery);
+      
+      // Parse Tavily results - they come as a string with JSON
+      const resultsArray = typeof searchResults === 'string' 
+        ? JSON.parse(searchResults) 
+        : searchResults;
+      
+      if (Array.isArray(resultsArray)) {
+        resources = resultsArray.slice(0, 5).map((result: any) => ({
+          title: result.title || 'Resource',
+          url: result.url || '',
+          snippet: result.content || result.snippet || '',
+        }));
+      }
+    } catch (error) {
+      this.logger.error(`Error searching for resources: ${error.message}`);
+      // Continue without resources if search fails
+    }
+
+    // Create a prompt for OpenAI to enhance the description
+    const systemPrompt = `You are a helpful AI assistant that enhances task descriptions. 
+Your goal is to:
+1. Expand the task description with helpful context and actionable details
+2. Break down complex tasks into clearer steps or considerations
+3. Add relevant information that would help someone complete this task
+4. Keep the enhanced description concise but informative (2-4 paragraphs max)
+5. Format the output as HTML suitable for display (use <p>, <strong>, <ul>, <li> tags as needed)
+6. If resources are provided, naturally reference them in the enhanced description with HTML links
+
+Do NOT:
+- Change the core meaning or objective of the task
+- Add speculative or unverified information
+- Make the description unnecessarily long`;
+
+    const resourceContext = resources.length > 0
+      ? `\n\nHere are some relevant resources found on the web:\n${resources.map((r, i) => `${i + 1}. ${r.title} - ${r.url}\n   ${r.snippet}`).join('\n')}`
+      : '';
+
+    const userPrompt = `Task Title: ${task.title}
+    
+Current Description: ${task.description || 'No description provided'}
+
+Priority: ${task.priority}
+Status: ${task.status}${resourceContext}
+
+Please provide an enhanced description for this task that adds helpful context and actionable information. Include links to the provided resources where relevant.`;
+
+    const messages = [
+      new SystemMessage(systemPrompt),
+      new HumanMessage(userPrompt),
+    ];
+
+    // Get AI response
+    const aiResponse = await this.chatModel.invoke(messages);
+    const enhancedDescription = aiResponse.content.toString();
+
+    this.logger.debug(`Enhanced description: ${enhancedDescription.substring(0, 100)}...`);
+
+    return {
+      enhancedDescription,
+      resources,
+    };
   }
 }
 

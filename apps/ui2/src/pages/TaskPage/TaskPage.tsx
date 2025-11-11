@@ -18,6 +18,7 @@ export default function TaskPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [enhancedDescription, setEnhancedDescription] = useState<string | undefined>();
 
   const handleSubmit = async (formData: TaskFormData) => {
     if (!taskId || !task) return;
@@ -67,6 +68,7 @@ export default function TaskPage() {
       await queryClient.invalidateQueries({ queryKey: ['task', taskId] });
 
       setIsEditing(false);
+      setEnhancedDescription(undefined);
     } catch (error) {
       console.error('Error updating task:', error);
       notifications.show({
@@ -75,6 +77,13 @@ export default function TaskPage() {
         color: 'red',
       });
     }
+  };
+
+  const handleSwitchToEdit = (enhancedDesc?: string) => {
+    if (enhancedDesc) {
+      setEnhancedDescription(enhancedDesc);
+    }
+    setIsEditing(true);
   };
 
   const handleDelete = async () => {
@@ -175,10 +184,17 @@ export default function TaskPage() {
           <TaskForm
             task={task}
             onSubmit={handleSubmit}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => {
+              setIsEditing(false);
+              setEnhancedDescription(undefined);
+            }}
+            enhancedDescription={enhancedDescription}
           />
         ) : (
-          <TaskViewMode task={task} />
+          <TaskViewMode 
+            task={task} 
+            onSwitchToEdit={handleSwitchToEdit}
+          />
         )}
 
       <ConfirmationModal

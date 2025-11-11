@@ -60,3 +60,17 @@ export const removeTagFromTask = async (taskId: string, tagId: string): Promise<
 export const deleteTask = async (id: string): Promise<void> => {
   await baseClient.delete(`/tasks/${id}`);
 };
+
+export interface EnhanceTaskResponse {
+  enhancedDescription: string;
+  resources: Array<{
+    title: string;
+    url: string;
+    snippet: string;
+  }>;
+}
+
+export const enhanceTaskWithAI = async (id: string): Promise<EnhanceTaskResponse> => {
+  const response = await baseClient.post<EnhanceTaskResponse>(`/tasks/${id}/enhance`);
+  return response.data;
+};

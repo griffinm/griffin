@@ -6,6 +6,7 @@ import { UsersModule } from "../users/users.module";
 import { PrismaModule } from "../prisma/prisma.module";
 import { SearchModule } from "../search/search.module";
 import { TagModule } from "../tag/tag.module";
+import { LlmModule } from "../llm/llm.module";
 
 @Module({
   controllers: [TasksController],
@@ -18,7 +19,8 @@ import { TagModule } from "../tag/tag.module";
     SearchModule,
     TagModule,
     forwardRef(() => AuthModule),
-    forwardRef(() => UsersModule)
+    forwardRef(() => UsersModule),
+    forwardRef(() => LlmModule)
   ],
 })
 export class TasksModule {}

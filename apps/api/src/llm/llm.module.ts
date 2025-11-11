@@ -9,7 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     PrismaModule,
-    TasksModule,
+    forwardRef(() => TasksModule),
     forwardRef(() => AuthModule),
     ConfigModule,
   ],

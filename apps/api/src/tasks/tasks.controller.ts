@@ -92,6 +92,14 @@ export class TasksController {
     return this.tasksService.update(id, request.user.id, task);
   }
 
+  @Post('tasks/:id/enhance')
+  async enhance(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<{ enhancedDescription: string; resources: Array<{ title: string; url: string; snippet: string }> }> {
+    return this.tasksService.enhanceTask(id, request.user.id);
+  }
+
   @Get('tasks/:id/tags')
   async getTags(
     @Req() request: RequestWithUser,
