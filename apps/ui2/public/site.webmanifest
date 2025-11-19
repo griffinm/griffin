@@ -1,7 +1,7 @@
 {
-  "name": "Griffin",
-  "short_name": "Griffin",
-  "description": "Griffin application",
+  "name": "Notes",
+  "short_name": "notes",
+  "description": "Notes application",
   "start_url": "/",
   "scope": "/",
   "id": "/",

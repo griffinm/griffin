@@ -13,7 +13,7 @@ import { Tag } from '@/types/tag';
 import { addTagToNote, removeTagFromNote } from '@/api/notesApi';
 import { useQueryClient } from '@tanstack/react-query';
 
-const SAVE_TIMEOUT = 250;
+const SAVE_TIMEOUT = 500;
 
 export function NoteView() {
   const { noteId } = useParams<{ noteId: string }>();
@@ -22,7 +22,6 @@ export function NoteView() {
   const { data: note, isLoading, error } = useNote(noteId || '');
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
-  const [isSaving, setIsSaving] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,14 +34,8 @@ export function NoteView() {
   const handleSave = useCallback((content: string) => {
     if (!noteId || !note) return;
     
-    setIsSaving(true);
     updateNoteMutation.mutate(
-      { id: noteId, note: { title: note.title, content } },
-      {
-        onSettled: () => {
-          setIsSaving(false);
-        },
-      }
+      { id: noteId, note: { title: note.title, content } }
     );
   }, [noteId, note, updateNoteMutation]);
 
@@ -82,7 +75,6 @@ export function NoteView() {
     }
 
     try {
-      setIsSaving(true);
       await updateNoteMutation.mutateAsync({
         id: noteId,
         note: {
@@ -94,8 +86,6 @@ export function NoteView() {
     } catch (error) {
       console.error('Error updating title:', error);
       setTitleValue(note.title);
-    } finally {
-      setIsSaving(false);
     }
   }, [titleValue, note, noteId, updateNoteMutation]);
 
@@ -242,21 +232,6 @@ export function NoteView() {
         overflowX: 'hidden',
       }}
     >
-      {isSaving && (
-        <div style={{ 
-          position: 'fixed', 
-          top: 60, 
-          right: 30, 
-          padding: '4px 8px', 
-          background: '#f0f0f0', 
-          borderRadius: 4,
-          fontSize: 12,
-          zIndex: 1000
-        }}>
-          Saving...
-        </div>
-      )}
-      
       {/* Editable Title */}
       <div 
         style={{ 

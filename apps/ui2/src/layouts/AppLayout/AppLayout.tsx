@@ -40,6 +40,7 @@ export const AppLayout = () => {
   const [transcriptionModalOpened, setTranscriptionModalOpened] = useState(false)
   const [chatDrawerOpened, setChatDrawerOpened] = useState(false)
   const [activeChatConversationId, setActiveChatConversationId] = useState<string | null>(null)
+  const [isChatPinned, setIsChatPinned] = useState(false)
   const { user, loading, logout } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
@@ -283,6 +284,18 @@ export const AppLayout = () => {
         >
           <Outlet />
         </div>
+
+        {/* Pinned chat sidebar */}
+        {isChatPinned && activeChatConversationId && (
+          <ChatDrawer
+            opened={true}
+            onClose={closeChatDrawer}
+            conversationId={activeChatConversationId}
+            onPinChange={setIsChatPinned}
+            renderAsSidebar={true}
+            onConversationChange={openChatDrawer}
+          />
+        )}
       </div>
 
       <TranscriptionModal
@@ -291,11 +304,16 @@ export const AppLayout = () => {
         onOpenChat={openChatDrawer}
       />
 
-      <ChatDrawer
-        opened={chatDrawerOpened}
-        onClose={closeChatDrawer}
-        conversationId={activeChatConversationId}
-      />
+      {/* Regular chat drawer (when not pinned) */}
+      {!isChatPinned && (
+        <ChatDrawer
+          opened={chatDrawerOpened}
+          onClose={closeChatDrawer}
+          conversationId={activeChatConversationId}
+          onPinChange={setIsChatPinned}
+          onConversationChange={openChatDrawer}
+        />
+      )}
     </div>
   )
 }
