@@ -5,7 +5,7 @@ import { UpdateDto } from "./dto/update.dto";
 import { SearchService } from "../search/search.service";
 import { associateTasks } from "./associateTasks";
 import { associateQuestions } from "./associateQuestions";
-import { Note } from "@prisma/client";
+import { Note, Tag } from "@prisma/client";
 
 @Injectable()
 export class NoteService {
@@ -16,10 +16,7 @@ export class NoteService {
     private searchService: SearchService,
   ) {}
 
-  /**
-   * Fetch tags for a list of notes
-   */
-  private async addTagsToNotes(notes: any[]): Promise<any[]> {
+  private async addTagsToNotes(notes: Note[]): Promise<Note[]> {
     if (notes.length === 0) return notes;
 
     const noteIds = notes.map(note => note.id);
@@ -44,7 +41,7 @@ export class NoteService {
         acc[ot.objectId].push(ot.tag);
       }
       return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, Tag[]>);
 
     // Add tags to each note
     return notes.map(note => ({
@@ -53,10 +50,6 @@ export class NoteService {
     }));
   }
 
-  /**
-   * Truncate HTML content safely for preview purposes
-   * Strips HTML tags and truncates to specified length
-   */
   private truncateContentForPreview(content: string | null, maxLength = 300): string | null {
     if (!content) return content;
     
@@ -140,7 +133,7 @@ export class NoteService {
     }));
 
     // Add tags
-    return this.addTagsToNotes(notesWithTruncated);
+    return this.addTagsToNotes(notesWithTruncated as Note[]);
   }
 
   async findOneForUser(id: string, userId: string) {
@@ -162,7 +155,6 @@ export class NoteService {
 
   async update(id: string, data: UpdateDto, userId: string) {
     this.logger.debug(`Updating note ${id.substring(0, 7)} for user ${userId.substring(0, 7)}`);
-    this.logger.debug(`Update data: ${JSON.stringify(data)}`);
 
     // First verify the note belongs to the user
     const existingNote = await this.prisma.note.findFirst({

@@ -179,7 +179,21 @@ export class SearchService implements OnModuleInit {
       });
     }
 
-    await this.createCollections();
+    // Remove all empty notes
+    this.logger.debug(`Removing all empty notes`);
+    const emptyNotes = await this.prisma.note.findMany({
+      where: {
+        content: { in: ['', '<p></p>'] },
+      },
+    });
+    for (const note of emptyNotes) {
+      await this.removeObject({
+        type: 'note',
+        id: note.id,
+      });
+    }
+    this.logger.debug(`Removed ${emptyNotes.length} empty notes`);
+
     return true;
   }
 
@@ -198,7 +212,7 @@ export class SearchService implements OnModuleInit {
 
     const collectionName = collectionNames[type];
 
-    let params:any = { id, userId };
+    const params: any = { id, userId };
     if (type === 'task') {
       const task = (object as Task)
       params.status = task.status
