@@ -212,6 +212,14 @@ export class SearchService implements OnModuleInit {
 
     const collectionName = collectionNames[type];
 
+    if(type === 'note') {
+      const note = (object as Note)
+      if(note.content === '' || note.content === '<p></p>') {
+        this.logger.debug(`Skipping empty note ${id.substring(0, 7)}`);
+        return true;
+      }
+    }
+
     const params: any = { id, userId };
     if (type === 'task') {
       const task = (object as Task)
