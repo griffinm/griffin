@@ -233,8 +233,16 @@ export class SearchService implements OnModuleInit {
     id: string;
   }): Promise<boolean> {
     this.logger.debug(`Removing ${type} ${id.substring(0, 7)} from search index`);
-    const collectionName = collectionNames[type];
-    this.typesenseClient.collections(collectionName).documents(id).delete();
+
+    try {
+      const collectionName = collectionNames[type];
+      this.typesenseClient.collections(collectionName).documents(id).delete();
+      this.logger.debug(`Removed ${type} ${id.substring(0, 7)} from search index`);
+    } catch (error) {
+      this.logger.error(`Error removing ${type} ${id.substring(0, 7)} from search index: ${error}`);
+      return false;
+    }
+
     return true;
   }
 
