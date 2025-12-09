@@ -238,7 +238,7 @@ export function NoteView() {
           position: isScrolled ? 'sticky' : 'relative',
           top: isScrolled ? 0 : 'auto',
           background: 'white',
-          zIndex: 100,
+          zIndex: 50,
           padding: isScrolled ? '8px 20px' : '16px 20px 0',
           marginBottom: isScrolled ? 0 : '12px',
           borderBottom: isScrolled ? '1px solid #e0e0e0' : 'none',

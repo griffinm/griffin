@@ -109,7 +109,7 @@ export function Search() {
           return (
             <div
               key={`task-${result.id}`}
-              className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-50"
+              className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-index-[1000]"
               onClick={() => {
                 setSearchTerm('');
                 setSearchResults(undefined);
@@ -134,7 +134,7 @@ export function Search() {
   };
 
   return (
-    <div ref={searchContainerRef} className="relative w-full max-w-md" style={{ flexShrink: 1 }}>
+    <div ref={searchContainerRef} className="relative w-full max-w-md z-index-[1000]" style={{ flexShrink: 1 }}>
       <TextInput
         placeholder="Search notes and tasks..."
         size="sm"
@@ -148,7 +148,7 @@ export function Search() {
         }}
       />
       {searchTerm && searchResults && (
-        <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-index-[1000] max-h-96 overflow-y-auto">
           {renderResults()}
         </div>
       )}
