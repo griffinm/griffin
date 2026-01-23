@@ -62,4 +62,20 @@ export class NotebookService {
       },
     });
   }
+
+  async getDescendantNotebookIds(notebookId: string, userId: string): Promise<string[]> {
+    const allNotebooks = await this.getNotebooksForUser(userId);
+    const result: string[] = [notebookId];
+
+    const collectDescendants = (parentId: string) => {
+      const children = allNotebooks.filter(nb => nb.parentId === parentId);
+      for (const child of children) {
+        result.push(child.id);
+        collectDescendants(child.id);
+      }
+    };
+
+    collectDescendants(notebookId);
+    return result;
+  }
 }

@@ -18,6 +18,10 @@ export const noteSchema: CollectionCreateSchema = {
     {
       name: 'userId',
       type: 'string',
+    },
+    {
+      name: 'notebookId',
+      type: 'string',
     }
   ],
 };

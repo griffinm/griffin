@@ -1,9 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit, Inject, forwardRef } from "@nestjs/common";
 import Typesense from "typesense";
 import { noteSchema, taskSchema, tagSchema } from "./schemas";
 import { Note, Task, Tag } from "@prisma/client";
 import { SearchResultsDto, NoteResult, TaskResult } from "./dto/search-results.dto";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotebookService } from "../notebooks/notebook.service";
 
 const collectionNames = {
   note: 'notes',
@@ -16,7 +17,11 @@ export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private typesenseClient;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => NotebookService))
+    private notebookService: NotebookService,
+  ) {}
 
   async onModuleInit() {
     this.logger.log('Initializing search service');
@@ -60,20 +65,28 @@ export class SearchService implements OnModuleInit {
     }
   }
   
-  async search(query: string, userId: string, collection: 'notes' | 'tasks' | 'all' = 'notes'): Promise<SearchResultsDto> {
+  async search(query: string, userId: string, collection: 'notes' | 'tasks' | 'all' = 'notes', notebookId?: string): Promise<SearchResultsDto> {
     const searchResults = new SearchResultsDto();
     searchResults.query = query;
     searchResults.hits = 0;
 
     // Search notes if requested
     if (collection === 'notes' || collection === 'all') {
+      let filterBy = `userId:${userId}`;
+
+      // If notebookId is provided, filter by notebook and its descendants
+      if (notebookId) {
+        const notebookIds = await this.notebookService.getDescendantNotebookIds(notebookId, userId);
+        filterBy += ` && notebookId:=[${notebookIds.join(',')}]`;
+      }
+
       const noteSearchParams = {
         q: query,
         query_by: 'title, content',
         num_typos: 4,
         typo_tokens_threshold: 1,
         per_page: 10,
-        filter_by: `userId:${userId}`,
+        filter_by: filterBy,
         highlight_affix_num_tokens: 4,
       };
       this.logger.debug(`Searching notes: ${JSON.stringify(noteSearchParams)}`);
@@ -236,6 +249,7 @@ export class SearchService implements OnModuleInit {
       const note = (object as Note)
       params.title = note.title
       params.content = note.content
+      params.notebookId = note.notebookId
     } else if (type === 'tag') {
       // This is a tag
       const tag = (object as Tag)
@@ -284,9 +298,9 @@ export class SearchService implements OnModuleInit {
         .replace(/<br>/gm, ' ')
         .replace(/<[^>]*>?/gm, '')
         .replace(/&nbsp;/gm, ' '),
-
       id: note.id,
       userId: userId,
+      notebookId: note.notebookId,
     });
   }
 }
