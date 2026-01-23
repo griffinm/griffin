@@ -10,7 +10,7 @@ import {
   ScrollArea,
 } from '@mantine/core';
 import { IconRobot, IconPlus } from '@tabler/icons-react';
-import { getConversation, sendMessage, listConversations } from '@/api/conversationApi';
+import { getConversation, sendMessage, listConversations, deleteConversation } from '@/api/conversationApi';
 import { ConversationItem, ConversationItemRole, ConversationWithItems } from '@/types/conversation';
 import { notifications } from '@mantine/notifications';
 import { ChatMessage } from './ChatMessage';
@@ -201,6 +201,33 @@ export const ChatDrawer = ({
     setHistoryDrawerOpened(false);
   };
 
+  const handleDeleteConversation = async (deletedConversationId: string) => {
+    try {
+      await deleteConversation(deletedConversationId);
+
+      // Remove from local state
+      setConversations((prev) => prev.filter((c) => c.id !== deletedConversationId));
+
+      // If we deleted the active conversation, clear it
+      if (deletedConversationId === conversationId && onConversationChange) {
+        onConversationChange('');
+      }
+
+      notifications.show({
+        title: 'Deleted',
+        message: 'Conversation deleted',
+        color: 'teal',
+      });
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete conversation',
+        color: 'red',
+      });
+    }
+  };
+
   // Render history list (when no conversation selected)
   const renderHistoryContent = () => (
     <Stack gap={0} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -221,6 +248,7 @@ export const ChatDrawer = ({
           conversations={conversations}
           isLoading={isLoadingHistory}
           onSelectConversation={handleSelectConversation}
+          onDeleteConversation={handleDeleteConversation}
           emptyMessage="No conversations yet"
           emptySubMessage="Start a new chat to begin"
         />
@@ -345,6 +373,7 @@ export const ChatDrawer = ({
                 isLoading={isLoadingHistory}
                 activeConversationId={conversationId}
                 onSelectConversation={handleSelectConversation}
+                onDeleteConversation={handleDeleteConversation}
               />
             </Box>
           </ScrollArea>
@@ -406,6 +435,7 @@ export const ChatDrawer = ({
               isLoading={isLoadingHistory}
               activeConversationId={conversationId}
               onSelectConversation={handleSelectConversation}
+              onDeleteConversation={handleDeleteConversation}
             />
           </Box>
         </ScrollArea>

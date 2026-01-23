@@ -24,6 +24,7 @@ export interface Conversation {
   id: string;
   userId: string;
   title?: string | null;
+  deletedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

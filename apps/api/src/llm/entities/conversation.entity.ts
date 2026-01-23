@@ -1,5 +1,4 @@
 import { Conversation } from '@prisma/client';
-import { Exclude } from 'class-transformer';
 
 export class ConversationEntity implements Conversation {
   id: string;
@@ -7,8 +6,6 @@ export class ConversationEntity implements Conversation {
   title: string | null;
   createdAt: Date;
   updatedAt: Date;
-  
-  @Exclude()
   deletedAt: Date | null;
 
   constructor(partial: Partial<ConversationEntity>) {

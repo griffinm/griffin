@@ -100,7 +100,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       where: {
         id: conversationId,
         userId,
-        deletedAt: null,
       },
       include: {
         conversationItems: {

@@ -1,11 +1,13 @@
-import { Text, Box, Stack, Loader } from '@mantine/core';
+import { Text, Box, Stack, Loader, Menu, ActionIcon, Group } from '@mantine/core';
+import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { ConversationWithItems } from '@/types/conversation';
 
 interface ConversationListProps {
   conversations: ConversationWithItems[];
   isLoading: boolean;
   activeConversationId?: string | null;
-  onSelectConversation: (conversationId: string) => void;
+  onSelectConversation: (_conversationId: string) => void;
+  onDeleteConversation?: (_conversationId: string) => void;
   emptyMessage?: string;
   emptySubMessage?: string;
 }
@@ -15,6 +17,7 @@ export const ConversationList = ({
   isLoading,
   activeConversationId,
   onSelectConversation,
+  onDeleteConversation,
   emptyMessage = 'No conversations yet',
   emptySubMessage,
 }: ConversationListProps) => {
@@ -73,9 +76,36 @@ export const ConversationList = ({
               }
             }}
           >
-            <Text fw={isActive ? 600 : 500} size="sm" mb={4}>
-              {conversation.title || 'Untitled Chat'}
-            </Text>
+            <Group justify="space-between" align="flex-start" mb={4}>
+              <Text fw={isActive ? 600 : 500} size="sm" style={{ flex: 1 }}>
+                {conversation.title || 'Untitled Chat'}
+              </Text>
+              {onDeleteConversation && (
+                <Menu position="bottom-end" shadow="md">
+                  <Menu.Target>
+                    <ActionIcon
+                      variant="subtle"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <IconDotsVertical size={16} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconTrash size={14} />}
+                      color="red"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteConversation(conversation.id);
+                      }}
+                    >
+                      Delete
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              )}
+            </Group>
             <Text
               size="xs"
               c="dimmed"
