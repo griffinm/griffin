@@ -87,7 +87,7 @@ export const AppLayout = () => {
     }
   };
 
-  const openChatDrawer = (conversationId: string) => {
+  const openChatDrawer = (conversationId: string | null = null) => {
     setActiveChatConversationId(conversationId);
     setChatDrawerOpened(true);
   };
@@ -98,7 +98,12 @@ export const AppLayout = () => {
     setTimeout(() => setActiveChatConversationId(null), 300);
   };
 
-  const handleNewChat = async () => {
+  const handleOpenChat = () => {
+    // Open drawer without conversation to show history
+    openChatDrawer(null);
+  };
+
+  const handleCreateNewChat = async () => {
     try {
       // Create a new conversation
       const conversation = await createConversation({
@@ -152,12 +157,12 @@ export const AppLayout = () => {
             <Search />
           </div>
           <Group gap="xs" style={{ flexShrink: 0 }}>
-            <Tooltip label="New Chat">
+            <Tooltip label="Chat">
               <ActionIcon
                 variant="light"
                 color="teal"
                 size={isMobile ? "md" : "lg"}
-                onClick={handleNewChat}
+                onClick={handleOpenChat}
               >
                 <IconMessagePlus size={isMobile ? 18 : 20} />
               </ActionIcon>
@@ -288,7 +293,7 @@ export const AppLayout = () => {
         </div>
 
         {/* Pinned chat sidebar */}
-        {isChatPinned && activeChatConversationId && (
+        {isChatPinned && (
           <ChatDrawer
             opened={true}
             onClose={closeChatDrawer}
@@ -296,6 +301,7 @@ export const AppLayout = () => {
             onPinChange={setIsChatPinned}
             renderAsSidebar={true}
             onConversationChange={openChatDrawer}
+            onNewChat={handleCreateNewChat}
           />
         )}
       </div>
@@ -314,6 +320,7 @@ export const AppLayout = () => {
           conversationId={activeChatConversationId}
           onPinChange={setIsChatPinned}
           onConversationChange={openChatDrawer}
+          onNewChat={handleCreateNewChat}
         />
       )}
     </div>

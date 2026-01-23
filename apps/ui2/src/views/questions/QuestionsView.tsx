@@ -6,7 +6,6 @@ import {
   Text,
   Skeleton,
 } from '@mantine/core';
-import { IconQuestionMark } from '@tabler/icons-react';
 import { useQuestions } from '@/hooks/useQuestions';
 import { Question } from '@/types/question';
 import { QuestionCard } from './QuestionCard';
