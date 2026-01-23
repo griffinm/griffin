@@ -32,6 +32,16 @@ export class QuestionEntity {
   noteId: string;
 
   @IsString()
+  @IsOptional()
+  @Expose()
+  noteTitle?: string;
+
+  @IsString()
+  @IsOptional()
+  @Expose()
+  notebookName?: string;
+
+  @IsString()
   @IsNotEmpty()
   @IsOptional()
   @Expose()

@@ -4,7 +4,6 @@ import {
   Title,
   Text,
   Stack,
-  Loader,
   Center,
   Container,
   Group,
@@ -23,6 +22,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { CreateNotebookModal } from '@/views/NoteTree/CreateNotebookModal';
 import { notifications } from '@mantine/notifications';
 import { useNotebookSearch } from '@/hooks/useNotebookSearch';
+import { ActionPanel } from '@/components/ActionPanel';
 
 export function NotebookView() {
   const { notebookId } = useParams<{ notebookId: string }>();
@@ -143,15 +143,7 @@ export function NotebookView() {
         />
 
         {/* Stats & Actions */}
-        <Paper 
-          shadow="sm" 
-          p="lg" 
-          radius="md" 
-          withBorder
-          style={{
-            background: 'linear-gradient(135deg, rgba(34, 139, 230, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)',
-          }}
-        >
+        <ActionPanel>
           <Group justify="space-between" align="center">
             <Group gap="lg">
               <div>
@@ -163,7 +155,7 @@ export function NotebookView() {
                 </Text>
               </div>
             </Group>
-            
+
             <Group gap="sm">
               <Button
                 leftSection={<IconNotebook size={18} />}
@@ -183,7 +175,7 @@ export function NotebookView() {
               </Button>
             </Group>
           </Group>
-        </Paper>
+        </ActionPanel>
 
         {/* Notes Grid / Search Results */}
         {isSearching ? (

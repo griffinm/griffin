@@ -25,6 +25,18 @@ export class QuestionsService {
         },
         ...this.getAnsweredWhereClause(includeAnswered),
       },
+      include: {
+        note: {
+          select: {
+            title: true,
+            notebook: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: {
         createdAt: 'asc',
       },
@@ -32,7 +44,11 @@ export class QuestionsService {
     this.logger.debug(`Found ${questions.length} questions for user ${userId}`);
 
     const objs = questions.map((question) => {
-      return plainToInstance(QuestionEntity, question);
+      return plainToInstance(QuestionEntity, {
+        ...question,
+        noteTitle: question.note?.title,
+        notebookName: question.note?.notebook?.title,
+      });
     });
     return objs;
   }
