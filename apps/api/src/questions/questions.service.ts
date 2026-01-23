@@ -23,7 +23,10 @@ export class QuestionsService {
         note: {
           deletedAt: null,
         },
-        // ...this.getAnsweredWhereClause(includeAnswered),
+        ...this.getAnsweredWhereClause(includeAnswered),
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
     this.logger.debug(`Found ${questions.length} questions for user ${userId}`);
