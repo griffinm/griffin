@@ -16,14 +16,57 @@
 
 .ProseMirror {
   outline: none;
-  
+
   p {
     margin: 0.5em 0;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     margin: 1em 0 0.5em 0;
     font-weight: 600 !important;
+  }
+
+  // Collapsible heading styles
+  .collapsed-content {
+    display: none;
+  }
+
+  .collapsible-heading {
+    display: inline-flex;
+    align-items: baseline;
+  }
+
+  .collapse-toggle {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin-left: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.4;
+    transition: opacity 0.15s ease;
+    border-radius: 3px;
+    color: inherit;
+    flex-shrink: 0;
+
+    &:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    &:focus {
+      outline: none;
+      opacity: 1;
+    }
+  }
+
+  // Keep toggle more visible when collapsed
+  .collapsible-heading[data-collapsed="true"] .collapse-toggle {
+    opacity: 0.6;
   }
 
   h1 {
@@ -62,10 +105,17 @@
     padding: 1em;
     border-radius: 4px;
     overflow-x: auto;
-    
+
     code {
       background: none;
       padding: 0;
     }
+  }
+}
+
+// Print styles - show all collapsed content
+@media print {
+  .ProseMirror .collapsed-content {
+    display: block !important;
   }
 }
