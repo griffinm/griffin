@@ -20,7 +20,7 @@ export const ChatMessageList = ({
 }: ChatMessageListProps) => {
   if (isLoading) {
     return (
-      <ScrollArea style={{ flex: 1, padding: '16px' }}>
+      <ScrollArea style={{ flex: 1 }}>
         <Box style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
           <Loader size="md" />
         </Box>
@@ -30,7 +30,7 @@ export const ChatMessageList = ({
 
   if (messages.length === 0) {
     return (
-      <ScrollArea style={{ flex: 1, padding: '16px' }}>
+      <ScrollArea style={{ flex: 1, paddingTop: '15px' }}>
         <Box style={{ textAlign: 'center', padding: 40 }}>
           <Text c="dimmed">No messages yet</Text>
         </Box>
@@ -41,7 +41,7 @@ export const ChatMessageList = ({
   const displayMessages = prepareMessagesForDisplay(messages);
 
   return (
-    <ScrollArea style={{ flex: 1, padding: '16px' }} viewportRef={viewportRef}>
+    <ScrollArea style={{ flex: 1, paddingTop: '15px' }} viewportRef={viewportRef}>
       <Stack gap={0}>
         {displayMessages.map((message) => (
           <ChatMessage key={message.id} message={message} />

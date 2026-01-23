@@ -36,6 +36,31 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
             alignItems: 'flex-start',
           }}
         >
+          <div className="flex flex-1 min-w-0 ml-10">
+            <ChatComponentRenderer componentData={message.componentData} />
+          </div>
+        </Group>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      style={{
+        display: 'flex',
+        justifyContent: isUser ? 'flex-end' : 'flex-start',
+        marginBottom: 10,
+      }}
+    >
+      <Group
+        gap="xs"
+        style={{
+          maxWidth: '85%',
+          flexDirection: isUser ? 'row-reverse' : 'row',
+          alignItems: 'flex-start',
+        }}
+      >
+        {!isUser && (
           <Box
             style={{
               width: 32,
@@ -51,62 +76,17 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
           >
             <IconRobot size={18} />
           </Box>
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <ChatComponentRenderer componentData={message.componentData} />
-          </Box>
-        </Group>
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      style={{
-        display: 'flex',
-        justifyContent: isUser ? 'flex-end' : 'flex-start',
-        marginBottom: 12,
-      }}
-    >
-      <Group
-        gap="xs"
-        style={{
-          maxWidth: '85%',
-          flexDirection: isUser ? 'row-reverse' : 'row',
-          alignItems: 'flex-start',
-        }}
-      >
-        <Box
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: isUser ? '#228be6' : '#868e96',
-            color: 'white',
-            flexShrink: 0,
-          }}
-        >
-          {isUser ? <IconUser size={18} /> : <IconRobot size={18} />}
-        </Box>
+        )}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Box
             style={{
               backgroundColor: isUser ? '#e7f5ff' : '#f1f3f5',
-              padding: '10px 14px',
+              padding: '3px 10px',
               borderRadius: 12,
               border: `1px solid ${isUser ? '#d0ebff' : '#dee2e6'}`,
             }}
           >
-            <Box
-              component="div"
-              style={{
-                fontSize: '14px',
-                lineHeight: 1.6,
-                wordBreak: 'break-word',
-              }}
-            >
+            <div className="text-sm leading-normal word-break-break-word">
               {message.content ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -119,7 +99,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
                   Empty message
                 </Text>
               )}
-            </Box>
+            </div>
           </Box>
           {/* Render component data if present */}
           {message.componentData && (
