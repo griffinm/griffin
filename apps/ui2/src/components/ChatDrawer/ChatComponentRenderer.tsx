@@ -18,7 +18,8 @@ interface ChatComponentRendererProps {
  */
 export const ChatComponentRenderer = ({ componentData }: ChatComponentRendererProps) => {
   console.log('ChatComponentRenderer received componentData:', componentData);
-  
+  console.log('Available registry types:', Object.keys(componentRegistry));
+
   if (!componentData || !componentData.type) {
     console.log('No componentData or type');
     return null;
@@ -26,13 +27,15 @@ export const ChatComponentRenderer = ({ componentData }: ChatComponentRendererPr
 
   const { type, data } = componentData;
   console.log('Component type:', type, 'Data:', data);
+  console.log('Is type in registry?', type in componentRegistry);
 
   // Check if component type is registered
   const Component = componentRegistry[type as ComponentType];
   if (!Component) {
-    console.warn(`Unknown component type: ${type}`);
+    console.warn(`Unknown component type: ${type}. Available types:`, Object.keys(componentRegistry));
     return null;
   }
+  console.log('Found component for type:', type);
 
   // Handle null or undefined data
   if (!data) {

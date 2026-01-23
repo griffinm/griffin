@@ -35,6 +35,7 @@ export interface ConversationWithItems extends Conversation {
 export interface SendMessageResponse {
   userMessage: ConversationItem;
   aiMessage: ConversationItem;
+  toolMessages: ConversationItem[];
   actionTaken: boolean;
 }
 

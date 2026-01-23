@@ -1,9 +1,10 @@
 import { TaskCard } from '@/components/tasks/TaskCard';
+import { ChatNoteCard } from './ChatNoteCard';
 
 /**
  * Registry mapping component types to their React components.
  * This allows the chat to render rich UI components based on data type.
- * 
+ *
  * To add new component types:
  * 1. Add the component type to the registry
  * 2. Update ConversationItem interface to include the new type
@@ -11,10 +12,7 @@ import { TaskCard } from '@/components/tasks/TaskCard';
  */
 export const componentRegistry = {
   task: TaskCard,
-  // Future: Add more component types here
-  // note: NoteCard,
-  // contact: ContactCard,
-  // etc.
+  note: ChatNoteCard,
 };
 
 export type ComponentType = keyof typeof componentRegistry;

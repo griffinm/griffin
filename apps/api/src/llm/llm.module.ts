@@ -5,6 +5,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { NoteModule } from '../notes/notes.module';
+import { SearchModule } from '../search/search.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { ConfigModule } from '@nestjs/config';
     TasksModule,
     forwardRef(() => AuthModule),
     ConfigModule,
+    NoteModule,
+    SearchModule,
   ],
   controllers: [LlmController],
   providers: [LlmService],

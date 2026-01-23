@@ -2,12 +2,18 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
+import { NoteService } from '../notes/notes.service';
+import { SearchService } from '../search/search.service';
 import { ChatOpenAI } from '@langchain/openai';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
 import { ConversationItemRole } from '@prisma/client';
 import { TavilySearch } from '@langchain/tavily';
+
+// Configuration constants
+const MAX_TOOL_ITERATIONS = 5;
+const MAX_HISTORY_MESSAGES = 50;
 
 @Injectable()
 export class LlmService {
@@ -18,6 +24,8 @@ export class LlmService {
   constructor(
     private prisma: PrismaService,
     private tasksService: TasksService,
+    private noteService: NoteService,
+    private searchService: SearchService,
     private configService: ConfigService,
   ) {
     // Initialize ChatOpenAI with API key from config
@@ -26,10 +34,14 @@ export class LlmService {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
+    // Configurable model settings with defaults
+    const modelName = this.configService.get<string>('LLM_MODEL') || 'gpt-4o-mini';
+    const temperature = parseFloat(this.configService.get<string>('LLM_TEMPERATURE') || '0.7');
+
     this.chatModel = new ChatOpenAI({
       openAIApiKey: apiKey,
-      modelName: 'gpt-4o-mini',
-      temperature: 0.7,
+      modelName,
+      temperature,
     });
 
     const tavilyKey = this.configService.get<string>('TAVILY_API_KEY');
@@ -37,6 +49,28 @@ export class LlmService {
       throw new Error('TAVILY_API_KEY is not configured');
     }
     this.tavilyApiKey = tavilyKey;
+  }
+
+  /**
+   * Get the system prompt for the assistant
+   */
+  private getSystemPrompt(): SystemMessage {
+    const today = new Date().toISOString().split('T')[0];
+    return new SystemMessage(
+      `You are a helpful assistant for Griffin, a personal notes and task management application.
+
+You can help users:
+- Create, search, update, and manage their tasks
+- Search and create notes
+- Look up information on the internet
+
+Today's date is ${today}.
+
+Be concise and helpful. When creating tasks, infer reasonable due dates and priorities from context if not specified.
+When searching for tasks or notes, use the search tools to find relevant items before making changes.
+
+IMPORTANT: When you use tools that return visual results (like searching notes or tasks), the user will see the results displayed as cards in the UI. Do NOT repeat or list the same information in your text response. Instead, just provide a brief summary like "Here are your notes" or "I found 3 matching tasks" without listing titles, IDs, or details that are already shown in the cards.`
+    );
   }
 
   /**
@@ -163,34 +197,43 @@ export class LlmService {
       },
     });
 
-    // Get conversation history
-    const history = conversation.conversationItems || [];
+    // Get conversation history (limited to prevent context overflow)
+    const fullHistory = conversation.conversationItems || [];
+    const history = fullHistory.slice(-MAX_HISTORY_MESSAGES);
 
-    // Convert history to Langchain messages
-    const messages = history.map((item) => {
+    // Build messages array with system prompt first
+    const messages: (SystemMessage | HumanMessage | AIMessage | ToolMessage)[] = [
+      this.getSystemPrompt(),
+    ];
+
+    // Convert history to LangChain messages
+    for (const item of history) {
       switch (item.role) {
         case ConversationItemRole.USER:
-          return new HumanMessage(item.content);
+          messages.push(new HumanMessage(item.content));
+          break;
         case ConversationItemRole.ASSISTANT:
           // If the assistant message has tool_calls, include them in the AIMessage
           if (item.toolCalls) {
-            return new AIMessage({
+            messages.push(new AIMessage({
               content: item.content,
-              tool_calls: item.toolCalls as any, // Type assertion needed for Prisma JSON type
-            });
+              tool_calls: item.toolCalls as any,
+            }));
+          } else {
+            messages.push(new AIMessage(item.content));
           }
-          return new AIMessage(item.content);
+          break;
         case ConversationItemRole.SYSTEM:
-          return new SystemMessage(item.content);
+          messages.push(new SystemMessage(item.content));
+          break;
         case ConversationItemRole.TOOL:
-          return new ToolMessage({
+          messages.push(new ToolMessage({
             content: item.content,
             tool_call_id: item.toolCallId || '',
-          });
-        default:
-          return new HumanMessage(item.content);
+          }));
+          break;
       }
-    });
+    }
 
     // Add the new user message
     messages.push(new HumanMessage(content));
@@ -201,13 +244,21 @@ export class LlmService {
     // Bind tools to the model
     const modelWithTools = this.chatModel.bindTools(tools);
 
-    // Get AI response
-    const aiResponse = await modelWithTools.invoke(messages);
+    // Track if any tools were executed and collect tool messages
+    let actionTaken = false;
+    let iterations = 0;
+    const toolMessages: any[] = [];
 
+    // Get initial AI response
+    let aiResponse = await modelWithTools.invoke(messages);
     this.logger.debug(`AI Response: ${JSON.stringify(aiResponse)}`);
 
-    // Check if AI wants to use tools
-    if (aiResponse.tool_calls && aiResponse.tool_calls.length > 0) {
+    // Multi-round tool execution loop
+    while (aiResponse.tool_calls && aiResponse.tool_calls.length > 0 && iterations < MAX_TOOL_ITERATIONS) {
+      actionTaken = true;
+      iterations++;
+      this.logger.debug(`Tool iteration ${iterations}/${MAX_TOOL_ITERATIONS}`);
+
       // Save AI message with tool calls
       const aiMessageContent = aiResponse.content || 'Using tools...';
       await this.prisma.conversationItem.create({
@@ -219,113 +270,109 @@ export class LlmService {
         },
       });
 
-      // Execute each tool call
-      for (const toolCall of aiResponse.tool_calls) {
+      // Add AI response to messages (once, before tool results)
+      messages.push(aiResponse);
+
+      // Execute all tool calls in parallel
+      const toolPromises = aiResponse.tool_calls.map(async (toolCall) => {
         const tool = tools.find((t) => t.name === toolCall.name);
-        if (tool) {
-          try {
-            this.logger.debug(`Executing tool: ${toolCall.name} with args: ${JSON.stringify(toolCall.args)}`);
-            const toolResult = await (tool as any).invoke(toolCall);
-            this.logger.debug(`Tool result: ${JSON.stringify(toolResult)}`);
-
-            // Extract componentData if present
-            const componentData = toolResult.componentData || null;
-
-            // Save tool result
-            await this.prisma.conversationItem.create({
-              data: {
-                conversationId,
-                role: ConversationItemRole.TOOL,
-                content: JSON.stringify(toolResult),
-                toolCallId: toolCall.id,
-                toolName: toolCall.name,
-                componentData: componentData ? JSON.parse(JSON.stringify(componentData)) : null,
-              },
-            });
-
-            // Add tool result to messages
-            messages.push(aiResponse);
-            messages.push(
-              new ToolMessage({
-                content: JSON.stringify(toolResult),
-                tool_call_id: toolCall.id || '',
-              })
-            );
-          } catch (error) {
-            this.logger.error(`Error executing tool ${toolCall.name}: ${error.message}`);
-            // Save error as tool result
-            await this.prisma.conversationItem.create({
-              data: {
-                conversationId,
-                role: ConversationItemRole.TOOL,
-                content: JSON.stringify({ error: error.message }),
-                toolCallId: toolCall.id,
-                toolName: toolCall.name,
-              },
-            });
-
-            messages.push(aiResponse);
-            messages.push(
-              new ToolMessage({
-                content: JSON.stringify({ error: error.message }),
-                tool_call_id: toolCall.id || '',
-              })
-            );
-          }
+        if (!tool) {
+          return { toolCall, result: { error: `Tool ${toolCall.name} not found` }, error: true };
         }
+
+        try {
+          this.logger.debug(`Executing tool: ${toolCall.name} with args: ${JSON.stringify(toolCall.args)}`);
+          const toolResult = await (tool as any).invoke(toolCall);
+          this.logger.debug(`Tool result type: ${typeof toolResult}`);
+          this.logger.debug(`Tool result keys: ${toolResult ? Object.keys(toolResult) : 'null'}`);
+          this.logger.debug(`Tool result: ${JSON.stringify(toolResult)}`);
+
+          // Extract the actual result - LangChain may wrap it in different ways
+          let actualResult = toolResult;
+
+          // If it's a string (some tools return stringified JSON), try to parse it
+          if (typeof toolResult === 'string') {
+            try {
+              actualResult = JSON.parse(toolResult);
+            } catch {
+              actualResult = { message: toolResult };
+            }
+          }
+          // If it has a 'content' property (LangChain wrapper), extract it
+          else if (toolResult && typeof toolResult === 'object' && 'content' in toolResult && typeof toolResult.content === 'string') {
+            try {
+              actualResult = JSON.parse(toolResult.content);
+            } catch {
+              actualResult = { message: toolResult.content };
+            }
+          }
+
+          this.logger.debug(`Actual result componentData: ${actualResult?.componentData ? 'present' : 'missing'}`);
+          return { toolCall, result: actualResult, error: false };
+        } catch (error) {
+          this.logger.error(`Error executing tool ${toolCall.name}: ${error.message}`);
+          return { toolCall, result: { error: error.message }, error: true };
+        }
+      });
+
+      const toolResults = await Promise.all(toolPromises);
+
+      // Process all tool results
+      for (const { toolCall, result, error } of toolResults) {
+        const componentData = !error && result.componentData ? result.componentData : null;
+
+        // Save tool result to database
+        const toolMessage = await this.prisma.conversationItem.create({
+          data: {
+            conversationId,
+            role: ConversationItemRole.TOOL,
+            content: JSON.stringify(result),
+            toolCallId: toolCall.id,
+            toolName: toolCall.name,
+            componentData: componentData ? JSON.parse(JSON.stringify(componentData)) : null,
+          },
+        });
+
+        // Collect for response
+        toolMessages.push(toolMessage);
+
+        // Add tool result to messages
+        messages.push(new ToolMessage({
+          content: JSON.stringify(result),
+          tool_call_id: toolCall.id || '',
+        }));
       }
 
-      // Get final AI response after tool execution
-      const finalResponse = await this.chatModel.invoke(messages);
-      const finalContent = typeof finalResponse.content === 'string' 
-        ? finalResponse.content 
-        : JSON.stringify(finalResponse.content);
-
-      const finalAiMessage = await this.prisma.conversationItem.create({
-        data: {
-          conversationId,
-          role: ConversationItemRole.ASSISTANT,
-          content: finalContent,
-        },
-      });
-
-      // Update conversation timestamp
-      await this.prisma.conversation.update({
-        where: { id: conversationId },
-        data: { updatedAt: new Date() },
-      });
-
-      return {
-        userMessage,
-        aiMessage: finalAiMessage,
-        actionTaken: true, // Tool was executed, action was taken
-      };
-    } else {
-      // No tool calls, just save the AI response
-      const aiContent = typeof aiResponse.content === 'string' 
-        ? aiResponse.content 
-        : JSON.stringify(aiResponse.content);
-
-      const aiMessage = await this.prisma.conversationItem.create({
-        data: {
-          conversationId,
-          role: ConversationItemRole.ASSISTANT,
-          content: aiContent,
-        },
-      });
-
-      // Update conversation timestamp
-      await this.prisma.conversation.update({
-        where: { id: conversationId },
-        data: { updatedAt: new Date() },
-      });
-
-      return {
-        userMessage,
-        aiMessage,
-        actionTaken: false, // No tool call, conversational response only
-      };
+      // Get next AI response (may request more tools or provide final answer)
+      aiResponse = await modelWithTools.invoke(messages);
+      this.logger.debug(`AI Response (iteration ${iterations}): ${JSON.stringify(aiResponse)}`);
     }
+
+    // Save final AI response
+    const finalContent = typeof aiResponse.content === 'string'
+      ? aiResponse.content
+      : JSON.stringify(aiResponse.content);
+
+    const finalAiMessage = await this.prisma.conversationItem.create({
+      data: {
+        conversationId,
+        role: ConversationItemRole.ASSISTANT,
+        content: finalContent,
+      },
+    });
+
+    // Update conversation timestamp
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    });
+
+    return {
+      userMessage,
+      aiMessage: finalAiMessage,
+      toolMessages,
+      actionTaken,
+    };
   }
 
   /**
@@ -355,15 +402,18 @@ export class LlmService {
 
           return {
             success: true,
-            task: {
-              id: task.id,
-              title: task.title,
-              description: task.description,
-              dueDate: task.dueDate,
-              priority: task.priority,
-              status: task.status,
-            },
             message: `Task "${title}" has been created successfully.`,
+            componentData: {
+              type: 'task',
+              data: {
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                dueDate: task.dueDate,
+                priority: task.priority,
+                status: task.status,
+              },
+            },
           };
         } catch (error) {
           this.logger.error(`Error creating task: ${error.message}`);
@@ -524,7 +574,161 @@ export class LlmService {
       includeRawContent: true,
     });
 
-    return [createTaskTool, searchTasksTool, updateTaskTool, getTaskTool, searchInternetTool];
+    // Notes tools
+    const searchNotesTool = new DynamicStructuredTool({
+      name: 'search_notes',
+      description: 'Search through the user\'s notes by title or content. Use this to find notes related to a topic, keyword, or phrase. Returns visual note cards that the user will see.',
+      schema: z.object({
+        query: z.string().describe('Search query to find notes by title or content'),
+        limit: z.number().optional().describe('Maximum number of notes to return (default: 5)'),
+      }),
+      func: async ({ query, limit }) => {
+        this.logger.debug(`Searching notes with query: ${query}, limit: ${limit}`);
+        try {
+          const searchResults = await this.searchService.search(query, userId, 'notes');
+
+          if (!searchResults.noteResults || searchResults.noteResults.length === 0) {
+            return {
+              success: true,
+              message: `No notes found matching "${query}".`,
+              componentData: null,
+            };
+          }
+
+          // Apply limit
+          const maxResults = limit || 5;
+          const limitedResults = searchResults.noteResults.slice(0, maxResults);
+
+          return {
+            success: true,
+            message: `Found ${limitedResults.length} note${limitedResults.length === 1 ? '' : 's'} matching "${query}".`,
+            componentData: {
+              type: 'note',
+              data: limitedResults,
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error searching notes: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to search notes: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const createNoteTool = new DynamicStructuredTool({
+      name: 'create_note',
+      description: 'Create a new note for the user. Use this when the user asks you to create a note, write something down, or save information.',
+      schema: z.object({
+        title: z.string().describe('The title of the note'),
+        content: z.string().describe('The content of the note (can include HTML formatting)'),
+        notebookId: z.string().optional().describe('The ID of the notebook to create the note in. If not provided, will use the user\'s first notebook.'),
+      }),
+      func: async ({ title, content, notebookId }) => {
+        this.logger.debug(`Creating note: ${title}`);
+        try {
+          // If no notebook specified, get the user's first notebook
+          let targetNotebookId = notebookId;
+          if (!targetNotebookId) {
+            const notebooks = await this.prisma.notebook.findMany({
+              where: {
+                userId,
+                deletedAt: null,
+                parentId: null, // Top-level notebooks
+              },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            });
+
+            if (notebooks.length === 0) {
+              return {
+                success: false,
+                message: 'No notebooks found. Please create a notebook first.',
+                componentData: null,
+              };
+            }
+            targetNotebookId = notebooks[0].id;
+          }
+
+          const note = await this.noteService.create(
+            { title, content },
+            targetNotebookId,
+            userId
+          );
+
+          return {
+            success: true,
+            message: `Note "${title}" has been created successfully.`,
+            componentData: {
+              type: 'note',
+              data: {
+                id: note.id,
+                title: note.title,
+                notebookId: note.notebookId,
+              },
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error creating note: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to create note: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const getNoteTool = new DynamicStructuredTool({
+      name: 'get_note',
+      description: 'Get the full content of a specific note by its ID. Use this after searching for notes to retrieve the complete content.',
+      schema: z.object({
+        noteId: z.string().describe('The ID of the note to retrieve'),
+      }),
+      func: async ({ noteId }) => {
+        this.logger.debug(`Getting note: ${noteId}`);
+        try {
+          const note = await this.noteService.findOneForUser(noteId, userId);
+
+          if (!note) {
+            return {
+              success: false,
+              message: `Note with ID "${noteId}" not found.`,
+              componentData: null,
+            };
+          }
+
+          return {
+            success: true,
+            message: `Retrieved note "${note.title}".`,
+            componentData: {
+              type: 'note',
+              data: note,
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error getting note: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to get note: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    return [
+      createTaskTool,
+      searchTasksTool,
+      updateTaskTool,
+      getTaskTool,
+      searchNotesTool,
+      createNoteTool,
+      getNoteTool,
+      searchInternetTool,
+    ];
   }
 }
 

@@ -139,10 +139,16 @@ export const ChatDrawer = ({
     try {
       const response = await sendMessage(conversationId, userMessage);
 
-      // Replace temp message with actual messages
+      // Replace temp message with actual messages (including tool messages)
+      console.log('sendMessage response:', response);
+      console.log('toolMessages:', response.toolMessages);
+      if (response.toolMessages?.length > 0) {
+        console.log('First tool message componentData:', response.toolMessages[0]?.componentData);
+      }
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== tempUserMessage.id),
         response.userMessage,
+        ...(response.toolMessages || []),
         response.aiMessage,
       ]);
 

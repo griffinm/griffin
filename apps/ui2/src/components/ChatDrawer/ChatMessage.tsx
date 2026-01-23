@@ -11,12 +11,24 @@ interface ChatMessageProps {
 }
 
 export const ChatMessage = ({ message }: ChatMessageProps) => {
+  console.log('ChatMessage rendering:', message.role, message.id, 'componentData:', !!message.componentData);
+
   const isUser = message.role === ConversationItemRole.USER;
   const isTool = message.role === ConversationItemRole.TOOL;
 
+  console.log('Role check:', {
+    role: message.role,
+    expectedTool: ConversationItemRole.TOOL,
+    isTool,
+    typeofRole: typeof message.role
+  });
+
   // Render tool messages if they have componentData
   if (isTool) {
+    console.log('Tool message:', message);
+    console.log('Tool message componentData:', message.componentData);
     if (!message.componentData) {
+      console.log('No componentData, skipping tool message');
       return null; // Don't show tool messages without component data
     }
 
