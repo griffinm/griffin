@@ -21,7 +21,7 @@ services:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_PASSWORD=griffin
     ports:
-      - 6543:5432
+      - 5432:5432
   api:
     build:
       context: .
