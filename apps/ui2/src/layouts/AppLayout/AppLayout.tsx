@@ -18,6 +18,7 @@ import {
   IconCheck,
   IconBook,
   IconTags,
+  IconQuestionMark,
   IconMicrophone,
   IconMessagePlus,
 } from '@tabler/icons-react'
@@ -116,6 +117,7 @@ export const AppLayout = () => {
     { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
     { icon: IconBook, label: 'Notebooks', path: getUrl('notebooks').path(), color: 'indigo' },
     { icon: IconTags, label: 'Tags', path: getUrl('tags').path(), color: 'violet' },
+    { icon: IconQuestionMark, label: 'Questions', path: getUrl('questions').path(), color: 'orange' },
   ]
 
   return (
@@ -247,9 +249,9 @@ export const AppLayout = () => {
             <Divider my="sm" />
           </Stack>
 
-          <Stack gap="xs" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
             <NoteTree />
-          </Stack>
+          </div>
 
           <Divider my="sm" />
 
