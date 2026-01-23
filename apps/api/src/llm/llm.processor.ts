@@ -38,6 +38,13 @@ export class LlmProcessor extends WorkerHost {
         content,
       );
 
+      // Generate title if this is the first message (title is null)
+      try {
+        await this.llmService.generateAndUpdateTitle(conversationId, content);
+      } catch (titleError) {
+        this.logger.warn(`Failed to generate title: ${titleError.message}`);
+      }
+
       // Update conversation status to IDLE (ready for next message)
       await this.prisma.conversation.update({
         where: { id: conversationId },

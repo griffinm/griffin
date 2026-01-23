@@ -57,6 +57,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         style={{
           maxWidth: '85%',
           flexDirection: isUser ? 'row-reverse' : 'row',
+          marginRight: isUser ? '10px' : '0',
           alignItems: 'flex-start',
         }}
       >
@@ -72,6 +73,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
               backgroundColor: '#868e96',
               color: 'white',
               flexShrink: 0,
+              lineHeight: '1',
             }}
           >
             <IconRobot size={18} />
@@ -84,6 +86,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
               padding: '3px 10px',
               borderRadius: 12,
               border: `1px solid ${isUser ? '#d0ebff' : '#dee2e6'}`,
+              lineHeight: '1',
             }}
           >
             <div className="text-sm leading-normal word-break-break-word">

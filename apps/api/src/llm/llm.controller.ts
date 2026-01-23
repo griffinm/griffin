@@ -127,6 +127,7 @@ export class LlmController {
     status: ConversationStatus;
     isComplete: boolean;
     errorMessage: string | null;
+    title: string | null;
   }> {
     const sinceDate = since ? new Date(since) : new Date(0);
 
@@ -141,6 +142,7 @@ export class LlmController {
       status: result.status,
       isComplete: result.isComplete,
       errorMessage: result.errorMessage,
+      title: result.title,
     };
   }
 

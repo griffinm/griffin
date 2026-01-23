@@ -35,6 +35,9 @@ export const useChat = ({ conversationId, isActive, onConversationChange }: UseC
         return [...prev, ...uniqueNewMessages];
       });
     },
+    onTitleUpdate: (title) => {
+      setConversationTitle(title);
+    },
     onComplete: () => {
       setIsWaitingForResponse(false);
       setIsSending(false);

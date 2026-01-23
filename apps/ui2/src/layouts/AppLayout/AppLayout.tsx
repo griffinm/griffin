@@ -107,10 +107,8 @@ export const AppLayout = () => {
 
   const handleCreateNewChat = async () => {
     try {
-      // Create a new conversation
-      const conversation = await createConversation({
-        title: `Chat - ${new Date().toLocaleString()}`,
-      });
+      // Create a new conversation (title will be auto-generated after first message)
+      const conversation = await createConversation();
 
       // Open the chat drawer with the new conversation
       openChatDrawer(conversation.id);

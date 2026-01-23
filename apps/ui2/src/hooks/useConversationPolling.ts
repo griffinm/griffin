@@ -9,6 +9,7 @@ interface UseConversationPollingOptions {
   onNewMessages?: (messages: ConversationItem[]) => void;
   onComplete?: () => void;
   onError?: (error: string) => void;
+  onTitleUpdate?: (title: string) => void;
 }
 
 interface UseConversationPollingResult {
@@ -26,6 +27,7 @@ export const useConversationPolling = ({
   onNewMessages,
   onComplete,
   onError,
+  onTitleUpdate,
 }: UseConversationPollingOptions): UseConversationPollingResult => {
   const [isPolling, setIsPolling] = useState(false);
   const [status, setStatus] = useState<ConversationStatus | null>(null);
@@ -37,8 +39,8 @@ export const useConversationPolling = ({
   const conversationIdRef = useRef(conversationId);
 
   // Keep refs up to date with latest callback values to avoid stale closures
-  const callbacksRef = useRef({ onNewMessages, onComplete, onError });
-  callbacksRef.current = { onNewMessages, onComplete, onError };
+  const callbacksRef = useRef({ onNewMessages, onComplete, onError, onTitleUpdate });
+  callbacksRef.current = { onNewMessages, onComplete, onError, onTitleUpdate };
 
   // Keep conversationId ref up to date
   useEffect(() => {
@@ -64,6 +66,11 @@ export const useConversationPolling = ({
       const response = await pollMessages(currentConversationId, sinceRef.current);
 
       setStatus(response.status);
+
+      // Update title if present
+      if (response.title) {
+        callbacksRef.current.onTitleUpdate?.(response.title);
+      }
 
       if (response.messages.length > 0) {
         // Update since to latest message timestamp

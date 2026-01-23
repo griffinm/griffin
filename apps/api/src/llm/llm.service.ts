@@ -410,6 +410,11 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
         id: conversationId,
         userId,
       },
+      select: {
+        status: true,
+        errorMessage: true,
+        title: true,
+      },
     });
 
     if (!conversation) {
@@ -437,6 +442,7 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       status: conversation.status,
       isComplete,
       errorMessage: conversation.errorMessage,
+      title: conversation.title,
     };
   }
 
@@ -460,6 +466,55 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
     }
 
     return conversation;
+  }
+
+  /**
+   * Generate a brief title for a conversation based on message content
+   */
+  private async generateConversationTitle(content: string): Promise<string> {
+    const { OpenAIClient } = await import('@griffin/open-ai');
+    const openaiClient = new OpenAIClient({
+      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
+    });
+
+    const client = openaiClient.getClient();
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 30,
+      messages: [
+        {
+          role: 'system',
+          content: 'Generate a brief, descriptive title (3-8 words) for a conversation. Respond with only the title, no quotes.',
+        },
+        { role: 'user', content },
+      ],
+    });
+
+    return response.choices[0]?.message?.content?.trim() || 'New Conversation';
+  }
+
+  /**
+   * Generate and update conversation title if it doesn't exist
+   */
+  async generateAndUpdateTitle(conversationId: string, messageContent: string): Promise<string | null> {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { title: true },
+    });
+
+    // Skip if title already exists
+    if (conversation?.title) {
+      return conversation.title;
+    }
+
+    const title = await this.generateConversationTitle(messageContent);
+
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { title },
+    });
+
+    return title;
   }
 
   /**

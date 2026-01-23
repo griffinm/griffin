@@ -52,6 +52,7 @@ export interface PollMessagesResponse {
   status: ConversationStatus;
   isComplete: boolean;
   errorMessage: string | null;
+  title?: string | null;
 }
 
 export interface ConversationListResponse {

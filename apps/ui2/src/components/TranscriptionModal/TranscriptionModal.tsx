@@ -279,10 +279,8 @@ Available tools you can use:
 
 Note: When the user mentions relative dates like "tomorrow", "next week", or "in 3 days", calculate the actual date based on the current date/time provided above.`;
 
-      // Create conversation
-      const conversation = await createConversation({
-        title: `Voice Note - ${new Date().toLocaleString()}`,
-      });
+      // Create conversation (title will be auto-generated after first message)
+      const conversation = await createConversation();
 
       // Send message to LLM
       const messageResponse = await sendMessage(conversation.id, contextMessage);

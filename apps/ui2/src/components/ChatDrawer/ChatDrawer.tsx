@@ -62,7 +62,7 @@ export const ChatDrawer = ({
   }, [renderAsSidebar]);
 
   const isDrawerOpen = pinned || opened;
-  const headerTitle = conversationId ? conversationTitle : 'Chat History';
+  const headerTitle = conversationId ? (conversationTitle || 'New Chat') : 'Chat History';
 
   const handleTogglePin = () => {
     const newPinned = !pinned;
