@@ -21,7 +21,7 @@ export class SearchController {
   @UseGuards(AuthGuard)
   async search(
     @Query('query') query: string,
-    @Query('collection') collection: 'notes' | 'tasks' | 'all' = 'notes',
+    @Query('collection') collection: 'notes' | 'tasks' | 'questions' | 'all' = 'notes',
     @Query('notebookId') notebookId: string,
     @Req() req: RequestWithUser
   ): Promise<SearchResultsDto> {

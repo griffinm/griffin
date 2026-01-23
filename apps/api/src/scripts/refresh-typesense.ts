@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import Typesense from "typesense";
 import { config } from "dotenv";
 import { existsSync } from "fs";
-import { noteSchema, taskSchema, tagSchema } from "../search/schemas";
+import { noteSchema, taskSchema, tagSchema, questionSchema } from "../search/schemas";
 
 // Load environment variables - try .env.local first, then .env, or use existing env vars
 if (existsSync('.env.local')) {
@@ -66,7 +66,14 @@ const main = async () => {
     } catch (e) {
       console.log('Tags collection does not exist');
     }
-    
+
+    try {
+      await typesenseClient.collections('questions').delete();
+      console.log('Deleted questions collection');
+    } catch (e) {
+      console.log('Questions collection does not exist');
+    }
+
     // Create collections with new schema
     console.log('Creating collections with updated schema...');
     await typesenseClient.collections().create(noteSchema);
@@ -77,7 +84,10 @@ const main = async () => {
     
     await typesenseClient.collections().create(tagSchema);
     console.log('Created tags collection');
-    
+
+    await typesenseClient.collections().create(questionSchema);
+    console.log('Created questions collection');
+
     // Get all notes from database
     const notes = await prisma.note.findMany();
     console.log(`Found ${notes.length} notes in database`);
@@ -147,11 +157,35 @@ const main = async () => {
       });
       console.log(`Added tag ${tag.id.substring(0, 7)} to search index`);
     }
-    
+
+    // Get all questions from database (excluding deleted)
+    const questions = await prisma.question.findMany({
+      where: {
+        deletedAt: null,
+        note: {
+          deletedAt: null,
+        },
+      },
+    });
+    console.log(`Found ${questions.length} questions in database`);
+
+    // Refresh Typesense index with all questions
+    for (const question of questions) {
+      await typesenseClient.collections("questions").documents().upsert({
+        id: question.id,
+        userId: question.userId,
+        question: question.question,
+        answer: question.answer || '',
+        noteId: question.noteId,
+      });
+      console.log(`Added question ${question.id.substring(0, 7)} to search index`);
+    }
+
     console.log(`\nSuccessfully refreshed Typesense index:`);
     console.log(`- ${notes.length} notes`);
     console.log(`- ${tasks.length} tasks`);
     console.log(`- ${tags.length} tags`);
+    console.log(`- ${questions.length} questions`);
   } catch (error) {
     console.error('Error refreshing Typesense:', error);
   } finally {

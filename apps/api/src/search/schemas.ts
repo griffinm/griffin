@@ -78,3 +78,30 @@ export const tagSchema: CollectionCreateSchema = {
     }
   ],
 };
+
+export const questionSchema: CollectionCreateSchema = {
+  name: "questions",
+  fields: [
+    {
+      name: "id",
+      type: "string",
+    },
+    {
+      name: "question",
+      type: "string",
+    },
+    {
+      name: "answer",
+      type: "string",
+      optional: true,
+    },
+    {
+      name: "userId",
+      type: "string",
+    },
+    {
+      name: "noteId",
+      type: "string",
+    },
+  ],
+};

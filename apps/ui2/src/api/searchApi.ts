@@ -3,7 +3,7 @@ import { SearchResults } from "@/types/search";
 
 export interface SearchRequest {
   query: string;
-  collection?: 'notes' | 'tasks' | 'all';
+  collection?: 'notes' | 'tasks' | 'questions' | 'all';
   notebookId?: string;
 }
 

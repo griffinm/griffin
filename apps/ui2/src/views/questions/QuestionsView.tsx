@@ -7,9 +7,13 @@ import {
   Skeleton,
 } from '@mantine/core';
 import { useQuestions } from '@/hooks/useQuestions';
+import { useQuestionsSearch } from '@/hooks/useQuestionsSearch';
 import { Question } from '@/types/question';
+import { QuestionResult } from '@/types/search';
 import { QuestionCard } from './QuestionCard';
 import { QuestionModal } from './QuestionModal';
+import { QuestionsSearchBar } from './QuestionsSearchBar';
+import { QuestionSearchResultCard } from './QuestionSearchResultCard';
 import { ActionPanel } from '@/components/ActionPanel';
 import { Stat } from '@/components/Stat/Stat';
 
@@ -24,6 +28,16 @@ export function QuestionsView() {
 
   // Fetch all questions (includeAnswered=true) and filter client-side
   const { data: questions, isLoading } = useQuestions(true);
+
+  // Search hook
+  const {
+    searchTerm,
+    setSearchTerm,
+    results: searchResults,
+    isSearching,
+    isLoading: isSearchLoading,
+    clearSearch,
+  } = useQuestionsSearch();
 
   const filteredAndSortedQuestions = useMemo(() => {
     if (!questions) return [];
@@ -66,6 +80,15 @@ export function QuestionsView() {
     setSelectedQuestion(null);
   };
 
+  const handleSearchResultClick = (result: QuestionResult) => {
+    // Find the full question from the loaded questions
+    const fullQuestion = questions?.find((q) => q.id === result.id);
+    if (fullQuestion) {
+      setSelectedQuestion(fullQuestion);
+      setModalOpened(true);
+    }
+  };
+
   return (
     <div className="p-5 flex flex-col  gap-5">
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between sm:items-center">
@@ -102,13 +125,41 @@ export function QuestionsView() {
             <Stat value={unansweredQuestions.length} label={'Unanswered'} />
           </div>
 
-          <div>
-            Search
+          <div className="w-full md:w-64">
+            <QuestionsSearchBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              clearSearch={clearSearch}
+              isLoading={isSearchLoading}
+            />
           </div>
         </div>
       </ActionPanel>
       
-      {isLoading ? (
+      {isSearching ? (
+        // Search results
+        isSearchLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} height={100} radius="md" />
+            ))}
+          </div>
+        ) : searchResults?.questionResults && searchResults.questionResults.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {searchResults.questionResults.map((result) => (
+              <QuestionSearchResultCard
+                key={result.id}
+                result={result}
+                onClick={() => handleSearchResultClick(result)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10">
+            <Text c="dimmed">No results found for "{searchTerm}"</Text>
+          </div>
+        )
+      ) : isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} height={100} radius="md" />
