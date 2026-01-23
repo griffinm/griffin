@@ -34,7 +34,7 @@ import { ChatDrawer } from '@/components/ChatDrawer';
 import { createConversation } from '@/api/conversationApi';
 
 const HEADER_HEIGHT = 40;
-const LEFT_NAVBAR_WIDTH_DESKTOP = 250;
+const LEFT_NAVBAR_WIDTH_DESKTOP = 225;
 
 export const AppLayout = () => {
   const theme = useMantineTheme()
@@ -220,8 +220,8 @@ export const AppLayout = () => {
             position: isMobile ? 'fixed' : 'relative',
             top: isMobile ? HEADER_HEIGHT : 'auto',
             left: isMobile ? (opened ? 0 : -LEFT_NAVBAR_WIDTH_DESKTOP) : 'auto',
-            width: isMobile ? 200 : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
-            minWidth: isMobile ? 200 : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
+            width: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
+            minWidth: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
             transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],

@@ -16,6 +16,7 @@ import { SearchModule } from '../search/search.module';
 import { TagModule } from '../tag/tag.module';
 import { AudioModule } from '../audio/audio.module';
 import { LlmModule } from '../llm/llm.module';
+import { QueueModule } from '../queue/queue.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LlmModule } from '../llm/llm.module';
     PrismaModule,
     SearchModule,
     TagModule,
+    QueueModule,
     LlmModule,
   ],
   controllers: [AppController],

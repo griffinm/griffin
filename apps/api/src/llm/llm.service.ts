@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 import { NoteService } from '../notes/notes.service';
@@ -8,8 +10,10 @@ import { ChatOpenAI } from '@langchain/openai';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
-import { ConversationItemRole } from '@prisma/client';
+import { ConversationItemRole, ConversationStatus } from '@prisma/client';
 import { TavilySearch } from '@langchain/tavily';
+import { LLM_QUEUE } from '../queue/queue.module';
+import { LlmMessageJobData } from './llm.processor';
 
 // Configuration constants
 const MAX_TOOL_ITERATIONS = 5;
@@ -27,6 +31,7 @@ export class LlmService {
     private noteService: NoteService,
     private searchService: SearchService,
     private configService: ConfigService,
+    @InjectQueue(LLM_QUEUE) private llmQueue: Queue<LlmMessageJobData>,
   ) {
     // Initialize ChatOpenAI with API key from config
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -181,11 +186,12 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
   }
 
   /**
-   * Send a message to a conversation and get AI response
+   * Send a message to a conversation - queues for async processing
+   * Returns immediately with the user message
    */
   async sendMessage(conversationId: string, userId: string, content: string) {
     // Verify conversation exists and belongs to user
-    const conversation = await this.getConversation(conversationId, userId);
+    await this.getConversation(conversationId, userId);
 
     // Save user message
     const userMessage = await this.prisma.conversationItem.create({
@@ -195,6 +201,42 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
         content,
       },
     });
+
+    // Update conversation status to PROCESSING
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        status: ConversationStatus.PROCESSING,
+        errorMessage: null,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Queue the job for async processing
+    await this.llmQueue.add('process-message', {
+      conversationId,
+      userId,
+      content,
+      userMessageId: userMessage.id,
+    });
+
+    return {
+      userMessage,
+      status: 'processing',
+    };
+  }
+
+  /**
+   * Process message asynchronously (called by processor)
+   * This contains the core LLM logic
+   */
+  async processMessageAsync(
+    conversationId: string,
+    userId: string,
+    content: string,
+  ) {
+    // Get conversation with history
+    const conversation = await this.getConversation(conversationId, userId);
 
     // Get conversation history (limited to prevent context overflow)
     const fullHistory = conversation.conversationItems || [];
@@ -234,19 +276,14 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       }
     }
 
-    // Add the new user message
-    messages.push(new HumanMessage(content));
-
     // Get tools
     const tools = this.getTools(userId);
 
     // Bind tools to the model
     const modelWithTools = this.chatModel.bindTools(tools);
 
-    // Track if any tools were executed and collect tool messages
-    let actionTaken = false;
+    // Track iterations
     let iterations = 0;
-    const toolMessages: any[] = [];
 
     // Get initial AI response
     let aiResponse = await modelWithTools.invoke(messages);
@@ -254,7 +291,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
 
     // Multi-round tool execution loop
     while (aiResponse.tool_calls && aiResponse.tool_calls.length > 0 && iterations < MAX_TOOL_ITERATIONS) {
-      actionTaken = true;
       iterations++;
       this.logger.debug(`Tool iteration ${iterations}/${MAX_TOOL_ITERATIONS}`);
 
@@ -321,7 +357,7 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
         const componentData = !error && result.componentData ? result.componentData : null;
 
         // Save tool result to database
-        const toolMessage = await this.prisma.conversationItem.create({
+        await this.prisma.conversationItem.create({
           data: {
             conversationId,
             role: ConversationItemRole.TOOL,
@@ -331,9 +367,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
             componentData: componentData ? JSON.parse(JSON.stringify(componentData)) : null,
           },
         });
-
-        // Collect for response
-        toolMessages.push(toolMessage);
 
         // Add tool result to messages
         messages.push(new ToolMessage({
@@ -352,7 +385,7 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       ? aiResponse.content
       : JSON.stringify(aiResponse.content);
 
-    const finalAiMessage = await this.prisma.conversationItem.create({
+    await this.prisma.conversationItem.create({
       data: {
         conversationId,
         role: ConversationItemRole.ASSISTANT,
@@ -365,13 +398,68 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       where: { id: conversationId },
       data: { updatedAt: new Date() },
     });
+  }
+
+  /**
+   * Poll for new messages since a given timestamp
+   */
+  async pollMessages(conversationId: string, userId: string, since: Date) {
+    // Verify conversation belongs to user
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        userId,
+      },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    // Get new messages since timestamp
+    const newMessages = await this.prisma.conversationItem.findMany({
+      where: {
+        conversationId,
+        createdAt: {
+          gt: since,
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    const isComplete = conversation.status === ConversationStatus.IDLE ||
+                       conversation.status === ConversationStatus.ERROR;
 
     return {
-      userMessage,
-      aiMessage: finalAiMessage,
-      toolMessages,
-      actionTaken,
+      messages: newMessages,
+      status: conversation.status,
+      isComplete,
+      errorMessage: conversation.errorMessage,
     };
+  }
+
+  /**
+   * Get conversation status only (lightweight)
+   */
+  async getConversationStatus(conversationId: string, userId: string) {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        userId,
+      },
+      select: {
+        status: true,
+        errorMessage: true,
+      },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    return conversation;
   }
 
   /**

@@ -20,8 +20,6 @@ export function ChatNoteCard({ note }: ChatNoteCardProps) {
     }
   };
 
-  console.log('note', note);
-
   // Get preview text - use snippet (from search) or content (from full note)
   const getPreview = () => {
     if (note.snippet) {
