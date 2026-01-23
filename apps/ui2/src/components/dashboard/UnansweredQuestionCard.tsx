@@ -2,14 +2,14 @@ import { Card, Text, Group, ActionIcon, HoverCard, Badge } from '@mantine/core';
 import { IconEye, IconHelp } from '@tabler/icons-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Question } from '@/types/question';
-import { useNavigate } from 'react-router-dom';
+import { useOpenNote } from '@/hooks/useOpenNote';
 
 interface UnansweredQuestionCardProps {
   question: Question;
 }
 
 export function UnansweredQuestionCard({ question }: UnansweredQuestionCardProps) {
-  const navigate = useNavigate();
+  const { openNote } = useOpenNote();
 
   const questionPreview = question.question.length > 80
     ? `${question.question.substring(0, 80)}...`
@@ -20,7 +20,7 @@ export function UnansweredQuestionCard({ question }: UnansweredQuestionCardProps
     if ((e.target as HTMLElement).closest('[data-preview-icon]')) {
       return;
     }
-    navigate(`/notes/${question.noteId}`);
+    openNote(question.noteId);
   };
 
   return (

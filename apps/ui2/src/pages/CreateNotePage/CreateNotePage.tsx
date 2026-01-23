@@ -4,10 +4,12 @@ import { Center, Loader, Text } from '@mantine/core';
 import { useNotebooks } from '@/hooks/useNotebooks';
 import { useCreateNote } from '@/hooks/useNotes';
 import { notifications } from '@mantine/notifications';
+import { useTabsContext } from '@/providers/TabsProvider';
 
 export function CreateNotePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { openTab } = useTabsContext();
   const { data: notebooks, isLoading: isLoadingNotebooks, error: notebooksError } = useNotebooks();
   const createNoteMutation = useCreateNote();
 
@@ -52,7 +54,8 @@ export function CreateNotePage() {
           },
         });
 
-        // Navigate to the newly created note
+        // Open the new note in a tab and navigate (with replace to remove this loading page from history)
+        openTab(newNote.id, newNote.title);
         navigate(`/notes/${newNote.id}`, { replace: true });
       } catch (error) {
         console.error('Error creating note:', error);

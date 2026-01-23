@@ -23,10 +23,12 @@ import { CreateNotebookModal } from '@/views/NoteTree/CreateNotebookModal';
 import { notifications } from '@mantine/notifications';
 import { useNotebookSearch } from '@/hooks/useNotebookSearch';
 import { ActionPanel } from '@/components/ActionPanel';
+import { useOpenNote } from '@/hooks/useOpenNote';
 
 export function NotebookView() {
   const { notebookId } = useParams<{ notebookId: string }>();
   const navigate = useNavigate();
+  const { openNote } = useOpenNote();
   const [createNotebookModalOpen, setCreateNotebookModalOpen] = useState(false);
   const createNoteMutation = useCreateNote();
   
@@ -49,8 +51,8 @@ export function NotebookView() {
     });
   }, [notes]);
 
-  const handleNoteClick = (noteId: string) => {
-    navigate(`/notes/${noteId}`);
+  const handleNoteClick = (noteId: string, title?: string) => {
+    openNote(noteId, title);
   };
 
   const handleCreateNote = async () => {
@@ -64,9 +66,9 @@ export function NotebookView() {
           content: '',
         },
       });
-      
-      // Navigate to the new note
-      navigate(`/notes/${newNote.id}`);
+
+      // Open the new note in a tab
+      openNote(newNote.id, newNote.title);
     } catch (error) {
       console.error('Error creating note:', error);
       notifications.show({
@@ -193,7 +195,7 @@ export function NotebookView() {
                   key={result.id}
                   result={result}
                   notebookName={getNotebookName(result.notebookId)}
-                  onClick={() => handleNoteClick(result.id)}
+                  onClick={() => handleNoteClick(result.id, result.title)}
                 />
               ))}
             </SimpleGrid>
@@ -254,7 +256,7 @@ export function NotebookView() {
                 <NoteCard
                   key={note.id}
                   note={note}
-                  onClick={() => handleNoteClick(note.id)}
+                  onClick={() => handleNoteClick(note.id, note.title)}
                 />
               ))}
             </SimpleGrid>

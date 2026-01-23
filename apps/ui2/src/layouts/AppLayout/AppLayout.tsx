@@ -24,9 +24,11 @@ import {
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
+import { TabsProvider } from '@/providers/TabsProvider';
 import { getUrl } from '@/constants/urls';
 import { NoteTree } from '@/views/NoteTree';
 import { Search } from '@/components/Search/Search';
+import { TabBar } from '@/components/TabBar';
 import { TranscriptionModal } from '@/components/TranscriptionModal';
 import { ChatDrawer } from '@/components/ChatDrawer';
 import { createConversation } from '@/api/conversationApi';
@@ -126,14 +128,15 @@ export const AppLayout = () => {
   ]
 
   return (
+    <TabsProvider>
     <div>
       {/* Full-width header */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
           zIndex: 100,
           height: HEADER_HEIGHT,
           padding: theme.spacing.md,
@@ -153,9 +156,14 @@ export const AppLayout = () => {
         />
 
         <Group style={{ flex: 1, minWidth: 0 }} justify="space-between" gap={isMobile ? "xs" : "md"}>
-          <div style={{ flex: 1, minWidth: 0, maxWidth: isMobile ? 'none' : '500px' }}>
+          <div style={{ flex: '0 0 auto', minWidth: isMobile ? 100 : 200, maxWidth: isMobile ? 'none' : '500px' }}>
             <Search />
           </div>
+          {!isMobile && (
+            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginLeft: 8, marginRight: 8 }}>
+              <TabBar />
+            </div>
+          )}
           <Group gap="xs" style={{ flexShrink: 0 }}>
             <Tooltip label="Chat">
               <ActionIcon
@@ -324,6 +332,7 @@ export const AppLayout = () => {
         />
       )}
     </div>
+    </TabsProvider>
   )
 }
 

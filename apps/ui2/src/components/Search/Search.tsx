@@ -4,6 +4,7 @@ import { IconSearch } from '@tabler/icons-react';
 import { SearchResults } from '@/types/search';
 import { fetchSearchResults } from '@/api/searchApi';
 import { useNavigate } from 'react-router-dom';
+import { useOpenNote } from '@/hooks/useOpenNote';
 
 const SEARCH_TIMEOUT = 300;
 
@@ -13,6 +14,7 @@ export function Search() {
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { openNote } = useOpenNote();
 
   const debouncedSearch = useCallback(() => {
     if (updateTimeoutRef.current) {
@@ -87,7 +89,7 @@ export function Search() {
               onClick={() => {
                 setSearchTerm('');
                 setSearchResults(undefined);
-                navigate(`/notes/${result.id}`);
+                openNote(result.id, result.title);
               }}
             >
               <div className="flex items-center gap-2 mb-1">

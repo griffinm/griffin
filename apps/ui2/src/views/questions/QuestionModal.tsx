@@ -15,7 +15,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { Question } from '@/types/question';
 import { updateQuestion } from '@/api/questionsApi';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useOpenNote } from '@/hooks/useOpenNote';
 
 interface QuestionModalProps {
   question: Question | null;
@@ -27,7 +27,7 @@ export function QuestionModal({ question, opened, onClose }: QuestionModalProps)
   const [answer, setAnswer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const { openNote } = useOpenNote();
 
   const isAnswered = question?.answer && question.answer !== '';
 
@@ -59,7 +59,7 @@ export function QuestionModal({ question, opened, onClose }: QuestionModalProps)
 
   const handleGoToNote = () => {
     if (question) {
-      navigate(`/notes/${question.noteId}`);
+      openNote(question.noteId, question.noteTitle);
       onClose();
     }
   };
