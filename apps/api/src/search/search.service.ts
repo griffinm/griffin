@@ -97,6 +97,7 @@ export class SearchService implements OnModuleInit {
         const noteResult = new NoteResult();
         noteResult.id = hit.document.id;
         noteResult.title = hit.document.title;
+        noteResult.notebookId = hit.document.notebookId;
         noteResult.matchedTokens = hit.matched_tokens;
         noteResult.snippet = hit.highlights[0]?.snippet;
         noteResult.matchedField = hit.highlights[0]?.field;

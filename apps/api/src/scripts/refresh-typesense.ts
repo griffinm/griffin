@@ -92,17 +92,20 @@ const main = async () => {
       
       if (notebook) {
         // Add note to Typesense index
+        const content = (note.content || '')
+          .replace(/<p>/gm, ' ')
+          .replace(/<br>/gm, ' ')
+          .replace(/<[^>]*>?/gm, '')
+          .replace(/&nbsp;/gm, ' ');
+
         await typesenseClient.collections("notes").documents().upsert({
-          title: note.title,
-          content: note.content
-            .replace(/<p>/gm, ' ')
-            .replace(/<br>/gm, ' ')
-            .replace(/<[^>]*>?/gm, '')
-            .replace(/&nbsp;/gm, ' '),
+          title: note.title || '',
+          content,
           id: note.id,
           userId: notebook.userId,
+          notebookId: note.notebookId,
         });
-        
+
         console.log(`Added note ${note.id.substring(0, 7)} to search index`);
       }
     }

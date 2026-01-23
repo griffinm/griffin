@@ -1,25 +1,28 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Button, 
-  Title, 
-  Text, 
-  Stack, 
-  Loader, 
-  Center, 
+import {
+  Button,
+  Title,
+  Text,
+  Stack,
+  Loader,
+  Center,
   Container,
   Group,
   Paper,
   SimpleGrid,
   Skeleton,
   ActionIcon,
+  TextInput,
 } from '@mantine/core';
-import { IconPlus, IconNotebook, IconNote, IconArrowLeft } from '@tabler/icons-react';
+import { IconPlus, IconNotebook, IconNote, IconArrowLeft, IconSearch, IconX } from '@tabler/icons-react';
 import { useNotesByNotebook, useCreateNote } from '@/hooks/useNotes';
-import { useNotebook } from '@/hooks/useNotebooks';
+import { useNotebook, useNotebooks } from '@/hooks/useNotebooks';
 import { NoteCard } from './NoteCard';
-import { useMemo, useState } from 'react';
+import { SearchResultCard } from './SearchResultCard';
+import { useMemo, useState, useCallback } from 'react';
 import { CreateNotebookModal } from '@/views/NoteTree/CreateNotebookModal';
 import { notifications } from '@mantine/notifications';
+import { useNotebookSearch } from '@/hooks/useNotebookSearch';
 
 export function NotebookView() {
   const { notebookId } = useParams<{ notebookId: string }>();
@@ -29,6 +32,12 @@ export function NotebookView() {
   
   const { data: notebook, isLoading: notebookLoading, error: notebookError } = useNotebook(notebookId || '');
   const { data: notes, isLoading: notesLoading, error: notesError } = useNotesByNotebook(notebookId || '');
+  const { data: allNotebooks } = useNotebooks();
+  const { searchTerm, setSearchTerm, results: searchResults, isSearching, isLoading: searchLoading, clearSearch } = useNotebookSearch(notebookId || '');
+
+  const getNotebookName = useCallback((nbId: string) => {
+    return allNotebooks?.find(nb => nb.id === nbId)?.title || 'Unknown Notebook';
+  }, [allNotebooks]);
 
   // Sort notes by updatedAt (most recent first)
   const sortedNotes = useMemo(() => {
@@ -117,6 +126,22 @@ export function NotebookView() {
           </div>
         </Group>
 
+        {/* Search Bar */}
+        <TextInput
+          placeholder="Search notes in this notebook and sub-notebooks..."
+          leftSection={<IconSearch size={18} />}
+          rightSection={
+            searchTerm ? (
+              <ActionIcon variant="subtle" onClick={clearSearch} size="sm">
+                <IconX size={16} />
+              </ActionIcon>
+            ) : null
+          }
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="md"
+        />
+
         {/* Stats & Actions */}
         <Paper 
           shadow="sm" 
@@ -160,49 +185,88 @@ export function NotebookView() {
           </Group>
         </Paper>
 
-        {/* Notes Grid */}
-        {notebookLoading || notesLoading ? (
-          <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <Skeleton key={i} height={180} radius="md" />
-            ))}
-          </SimpleGrid>
-        ) : sortedNotes.length === 0 ? (
-          <Paper shadow="sm" p="xl" radius="md" withBorder>
-            <Center py="xl">
-              <Stack align="center" gap="md">
-                <IconNote size={64} style={{ opacity: 0.3 }} />
-                <div style={{ textAlign: 'center' }}>
-                  <Text size="lg" fw={500} mb="xs">
-                    No notes in this notebook yet
-                  </Text>
-                  <Text size="sm" c="dimmed" mb="md">
-                    Create your first note to get started with this notebook
-                  </Text>
-                </div>
-                <Button
-                  size="lg"
-                  leftSection={<IconPlus size={20} />}
-                  onClick={handleCreateNote}
-                  loading={createNoteMutation.isPending}
-                  variant="gradient"
-                  gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
-                >
-                  Create Your First Note
-                </Button>
-              </Stack>
-            </Center>
-          </Paper>
+        {/* Notes Grid / Search Results */}
+        {isSearching ? (
+          // Search Results Mode
+          searchLoading ? (
+            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <Skeleton key={i} height={180} radius="md" />
+              ))}
+            </SimpleGrid>
+          ) : searchResults?.noteResults && searchResults.noteResults.length > 0 ? (
+            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+              {searchResults.noteResults.map((result) => (
+                <SearchResultCard
+                  key={result.id}
+                  result={result}
+                  notebookName={getNotebookName(result.notebookId)}
+                  onClick={() => handleNoteClick(result.id)}
+                />
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
+              <Center py="xl">
+                <Stack align="center" gap="md">
+                  <IconSearch size={64} style={{ opacity: 0.3 }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <Text size="lg" fw={500} mb="xs">
+                      No results found
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Try a different search term
+                    </Text>
+                  </div>
+                </Stack>
+              </Center>
+            </Paper>
+          )
         ) : (
-          <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
-            {sortedNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onClick={() => handleNoteClick(note.id)}
-              />
-            ))}
-          </SimpleGrid>
+          // Normal Notes Mode
+          notebookLoading || notesLoading ? (
+            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <Skeleton key={i} height={180} radius="md" />
+              ))}
+            </SimpleGrid>
+          ) : sortedNotes.length === 0 ? (
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
+              <Center py="xl">
+                <Stack align="center" gap="md">
+                  <IconNote size={64} style={{ opacity: 0.3 }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <Text size="lg" fw={500} mb="xs">
+                      No notes in this notebook yet
+                    </Text>
+                    <Text size="sm" c="dimmed" mb="md">
+                      Create your first note to get started with this notebook
+                    </Text>
+                  </div>
+                  <Button
+                    size="lg"
+                    leftSection={<IconPlus size={20} />}
+                    onClick={handleCreateNote}
+                    loading={createNoteMutation.isPending}
+                    variant="gradient"
+                    gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                  >
+                    Create Your First Note
+                  </Button>
+                </Stack>
+              </Center>
+            </Paper>
+          ) : (
+            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+              {sortedNotes.map((note) => (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  onClick={() => handleNoteClick(note.id)}
+                />
+              ))}
+            </SimpleGrid>
+          )
         )}
       </Stack>
 

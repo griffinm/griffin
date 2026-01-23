@@ -1,6 +1,7 @@
 export class NoteResult {
   id: string;
   title: string;
+  notebookId: string;
   matchedTokens: string[];
   snippet?: string;
   matchedField?: 'content' | 'title';
