@@ -12,4 +12,14 @@
       @apply flex gap-2 items-center;
     }
   }
+
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    @apply bg-gray-100 p-4 rounded;
+
+    code {
+      @apply bg-transparent p-0;
+    }
+  }
 }
