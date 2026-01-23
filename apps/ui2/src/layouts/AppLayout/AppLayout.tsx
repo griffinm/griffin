@@ -209,7 +209,7 @@ export const AppLayout = () => {
               right: 0,
               bottom: 0,
               background: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 9,
+              zIndex: 59,
             }}
           />
         )}
@@ -229,7 +229,7 @@ export const AppLayout = () => {
             display: 'flex',
             flexDirection: 'column',
             height: isMobile ? `calc(100vh - ${HEADER_HEIGHT}px)` : '100%',
-            zIndex: 10,
+            zIndex: 60,
             boxShadow: isMobile && opened ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
           }}
         >
