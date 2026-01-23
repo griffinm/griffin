@@ -1,6 +1,7 @@
 volumes:
   griffin-db-data:
   typesense-data:
+  redis-data:
 
 services:
   typesense:
@@ -21,7 +22,15 @@ services:
       - ALLOW_IP_RANGE=0.0.0.0/0
       - POSTGRES_PASSWORD=griffin
     ports:
-      - 6543:5432
+      - 5432:5432
+  redis:
+    image: redis:7-alpine
+    restart: on-failure
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
   api:
     build:
       context: .
@@ -31,4 +40,5 @@ services:
     depends_on:
       - db
       - typesense
+      - redis
     restart: on-failure

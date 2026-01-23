@@ -1,10 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuestionDto } from './dto/create.dto';
 import { UpdateQuestionDto } from './dto/update.dto';
 import { QuestionEntity } from './dto/question.entity';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from '@prisma/client';
+import { SearchService } from '../search/search.service';
 
 @Injectable()
 export class QuestionsService {
@@ -12,6 +13,8 @@ export class QuestionsService {
 
   constructor(
     private prisma: PrismaService,
+    @Inject(forwardRef(() => SearchService))
+    private searchService: SearchService,
   ) {}
 
   async getMany(userId: string, includeAnswered = false): Promise<QuestionEntity[]> {
@@ -23,13 +26,32 @@ export class QuestionsService {
         note: {
           deletedAt: null,
         },
-        // ...this.getAnsweredWhereClause(includeAnswered),
+        ...this.getAnsweredWhereClause(includeAnswered),
+      },
+      include: {
+        note: {
+          select: {
+            title: true,
+            notebook: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
     this.logger.debug(`Found ${questions.length} questions for user ${userId}`);
 
     const objs = questions.map((question) => {
-      return plainToInstance(QuestionEntity, question);
+      return plainToInstance(QuestionEntity, {
+        ...question,
+        noteTitle: question.note?.title,
+        notebookName: question.note?.notebook?.title,
+      });
     });
     return objs;
   }
@@ -62,6 +84,8 @@ export class QuestionsService {
       },
     });
 
+    this.searchService.addQuestion(question, userId);
+
     this.logger.debug(`Question ID: ${question.id} created for user ${userId}`);
     return plainToInstance(QuestionEntity, question);
   }
@@ -80,6 +104,9 @@ export class QuestionsService {
         deletedAt: new Date(),
       },
     });
+
+    this.searchService.removeQuestion(questionId);
+
     this.logger.debug(`Question ${questionId} deleted for user ${userId}`);
 
     return plainToInstance(QuestionEntity, question);
@@ -100,6 +127,9 @@ export class QuestionsService {
       },
       data: updateQuestionDto,
     });
+
+    this.searchService.addQuestion(question, userId);
+
     this.logger.debug(`Question ${questionId} updated for user ${userId}`);
     return plainToInstance(QuestionEntity, question);
   }

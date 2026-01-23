@@ -5,6 +5,13 @@ export enum ConversationItemRole {
   TOOL = 'TOOL',
 }
 
+export enum ConversationStatus {
+  IDLE = 'IDLE',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  ERROR = 'ERROR',
+}
+
 export interface ConversationItem {
   id: string;
   conversationId: string;
@@ -24,6 +31,9 @@ export interface Conversation {
   id: string;
   userId: string;
   title?: string | null;
+  status?: ConversationStatus;
+  errorMessage?: string | null;
+  deletedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,8 +44,15 @@ export interface ConversationWithItems extends Conversation {
 
 export interface SendMessageResponse {
   userMessage: ConversationItem;
-  aiMessage: ConversationItem;
-  actionTaken: boolean;
+  status: string;
+}
+
+export interface PollMessagesResponse {
+  messages: ConversationItem[];
+  status: ConversationStatus;
+  isComplete: boolean;
+  errorMessage: string | null;
+  title?: string | null;
 }
 
 export interface ConversationListResponse {

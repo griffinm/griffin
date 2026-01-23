@@ -17,26 +17,21 @@ interface ChatComponentRendererProps {
  * - Multiple tasks: { type: 'task', data: [{...task1...}, {...task2...}] }
  */
 export const ChatComponentRenderer = ({ componentData }: ChatComponentRendererProps) => {
-  console.log('ChatComponentRenderer received componentData:', componentData);
-  
   if (!componentData || !componentData.type) {
-    console.log('No componentData or type');
     return null;
   }
 
   const { type, data } = componentData;
-  console.log('Component type:', type, 'Data:', data);
 
   // Check if component type is registered
   const Component = componentRegistry[type as ComponentType];
   if (!Component) {
-    console.warn(`Unknown component type: ${type}`);
+    console.warn(`Unknown component type: ${type}. Available types:`, Object.keys(componentRegistry));
     return null;
   }
 
   // Handle null or undefined data
   if (!data) {
-    console.log('No data provided');
     return null;
   }
 

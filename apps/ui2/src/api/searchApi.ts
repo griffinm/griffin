@@ -3,11 +3,16 @@ import { SearchResults } from "@/types/search";
 
 export interface SearchRequest {
   query: string;
-  collection?: 'notes' | 'tasks' | 'all';
+  collection?: 'notes' | 'tasks' | 'questions' | 'all';
+  notebookId?: string;
 }
 
-export const fetchSearchResults = async ({ query, collection = 'notes' }: SearchRequest): Promise<SearchResults> => {
-  const response = await baseClient.get<SearchResults>(`/search?query=${query}&collection=${collection}`);
+export const fetchSearchResults = async ({ query, collection = 'notes', notebookId }: SearchRequest): Promise<SearchResults> => {
+  let url = `/search?query=${encodeURIComponent(query)}&collection=${collection}`;
+  if (notebookId) {
+    url += `&notebookId=${notebookId}`;
+  }
+  const response = await baseClient.get<SearchResults>(url);
   return response.data;
 };
 

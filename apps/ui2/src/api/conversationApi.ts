@@ -4,6 +4,7 @@ import {
   ConversationWithItems,
   SendMessageResponse,
   ConversationListResponse,
+  PollMessagesResponse,
 } from "@/types/conversation";
 
 export interface CreateConversationOptions {
@@ -26,7 +27,7 @@ export const createConversation = async (
 };
 
 /**
- * Send a message to a conversation
+ * Send a message to a conversation (returns immediately, queues for processing)
  */
 export const sendMessage = async (
   conversationId: string,
@@ -35,6 +36,24 @@ export const sendMessage = async (
   const response = await baseClient.post<SendMessageResponse>(
     `/conversations/${conversationId}/messages`,
     { content }
+  );
+  return response.data;
+};
+
+/**
+ * Poll for new messages since a timestamp
+ */
+export const pollMessages = async (
+  conversationId: string,
+  since: Date
+): Promise<PollMessagesResponse> => {
+  const response = await baseClient.get<PollMessagesResponse>(
+    `/conversations/${conversationId}/messages/poll`,
+    {
+      params: {
+        since: since.toISOString(),
+      },
+    }
   );
   return response.data;
 };

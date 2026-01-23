@@ -2,14 +2,14 @@ import { Card, Text, Group, ActionIcon, HoverCard, Pill } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Note } from '@/types/note';
-import { useNavigate } from 'react-router-dom';
+import { useOpenNote } from '@/hooks/useOpenNote';
 
 interface RecentNoteCardProps {
   note: Note;
 }
 
 export function RecentNoteCard({ note }: RecentNoteCardProps) {
-  const navigate = useNavigate();
+  const { openNote } = useOpenNote();
 
   const contentPreview = note.content
     ? note.content.length > 100
@@ -22,7 +22,7 @@ export function RecentNoteCard({ note }: RecentNoteCardProps) {
     if ((e.target as HTMLElement).closest('[data-preview-icon]')) {
       return;
     }
-    navigate(`/notes/${note.id}`);
+    openNote(note.id, note.title);
   };
 
   return (

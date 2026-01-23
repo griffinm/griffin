@@ -1,16 +1,16 @@
 import { Button, Group, Paper } from '@mantine/core';
 import { IconPlus, IconNote } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { useNotebooks } from '@/hooks/useNotebooks';
 import { useCreateNote } from '@/hooks/useNotes';
 import { notifications } from '@mantine/notifications';
+import { useOpenNote } from '@/hooks/useOpenNote';
 
 interface ActionBarProps {
   onCreateTask: () => void;
 }
 
 export function ActionBar({ onCreateTask }: ActionBarProps) {
-  const navigate = useNavigate();
+  const { openNote } = useOpenNote();
   const { data: notebooks } = useNotebooks();
   const createNoteMutation = useCreateNote();
 
@@ -35,9 +35,9 @@ export function ActionBar({ onCreateTask }: ActionBarProps) {
           content: '',
         },
       });
-      
-      // Navigate to the new note
-      navigate(`/notes/${newNote.id}`);
+
+      // Open the new note in a tab
+      openNote(newNote.id, newNote.title);
     } catch (error) {
       console.error('Error creating note:', error);
       notifications.show({

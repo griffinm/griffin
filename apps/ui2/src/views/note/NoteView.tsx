@@ -12,6 +12,7 @@ import { TagManager } from '@/components/TagManager/TagManager';
 import { Tag } from '@/types/tag';
 import { addTagToNote, removeTagFromNote } from '@/api/notesApi';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTabsContext } from '@/providers/TabsProvider';
 
 const SAVE_TIMEOUT = 500;
 
@@ -19,6 +20,7 @@ export function NoteView() {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { updateTabTitle, closeTab } = useTabsContext();
   const { data: note, isLoading, error } = useNote(noteId || '');
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
@@ -56,6 +58,13 @@ export function NoteView() {
       setTitleValue(note.title);
     }
   }, [note?.title]);
+
+  // Sync tab title when note title changes
+  useEffect(() => {
+    if (noteId && note?.title) {
+      updateTabTitle(noteId, note.title);
+    }
+  }, [noteId, note?.title, updateTabTitle]);
 
   // Focus input when entering edit mode
   useEffect(() => {
@@ -129,7 +138,8 @@ export function NoteView() {
         notebookId: note.notebookId,
       });
       setDeleteModalOpened(false);
-      // Navigate to the notebook after deleting the note
+      // Close the tab and navigate to the notebook
+      closeTab(noteId);
       navigate(`/notebooks/${note.notebookId}`);
     } catch (error) {
       console.error('Error deleting note:', error);
@@ -336,8 +346,9 @@ export function NoteView() {
       </div>
 
       <div style={{ padding: '0 20px 20px' }}>
-        <Editor 
-          value={note.content || ''} 
+        <Editor
+          key={noteId}
+          value={note.content || ''}
           onUpdate={debouncedUpdate}
           minHeight="calc(100vh - 200px)"
           maxHeight="none"

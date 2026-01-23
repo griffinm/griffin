@@ -6,21 +6,91 @@
     margin-bottom: 10px;
     margin-top: 10px;
   }
+
+  ul[data-type="taskList"] {
+    li[data-checked="true"] {
+      color: oklch(55.1% 0.027 264.364);
+    }
+  }
 }
 
 .ProseMirror {
   outline: none;
-  
+
   p {
     margin: 0.5em 0;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     margin: 1em 0 0.5em 0;
+    font-weight: 600 !important;
+  }
+
+  // Collapsible heading styles
+  .collapsed-content {
+    display: none;
+  }
+
+  .collapsible-heading {
+    display: inline-flex;
+    align-items: baseline;
+  }
+
+  .collapse-toggle {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin-left: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.4;
+    transition: opacity 0.15s ease;
+    border-radius: 3px;
+    color: inherit;
+    flex-shrink: 0;
+
+    &:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    &:focus {
+      outline: none;
+      opacity: 1;
+    }
+  }
+
+  // Keep toggle more visible when collapsed
+  .collapsible-heading[data-collapsed="true"] .collapse-toggle {
+    opacity: 0.6;
+  }
+
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  h4 {
+    font-size: 1rem !important;
+  }
+
+  h5 {
+    font-size: 0.9rem !important;
   }
   
   ul, ol {
-    padding-left: 1.5em;
+    padding-left: 0.25em;
   }
   
   code {
@@ -34,11 +104,21 @@
     background-color: rgba(0, 0, 0, 0.05);
     padding: 1em;
     border-radius: 4px;
-    overflow-x: auto;
-    
+    white-space: pre-wrap;
+    word-wrap: break-word;
+
     code {
       background: none;
       padding: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
+  }
+}
+
+// Print styles - show all collapsed content
+@media print {
+  .ProseMirror .collapsed-content {
+    display: block !important;
   }
 }

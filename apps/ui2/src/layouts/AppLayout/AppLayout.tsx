@@ -18,20 +18,23 @@ import {
   IconCheck,
   IconBook,
   IconTags,
+  IconQuestionMark,
   IconMicrophone,
   IconMessagePlus,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
+import { TabsProvider } from '@/providers/TabsProvider';
 import { getUrl } from '@/constants/urls';
 import { NoteTree } from '@/views/NoteTree';
 import { Search } from '@/components/Search/Search';
+import { TabBar } from '@/components/TabBar';
 import { TranscriptionModal } from '@/components/TranscriptionModal';
 import { ChatDrawer } from '@/components/ChatDrawer';
 import { createConversation } from '@/api/conversationApi';
 
 const HEADER_HEIGHT = 40;
-const LEFT_NAVBAR_WIDTH_DESKTOP = 250;
+const LEFT_NAVBAR_WIDTH_DESKTOP = 225;
 
 export const AppLayout = () => {
   const theme = useMantineTheme()
@@ -86,7 +89,7 @@ export const AppLayout = () => {
     }
   };
 
-  const openChatDrawer = (conversationId: string) => {
+  const openChatDrawer = (conversationId: string | null = null) => {
     setActiveChatConversationId(conversationId);
     setChatDrawerOpened(true);
   };
@@ -97,12 +100,15 @@ export const AppLayout = () => {
     setTimeout(() => setActiveChatConversationId(null), 300);
   };
 
-  const handleNewChat = async () => {
+  const handleOpenChat = () => {
+    // Open drawer without conversation to show history
+    openChatDrawer(null);
+  };
+
+  const handleCreateNewChat = async () => {
     try {
-      // Create a new conversation
-      const conversation = await createConversation({
-        title: `Chat - ${new Date().toLocaleString()}`,
-      });
+      // Create a new conversation (title will be auto-generated after first message)
+      const conversation = await createConversation();
 
       // Open the chat drawer with the new conversation
       openChatDrawer(conversation.id);
@@ -116,17 +122,19 @@ export const AppLayout = () => {
     { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
     { icon: IconBook, label: 'Notebooks', path: getUrl('notebooks').path(), color: 'indigo' },
     { icon: IconTags, label: 'Tags', path: getUrl('tags').path(), color: 'violet' },
+    { icon: IconQuestionMark, label: 'Questions', path: getUrl('questions').path(), color: 'orange' },
   ]
 
   return (
+    <TabsProvider>
     <div>
       {/* Full-width header */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
           zIndex: 100,
           height: HEADER_HEIGHT,
           padding: theme.spacing.md,
@@ -146,16 +154,21 @@ export const AppLayout = () => {
         />
 
         <Group style={{ flex: 1, minWidth: 0 }} justify="space-between" gap={isMobile ? "xs" : "md"}>
-          <div style={{ flex: 1, minWidth: 0, maxWidth: isMobile ? 'none' : '500px' }}>
+          <div style={{ flex: '0 0 auto', minWidth: isMobile ? 100 : 200, maxWidth: isMobile ? 'none' : '500px' }}>
             <Search />
           </div>
+          {!isMobile && (
+            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginLeft: 8, marginRight: 8 }}>
+              <TabBar />
+            </div>
+          )}
           <Group gap="xs" style={{ flexShrink: 0 }}>
-            <Tooltip label="New Chat">
+            <Tooltip label="Chat">
               <ActionIcon
                 variant="light"
                 color="teal"
                 size={isMobile ? "md" : "lg"}
-                onClick={handleNewChat}
+                onClick={handleOpenChat}
               >
                 <IconMessagePlus size={isMobile ? 18 : 20} />
               </ActionIcon>
@@ -194,7 +207,7 @@ export const AppLayout = () => {
               right: 0,
               bottom: 0,
               background: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 9,
+              zIndex: 59,
             }}
           />
         )}
@@ -205,8 +218,8 @@ export const AppLayout = () => {
             position: isMobile ? 'fixed' : 'relative',
             top: isMobile ? HEADER_HEIGHT : 'auto',
             left: isMobile ? (opened ? 0 : -LEFT_NAVBAR_WIDTH_DESKTOP) : 'auto',
-            width: isMobile ? 200 : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
-            minWidth: isMobile ? 200 : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
+            width: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
+            minWidth: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
             transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
             overflow: 'hidden',
             background: theme.colors.gray[0],
@@ -214,7 +227,7 @@ export const AppLayout = () => {
             display: 'flex',
             flexDirection: 'column',
             height: isMobile ? `calc(100vh - ${HEADER_HEIGHT}px)` : '100%',
-            zIndex: 10,
+            zIndex: 60,
             boxShadow: isMobile && opened ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
           }}
         >
@@ -247,9 +260,9 @@ export const AppLayout = () => {
             <Divider my="sm" />
           </Stack>
 
-          <Stack gap="xs" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
             <NoteTree />
-          </Stack>
+          </div>
 
           <Divider my="sm" />
 
@@ -286,7 +299,7 @@ export const AppLayout = () => {
         </div>
 
         {/* Pinned chat sidebar */}
-        {isChatPinned && activeChatConversationId && (
+        {isChatPinned && (
           <ChatDrawer
             opened={true}
             onClose={closeChatDrawer}
@@ -294,6 +307,7 @@ export const AppLayout = () => {
             onPinChange={setIsChatPinned}
             renderAsSidebar={true}
             onConversationChange={openChatDrawer}
+            onNewChat={handleCreateNewChat}
           />
         )}
       </div>
@@ -312,9 +326,11 @@ export const AppLayout = () => {
           conversationId={activeChatConversationId}
           onPinChange={setIsChatPinned}
           onConversationChange={openChatDrawer}
+          onNewChat={handleCreateNewChat}
         />
       )}
     </div>
+    </TabsProvider>
   )
 }
 

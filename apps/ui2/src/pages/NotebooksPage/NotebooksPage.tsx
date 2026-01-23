@@ -114,8 +114,7 @@ export function NotebooksPage() {
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => {
-              // TODO: Open create notebook modal
-              console.log('Create notebook clicked');
+              navigate('/notebooks/create');
             }}
           >
             New Notebook
@@ -141,12 +140,10 @@ export function NotebooksPage() {
                   key={notebook.id} 
                   notebook={notebook}
                   onEdit={(nb) => {
-                    // TODO: Open edit modal
-                    console.log('Edit notebook:', nb);
+                    navigate(`/notebooks/${nb.id}/edit`);
                   }}
                   onDelete={(nb) => {
-                    // TODO: Open delete confirmation
-                    console.log('Delete notebook:', nb);
+                    navigate(`/notebooks/${nb.id}/delete`);
                   }}
                 />
               ))}
@@ -245,12 +242,10 @@ export function NotebooksPage() {
                   key={notebook.id} 
                   notebook={notebook}
                   onEdit={(nb) => {
-                    // TODO: Open edit modal
-                    console.log('Edit notebook:', nb);
+                    navigate(`/notebooks/${nb.id}/edit`);
                   }}
                   onDelete={(nb) => {
-                    // TODO: Open delete confirmation
-                    console.log('Delete notebook:', nb);
+                    navigate(`/notebooks/${nb.id}/delete`);
                   }}
                 />
               ))}

@@ -2,6 +2,8 @@ export interface Question {
   id: string;
   userId: string;
   noteId: string;
+  noteTitle?: string;
+  notebookName?: string;
   question: string;
   answer?: string | null;
   createdAt: Date;

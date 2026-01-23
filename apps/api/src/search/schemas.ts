@@ -18,6 +18,10 @@ export const noteSchema: CollectionCreateSchema = {
     {
       name: 'userId',
       type: 'string',
+    },
+    {
+      name: 'notebookId',
+      type: 'string',
     }
   ],
 };
@@ -72,5 +76,32 @@ export const tagSchema: CollectionCreateSchema = {
       name: 'userId',
       type: 'string',
     }
+  ],
+};
+
+export const questionSchema: CollectionCreateSchema = {
+  name: "questions",
+  fields: [
+    {
+      name: "id",
+      type: "string",
+    },
+    {
+      name: "question",
+      type: "string",
+    },
+    {
+      name: "answer",
+      type: "string",
+      optional: true,
+    },
+    {
+      name: "userId",
+      type: "string",
+    },
+    {
+      name: "noteId",
+      type: "string",
+    },
   ],
 };

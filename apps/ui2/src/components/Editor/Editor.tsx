@@ -42,11 +42,17 @@ import { TaskExtension } from './plugins/Task/Extension';
 import { TaskMenuItem } from './plugins/Task/MenuItem';
 import { QuestionExtension } from './plugins/Question/Extension';
 import { QuestionMenuItem } from './plugins/Question/MenuItem';
+import { CollapsibleHeading } from './plugins/CollapsibleHeading/Extension';
 import { createMedia } from '@/api/mediaApi';
 import './styles.scss';
 
 const extensions = [
-  StarterKit,
+  StarterKit.configure({
+    heading: false, // Disable default heading, use CollapsibleHeading instead
+  }),
+  CollapsibleHeading.configure({
+    levels: [1, 2, 3, 4, 5, 6],
+  }),
   TableCell,
   TableHeader,
   TableRow,

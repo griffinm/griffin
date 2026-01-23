@@ -1,14 +1,16 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit, Inject, forwardRef } from "@nestjs/common";
 import Typesense from "typesense";
-import { noteSchema, taskSchema, tagSchema } from "./schemas";
-import { Note, Task, Tag } from "@prisma/client";
-import { SearchResultsDto, NoteResult, TaskResult } from "./dto/search-results.dto";
+import { noteSchema, taskSchema, tagSchema, questionSchema } from "./schemas";
+import { Note, Task, Tag, Question } from "@prisma/client";
+import { SearchResultsDto, NoteResult, TaskResult, QuestionResult } from "./dto/search-results.dto";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotebookService } from "../notebooks/notebook.service";
 
 const collectionNames = {
   note: 'notes',
   task: 'tasks',
   tag: 'tags',
+  question: 'questions',
 }
 
 @Injectable()
@@ -16,7 +18,11 @@ export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private typesenseClient;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => NotebookService))
+    private notebookService: NotebookService,
+  ) {}
 
   async onModuleInit() {
     this.logger.log('Initializing search service');
@@ -58,22 +64,37 @@ export class SearchService implements OnModuleInit {
     } else {
       this.logger.log(`Collection ${tagSchema.name} already exists`);
     }
+
+    if (!existingSchemaNames.includes(questionSchema.name)) {
+      this.logger.log(`Creating collection ${questionSchema.name}`);
+      await this.typesenseClient.collections().create(questionSchema);
+    } else {
+      this.logger.log(`Collection ${questionSchema.name} already exists`);
+    }
   }
   
-  async search(query: string, userId: string, collection: 'notes' | 'tasks' | 'all' = 'notes'): Promise<SearchResultsDto> {
+  async search(query: string, userId: string, collection: 'notes' | 'tasks' | 'questions' | 'all' = 'notes', notebookId?: string): Promise<SearchResultsDto> {
     const searchResults = new SearchResultsDto();
     searchResults.query = query;
     searchResults.hits = 0;
 
     // Search notes if requested
     if (collection === 'notes' || collection === 'all') {
+      let filterBy = `userId:${userId}`;
+
+      // If notebookId is provided, filter by notebook and its descendants
+      if (notebookId) {
+        const notebookIds = await this.notebookService.getDescendantNotebookIds(notebookId, userId);
+        filterBy += ` && notebookId:=[${notebookIds.join(',')}]`;
+      }
+
       const noteSearchParams = {
         q: query,
         query_by: 'title, content',
         num_typos: 4,
         typo_tokens_threshold: 1,
         per_page: 10,
-        filter_by: `userId:${userId}`,
+        filter_by: filterBy,
         highlight_affix_num_tokens: 4,
       };
       this.logger.debug(`Searching notes: ${JSON.stringify(noteSearchParams)}`);
@@ -84,6 +105,7 @@ export class SearchService implements OnModuleInit {
         const noteResult = new NoteResult();
         noteResult.id = hit.document.id;
         noteResult.title = hit.document.title;
+        noteResult.notebookId = hit.document.notebookId;
         noteResult.matchedTokens = hit.matched_tokens;
         noteResult.snippet = hit.highlights[0]?.snippet;
         noteResult.matchedField = hit.highlights[0]?.field;
@@ -123,20 +145,51 @@ export class SearchService implements OnModuleInit {
       searchResults.hits += taskResult.hits.length;
     }
 
+    // Search questions if requested
+    if (collection === 'questions' || collection === 'all') {
+      const questionSearchParams = {
+        q: query,
+        query_by: 'question, answer',
+        num_typos: 4,
+        typo_tokens_threshold: 1,
+        per_page: 10,
+        filter_by: `userId:${userId}`,
+        highlight_affix_num_tokens: 4,
+      };
+      this.logger.debug(`Searching questions: ${JSON.stringify(questionSearchParams)}`);
+
+      const questionResult = await this.typesenseClient.collections(["questions"]).documents().search(questionSearchParams);
+
+      searchResults.questionResults = questionResult.hits.map((hit) => {
+        const questionResult = new QuestionResult();
+        questionResult.id = hit.document.id;
+        questionResult.question = hit.document.question;
+        questionResult.answer = hit.document.answer;
+        questionResult.noteId = hit.document.noteId;
+        questionResult.matchedTokens = hit.matched_tokens;
+        questionResult.snippet = hit.highlights[0]?.snippet;
+        questionResult.matchedField = hit.highlights[0]?.field;
+        return questionResult;
+      });
+      searchResults.hits += questionResult.hits.length;
+    }
+
     return searchResults;
   }
 
   public async rebuildIndex() {
     this.logger.debug(`Rebuilding search index`);
     
-    this.logger.debug(`Deleting collections ${noteSchema.name}, ${taskSchema.name}, and ${tagSchema.name}`);
+    this.logger.debug(`Deleting collections ${noteSchema.name}, ${taskSchema.name}, ${tagSchema.name}, and ${questionSchema.name}`);
     await this.typesenseClient.collections(collectionNames.note).delete();
     await this.typesenseClient.collections(collectionNames.task).delete();
     await this.typesenseClient.collections(collectionNames.tag).delete();
-    this.logger.debug(`Creating collections ${noteSchema.name}, ${taskSchema.name}, and ${tagSchema.name}`);
+    await this.typesenseClient.collections(collectionNames.question).delete();
+    this.logger.debug(`Creating collections ${noteSchema.name}, ${taskSchema.name}, ${tagSchema.name}, and ${questionSchema.name}`);
     await this.typesenseClient.collections().create(noteSchema);
     await this.typesenseClient.collections().create(taskSchema);
     await this.typesenseClient.collections().create(tagSchema);
+    await this.typesenseClient.collections().create(questionSchema);
 
     // Add all notes to the note collection
     const notes = await this.prisma.note.findMany({
@@ -179,6 +232,24 @@ export class SearchService implements OnModuleInit {
       });
     }
 
+    // Add all questions to the question collection
+    const questions = await this.prisma.question.findMany({
+      where: {
+        deletedAt: null,
+        note: {
+          deletedAt: null,
+        },
+      },
+    });
+    for (const question of questions) {
+      await this.addObject({
+        type: 'question',
+        id: question.id,
+        object: question,
+        userId: question.userId,
+      });
+    }
+
     // Remove all empty notes
     this.logger.debug(`Removing all empty notes`);
     const emptyNotes = await this.prisma.note.findMany({
@@ -203,9 +274,9 @@ export class SearchService implements OnModuleInit {
     object,
     userId,
   }: {
-    type: 'note' | 'task' | 'tag';
+    type: 'note' | 'task' | 'tag' | 'question';
     id: string;
-    object: Note | Task | Tag;
+    object: Note | Task | Tag | Question;
     userId: string,
   }): Promise<boolean> {
     this.logger.debug(`Adding ${type} ${id.substring(0, 7)} to search index`);
@@ -236,10 +307,17 @@ export class SearchService implements OnModuleInit {
       const note = (object as Note)
       params.title = note.title
       params.content = note.content
+      params.notebookId = note.notebookId
     } else if (type === 'tag') {
       // This is a tag
       const tag = (object as Tag)
       params.name = tag.name
+    } else if (type === 'question') {
+      // This is a question
+      const question = (object as Question)
+      params.question = question.question
+      params.answer = question.answer || ''
+      params.noteId = question.noteId
     }
 
     this.typesenseClient.collections(collectionName).documents().upsert(params);
@@ -251,7 +329,7 @@ export class SearchService implements OnModuleInit {
     type,
     id,
   }: {
-    type: 'note' | 'task' | 'tag';
+    type: 'note' | 'task' | 'tag' | 'question';
     id: string;
   }): Promise<boolean> {
     this.logger.debug(`Removing ${type} ${id.substring(0, 7)} from search index`);
@@ -284,9 +362,31 @@ export class SearchService implements OnModuleInit {
         .replace(/<br>/gm, ' ')
         .replace(/<[^>]*>?/gm, '')
         .replace(/&nbsp;/gm, ' '),
-
       id: note.id,
       userId: userId,
+      notebookId: note.notebookId,
     });
+  }
+
+  async addQuestion(question: Question, userId: string) {
+    this.logger.debug(`Adding question ${question.id.substring(0, 7)} to search index`);
+
+    this.typesenseClient.collections("questions").documents().upsert({
+      id: question.id,
+      question: question.question,
+      answer: question.answer || '',
+      userId: userId,
+      noteId: question.noteId,
+    });
+  }
+
+  async removeQuestion(questionId: string) {
+    this.logger.debug(`Removing question ${questionId.substring(0, 7)} from search index`);
+
+    try {
+      this.typesenseClient.collections("questions").documents(questionId).delete();
+    } catch (error) {
+      this.logger.error(`Error removing question ${questionId.substring(0, 7)} from search index: ${error}`);
+    }
   }
 }

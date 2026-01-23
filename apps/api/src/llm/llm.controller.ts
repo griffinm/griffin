@@ -19,6 +19,7 @@ import { ConversationMessageDto } from './dto/conversation-message.dto';
 import { ConversationEntity } from './entities/conversation.entity';
 import { ConversationWithItemsDto } from './dto/conversation-with-items.dto';
 import { ConversationItemEntity } from './entities/conversation-item.entity';
+import { ConversationStatus } from '@prisma/client';
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -89,7 +90,8 @@ export class LlmController {
   }
 
   /**
-   * Send a message to a conversation
+   * Send a message to a conversation (async - queues for processing)
+   * Returns immediately with user message and processing status
    */
   @Post('conversations/:id/messages')
   async sendMessage(
@@ -98,8 +100,7 @@ export class LlmController {
     @Body() dto: ConversationMessageDto,
   ): Promise<{
     userMessage: ConversationItemEntity;
-    aiMessage: ConversationItemEntity;
-    actionTaken: boolean;
+    status: string;
   }> {
     const result = await this.llmService.sendMessage(
       id,
@@ -109,9 +110,51 @@ export class LlmController {
 
     return {
       userMessage: new ConversationItemEntity(result.userMessage),
-      aiMessage: new ConversationItemEntity(result.aiMessage),
-      actionTaken: result.actionTaken,
+      status: result.status,
     };
+  }
+
+  /**
+   * Poll for new messages since a timestamp
+   */
+  @Get('conversations/:id/messages/poll')
+  async pollMessages(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+    @Query('since') since: string,
+  ): Promise<{
+    messages: ConversationItemEntity[];
+    status: ConversationStatus;
+    isComplete: boolean;
+    errorMessage: string | null;
+    title: string | null;
+  }> {
+    const sinceDate = since ? new Date(since) : new Date(0);
+
+    const result = await this.llmService.pollMessages(
+      id,
+      request.user.id,
+      sinceDate,
+    );
+
+    return {
+      messages: result.messages.map((m) => new ConversationItemEntity(m)),
+      status: result.status,
+      isComplete: result.isComplete,
+      errorMessage: result.errorMessage,
+      title: result.title,
+    };
+  }
+
+  /**
+   * Get conversation status only (lightweight)
+   */
+  @Get('conversations/:id/status')
+  async getStatus(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+  ) {
+    return this.llmService.getConversationStatus(id, request.user.id);
   }
 
   /**
