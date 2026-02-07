@@ -42,6 +42,8 @@ import { TaskExtension } from './plugins/Task/Extension';
 import { TaskMenuItem } from './plugins/Task/MenuItem';
 import { QuestionExtension } from './plugins/Question/Extension';
 import { QuestionMenuItem } from './plugins/Question/MenuItem';
+import { PromptExtension } from './plugins/Prompt/Extension';
+import { PromptMenuItem } from './plugins/Prompt/MenuItem';
 import { CollapsibleHeading } from './plugins/CollapsibleHeading/Extension';
 import { createMedia } from '@/api/mediaApi';
 import './styles.scss';
@@ -71,6 +73,7 @@ const extensions = [
   ResizableImage,
   TaskExtension,
   QuestionExtension,
+  PromptExtension,
 ];
 
 export function Editor({
@@ -218,6 +221,7 @@ export function Editor({
             <MenuDivider />
             <TaskMenuItem />
             <QuestionMenuItem />
+            <PromptMenuItem />
             <MenuDivider />
             <MenuButtonBold />
             <MenuButtonItalic />

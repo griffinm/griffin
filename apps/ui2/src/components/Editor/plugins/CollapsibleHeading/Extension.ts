@@ -9,21 +9,38 @@ export const collapsePluginKey = new PluginKey('collapsibleHeading');
 
 function findCollapsedSectionEnd(
   doc: ProseMirrorNode,
-  startPos: number,
+  headingPos: number,
   level: number
 ): number {
-  let endPos = doc.content.size;
+  // Find the index of the heading node in the doc
+  let currentPos = 0;
+  let headingIndex = -1;
 
-  doc.nodesBetween(startPos, doc.content.size, (node, pos) => {
-    // If we find a heading with same or higher level (lower number), stop here
-    if (node.type.name === 'heading' && node.attrs.level <= level) {
-      endPos = pos;
-      return false; // Stop iteration
+  for (let i = 0; i < doc.childCount; i++) {
+    if (currentPos === headingPos) {
+      headingIndex = i;
+      break;
     }
-    return true;
-  });
+    currentPos += doc.child(i).nodeSize;
+  }
 
-  return endPos;
+  if (headingIndex === -1) {
+    return doc.content.size;
+  }
+
+  // Start from the node after the heading
+  currentPos = headingPos + doc.child(headingIndex).nodeSize;
+
+  for (let i = headingIndex + 1; i < doc.childCount; i++) {
+    const node = doc.child(i);
+    // Stop at next heading of same or higher level (lower number)
+    if (node.type.name === 'heading' && node.attrs.level <= level) {
+      return currentPos;
+    }
+    currentPos += node.nodeSize;
+  }
+
+  return doc.content.size;
 }
 
 function computeHiddenDecorations(doc: ProseMirrorNode): DecorationSet {
@@ -33,7 +50,7 @@ function computeHiddenDecorations(doc: ProseMirrorNode): DecorationSet {
     if (node.type.name === 'heading' && node.attrs.collapsed) {
       const level = node.attrs.level;
       const contentStart = pos + node.nodeSize;
-      const endPos = findCollapsedSectionEnd(doc, contentStart, level);
+      const endPos = findCollapsedSectionEnd(doc, pos, level);
 
       // Add decorations for each block node in the collapsed range
       if (contentStart < endPos) {
@@ -84,15 +101,20 @@ export const CollapsibleHeading = Heading.extend({
       new Plugin({
         key: collapsePluginKey,
         state: {
-          init(_, { doc }) {
-            return computeHiddenDecorations(doc);
+          init() {
+            // Always start with nothing collapsed when opening a note
+            return DecorationSet.empty;
           },
           apply(tr, oldDecorations, _oldState, newState) {
-            // Recalculate if document changed or collapse was toggled
-            if (tr.docChanged || tr.getMeta(collapsePluginKey)) {
+            // Only recalculate when user explicitly toggles collapse
+            if (tr.getMeta(collapsePluginKey)) {
               return computeHiddenDecorations(newState.doc);
             }
-            return oldDecorations.map(tr.mapping, tr.doc);
+            // On doc changes, map existing decorations to new positions (preserves collapse state)
+            if (tr.docChanged) {
+              return oldDecorations.map(tr.mapping, newState.doc);
+            }
+            return oldDecorations;
           },
         },
         props: {
