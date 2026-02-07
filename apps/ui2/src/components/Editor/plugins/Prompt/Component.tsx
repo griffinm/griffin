@@ -96,7 +96,7 @@ export function Component(props: NodeViewProps) {
       {!collapsed && (
         <div className="px-2 pb-2 cursor-pointer hover:opacity-80 rounded transition-colors">
           {content ? (
-            <pre className="m-0 p-2 bg-white/50 rounded text-sm font-mono whitespace-pre-wrap overflow-x-auto">
+            <pre className="m-0 p-2 bg-white/50 rounded text-sm font-mono whitespace-pre-wrap break-words overflow-hidden">
               {content}
             </pre>
           ) : (
