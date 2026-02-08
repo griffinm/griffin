@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, TextInput, Textarea, Select, Badge } from '@mantine/core'
 import { NodeViewWrapper } from '@tiptap/react'
-import { IconChevronRight, IconChevronDown, IconCheck, IconX } from '@tabler/icons-react'
+import { IconChevronRight, IconChevronDown, IconCheck, IconX, IconCopy } from '@tabler/icons-react'
 import type { NodeViewProps } from '@tiptap/react'
 
 const statusOptions = [
@@ -83,7 +83,18 @@ export function Component(props: NodeViewProps) {
         )}
       </button>
       <span className="flex-shrink-0 text-base leading-none">{statusIcons[status] || '🟠'}</span>
-      <span className="flex-1 font-medium">{title}</span>
+      <span className="flex-1 font-medium" onClick={handleStartEdit}>{title}</span>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          navigator.clipboard.writeText(content || '')
+        }}
+        className="p-0 bg-transparent border-none cursor-pointer flex items-center opacity-40 hover:opacity-100 transition-opacity"
+        title="Copy prompt content"
+      >
+        <IconCopy size={14} className="text-gray-500" />
+      </button>
       <Badge color={statusColors[status]} size="sm">
         {status}
       </Badge>
@@ -91,14 +102,14 @@ export function Component(props: NodeViewProps) {
   )
 
   const renderShow = () => (
-    <div className={`rounded ${statusBgColors[status]}`} onClick={handleStartEdit}>
+    <div className={`rounded ${statusBgColors[status]}`}>
       {renderHeader()}
       {!collapsed && (
-        <div className="px-2 pb-2 cursor-pointer hover:opacity-80 rounded transition-colors">
+        <div className="px-2 pb-2 cursor-pointer hover:opacity-80 rounded transition-colors" onClick={handleStartEdit}>
           {content ? (
-            <pre className="m-0 p-2 bg-white/50 rounded text-sm font-mono whitespace-pre-wrap break-words overflow-hidden">
+            <div className="m-0 p-2 bg-white/50 rounded text-sm font-mono whitespace-pre-wrap break-words">
               {content}
-            </pre>
+            </div>
           ) : (
             <p className="m-0 p-2 text-gray-400 text-sm italic">Click to add prompt content...</p>
           )}
