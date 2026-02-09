@@ -20,8 +20,8 @@ export const ChatInput = ({ value, onChange, onSend, disabled = false }: ChatInp
     <Box
       style={{
         padding: '16px',
-        borderTop: '1px solid #dee2e6',
-        backgroundColor: 'white',
+        borderTop: '1px solid var(--mantine-color-gray-3)',
+        backgroundColor: 'var(--mantine-color-body)',
       }}
     >
       <Group gap="xs" wrap="nowrap">

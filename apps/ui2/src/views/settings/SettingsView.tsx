@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { Container, Title, Stack, Text } from '@mantine/core';
 import { UserContext } from '@/providers/UserProvider/UserContext';
-import { ProfileSection, PasswordSection } from '@/components/settings';
+import { ProfileSection, PasswordSection, AppearanceSection } from '@/components/settings';
 
 export function SettingsView() {
   const { user, refetch } = useContext(UserContext);
@@ -20,6 +20,9 @@ export function SettingsView() {
             Manage your account settings and preferences
           </Text>
         </div>
+
+        {/* Appearance */}
+        <AppearanceSection />
 
         {/* Profile Settings */}
         <ProfileSection user={user} onSuccess={handleProfileSuccess} />

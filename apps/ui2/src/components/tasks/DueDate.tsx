@@ -20,7 +20,7 @@ export function DueDate({ dueDate }: { dueDate?: Date | string }) {
   }
 
   return (
-    <div className="flex flex-col text-xs text-gray-500 items-end">
+    <div className="flex flex-col text-xs text-[var(--mantine-color-dimmed)] items-end">
       <span>{formattedDate}</span>
       <span>{distanceText()}</span>
     </div>

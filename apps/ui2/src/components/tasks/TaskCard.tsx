@@ -100,8 +100,8 @@ export function TaskCard({ task }: TaskCardProps) {
     return (
       <span
         className={classNames('text-xs px-2 py-1 rounded-full', {
-          'bg-red-100 text-red-700': isOverdue,
-          'bg-blue-100 text-blue-700': !isOverdue,
+          'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200': isOverdue,
+          'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200': !isOverdue,
         })}
       >
         {isOverdue ? 'Overdue' : 'Due'}
@@ -111,7 +111,7 @@ export function TaskCard({ task }: TaskCardProps) {
 
   const renderCompletedTaskFooter = () => {
     return (
-      <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+      <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">
         Completed
       </span>
     );
@@ -125,7 +125,7 @@ export function TaskCard({ task }: TaskCardProps) {
   return (
     <>
       <div
-        className="flex flex-row bg-white rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-200 hover:border-gray-300 h-32 overflow-hidden relative"
+        className="flex flex-row bg-[var(--mantine-color-body)] rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-[var(--mantine-color-gray-3)] hover:border-[var(--mantine-color-gray-4)] h-32 overflow-hidden relative"
         onClick={onClick}
       >
         <div className="flex flex-row h-full gap-2 w-full flex-1 min-w-0">
@@ -177,7 +177,7 @@ export function TaskCard({ task }: TaskCardProps) {
 
             {/* Due Date Footer */}
             <div className="flex justify-between items-center mt-2">
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-[var(--mantine-color-dimmed)]">
                 {task.dueDate && formatDistanceToNowStrict(new Date(task.dueDate), { addSuffix: true })}
               </div>
 

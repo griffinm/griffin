@@ -399,7 +399,7 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
                       style={{
                         width: 4,
                         height: audioLevel > i / 20 ? 30 * (1 + audioLevel) : 10,
-                        backgroundColor: audioLevel > i / 20 ? '#228be6' : '#dee2e6',
+                        backgroundColor: audioLevel > i / 20 ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-3)',
                         borderRadius: 2,
                         transition: 'height 0.1s ease',
                       }}
@@ -439,9 +439,9 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
             <Box
               p="md"
               style={{
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--mantine-color-gray-0)',
                 borderRadius: 8,
-                border: '1px solid #dee2e6',
+                border: '1px solid var(--mantine-color-gray-3)',
                 maxHeight: 300,
                 overflowY: 'auto',
               }}

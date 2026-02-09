@@ -106,7 +106,7 @@ export function TaskForm({
       )}
 
       {/* Action Footer */}
-      <div className="mt-3 fixed sm:relative bottom-0 left-0 right-0 sm:bottom-auto sm:left-auto sm:right-auto flex justify-end gap-2 p-4 sm:p-0 bg-white z-10">
+      <div className="mt-3 fixed sm:relative bottom-0 left-0 right-0 sm:bottom-auto sm:left-auto sm:right-auto flex justify-end gap-2 p-4 sm:p-0 bg-[var(--mantine-color-body)] z-10">
         <Button 
           type="button" 
           size="sm" 

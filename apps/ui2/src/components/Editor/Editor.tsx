@@ -35,9 +35,11 @@ import {
   type RichTextEditorRef,
   RichTextEditorProvider,
 } from "mui-tiptap";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useMemo } from "react";
 import { useEditor } from "@tiptap/react";
 import { Editor as TiptapEditor, type EditorOptions } from "@tiptap/core";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { useComputedColorScheme } from "@mantine/core";
 import { TaskExtension } from './plugins/Task/Extension';
 import { TaskMenuItem } from './plugins/Task/MenuItem';
 import { QuestionExtension } from './plugins/Question/Extension';
@@ -82,6 +84,7 @@ export function Editor({
   onUpdate,
   minHeight,
   maxHeight,
+  fillHeight,
   noteId,
 }: {
   value: string;
@@ -89,10 +92,16 @@ export function Editor({
   onUpdate?: (_params: { editor: TiptapEditor }) => void;
   minHeight?: string | number;
   maxHeight?: string | number;
+  fillHeight?: boolean;
   noteId?: string;
 }) {
   const rteRef = useRef<RichTextEditorRef>(null);
-  
+  const computedColorScheme = useComputedColorScheme('light');
+  const muiTheme = useMemo(
+    () => createTheme({ palette: { mode: computedColorScheme } }),
+    [computedColorScheme],
+  );
+
   const editor = useEditor({
     extensions: extensions,
     content: value || '',
@@ -191,6 +200,7 @@ export function Editor({
     );
 
   return (
+    <ThemeProvider theme={muiTheme}>
     <RichTextEditorProvider editor={editor}>
       <RichTextEditor
         ref={rteRef}
@@ -203,13 +213,33 @@ export function Editor({
         content={value}
         RichTextFieldProps={{
           variant: "outlined",
+          ...(fillHeight && {
+            sx: {
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              '& .MuiInputBase-root': {
+                flex: 1,
+                alignItems: 'stretch',
+              },
+            },
+          }),
         }}
         sx={{
+          ...(fillHeight && {
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+          }),
           '& .ProseMirror': {
-            minHeight: minHeight || '200px',
+            minHeight: fillHeight ? 0 : (minHeight || '200px'),
+            ...(fillHeight && { flex: 1 }),
             maxHeight: maxHeight,
             overflowY: 'auto',
             overflowX: 'hidden',
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: computedColorScheme === 'dark' ? 'transparent' : undefined,
           },
         }}
         renderControls={() => (
@@ -265,5 +295,6 @@ export function Editor({
         )}
       </RichTextEditor>
     </RichTextEditorProvider>
+    </ThemeProvider>
   );
 }

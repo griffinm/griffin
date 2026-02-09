@@ -135,7 +135,7 @@ export function TaskViewMode({ task }: TaskViewModeProps) {
         <div>
           <Text size="xs" c="dimmed" mb={8}>Description</Text>
           <div style={{ 
-            border: '1px solid #e9ecef',
+            border: '1px solid var(--mantine-color-gray-3)',
             borderRadius: '8px',
             padding: '12px',
             minHeight: '100px',

@@ -60,19 +60,19 @@ export const ConversationList = ({
             style={{
               padding: '12px',
               borderRadius: 8,
-              border: `1px solid ${isActive ? '#228be6' : '#dee2e6'}`,
-              backgroundColor: isActive ? '#e7f5ff' : 'white',
+              border: `1px solid ${isActive ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-3)'}`,
+              backgroundColor: isActive ? 'var(--mantine-color-blue-light)' : 'var(--mantine-color-body)',
               cursor: 'pointer',
               transition: 'all 0.2s',
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
-                e.currentTarget.style.backgroundColor = '#f8f9fa';
+                e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
               }
             }}
             onMouseLeave={(e) => {
               if (!isActive) {
-                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.backgroundColor = 'var(--mantine-color-body)';
               }
             }}
           >

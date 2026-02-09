@@ -6,7 +6,7 @@ export const HtmlPreview = ({ html, maxHeight }: { html: string, maxHeight?: boo
   if (!html) return null;
   const [showFullHtml, setShowFullHtml] = useState(false);
 
-  const classes = classnames('text-sm text-gray-700 html-preview py-2 rounded-md', {
+  const classes = classnames('text-sm text-[var(--mantine-color-text)] html-preview py-2 rounded-md', {
     'max-h-[50px] overflow-y-hidden': maxHeight && !showFullHtml,
   });
 

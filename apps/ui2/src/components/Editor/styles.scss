@@ -55,7 +55,7 @@
 
     &:hover {
       opacity: 1;
-      background: rgba(0, 0, 0, 0.05);
+      background: var(--mantine-color-default-hover);
     }
 
     &:focus {
@@ -94,14 +94,14 @@
   }
   
   code {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--mantine-color-default-hover);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-family: monospace;
   }
-  
+
   pre {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--mantine-color-gray-0);
     padding: 1em;
     border-radius: 4px;
     white-space: pre-wrap;

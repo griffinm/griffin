@@ -32,7 +32,7 @@ export function QuestionsSearchBar({
       }
       styles={{
         input: {
-          backgroundColor: 'white',
+          backgroundColor: 'var(--mantine-color-body)',
         },
       }}
     />

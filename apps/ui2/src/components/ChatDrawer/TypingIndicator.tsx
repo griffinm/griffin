@@ -5,7 +5,7 @@ const typingDotStyle = {
   width: 8,
   height: 8,
   borderRadius: '50%',
-  backgroundColor: '#868e96',
+  backgroundColor: 'var(--mantine-color-gray-6)',
 };
 
 export const TypingIndicator = () => {
@@ -26,18 +26,18 @@ export const TypingIndicator = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#868e96',
-            color: 'white',
+            backgroundColor: 'var(--mantine-color-gray-6)',
+            color: 'var(--mantine-color-white)',
           }}
         >
           <IconRobot size={18} />
         </Box>
         <Box
           style={{
-            backgroundColor: '#f1f3f5',
+            backgroundColor: 'var(--mantine-color-default-hover)',
             padding: '10px 14px',
             borderRadius: 12,
-            border: '1px solid #dee2e6',
+            border: '1px solid var(--mantine-color-default-border)',
             display: 'flex',
             gap: 4,
             alignItems: 'center',

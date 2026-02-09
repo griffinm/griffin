@@ -19,10 +19,10 @@ const statusColors: Record<string, string> = {
 }
 
 const statusBgColors: Record<string, string> = {
-  draft: 'bg-gray-50',
-  ready: 'bg-blue-50',
-  running: 'bg-yellow-50',
-  done: 'bg-green-50',
+  draft: 'bg-[var(--mantine-color-default-hover)]',
+  ready: 'bg-[var(--mantine-color-blue-light)]',
+  running: 'bg-[var(--mantine-color-yellow-light)]',
+  done: 'bg-[var(--mantine-color-green-light)]',
 }
 
 const statusIcons: Record<string, string> = {
@@ -70,16 +70,16 @@ export function Component(props: NodeViewProps) {
   }
 
   const renderHeader = () => (
-    <div className="flex items-center gap-2 py-1 px-2 border-1 border-gray-200 cursor-pointer select-none text-2xl">
+    <div className="flex items-center gap-2 py-1 px-2 border-1 border-[var(--mantine-color-gray-3)] cursor-pointer select-none text-2xl">
       <button
         type="button"
         onClick={handleToggleCollapse}
         className="p-0 bg-transparent border-none cursor-pointer flex items-center"
       >
         {collapsed ? (
-          <IconChevronRight size={16} className="text-gray-500" />
+          <IconChevronRight size={16} className="text-[var(--mantine-color-dimmed)]" />
         ) : (
-          <IconChevronDown size={16} className="text-gray-500" />
+          <IconChevronDown size={16} className="text-[var(--mantine-color-dimmed)]" />
         )}
       </button>
       <span className="flex-shrink-0 text-base leading-none">{statusIcons[status] || '🟠'}</span>
@@ -93,7 +93,7 @@ export function Component(props: NodeViewProps) {
         className="p-0 bg-transparent border-none cursor-pointer flex items-center opacity-40 hover:opacity-100 transition-opacity"
         title="Copy prompt content"
       >
-        <IconCopy size={14} className="text-gray-500" />
+        <IconCopy size={14} className="text-[var(--mantine-color-dimmed)]" />
       </button>
       <Badge color={statusColors[status]} size="sm">
         {status}
@@ -107,11 +107,11 @@ export function Component(props: NodeViewProps) {
       {!collapsed && (
         <div className="px-2 pb-2 cursor-pointer hover:opacity-80 rounded transition-colors" onClick={handleStartEdit}>
           {content ? (
-            <div className="m-0 p-2 bg-white/50 rounded text-sm font-mono whitespace-pre-wrap break-words">
+            <div className="m-0 p-2 bg-[var(--mantine-color-gray-0)] rounded text-sm font-mono whitespace-pre-wrap break-words">
               {content}
             </div>
           ) : (
-            <p className="m-0 p-2 text-gray-400 text-sm italic">Click to add prompt content...</p>
+            <p className="m-0 p-2 text-[var(--mantine-color-dimmed)] text-sm italic">Click to add prompt content...</p>
           )}
         </div>
       )}

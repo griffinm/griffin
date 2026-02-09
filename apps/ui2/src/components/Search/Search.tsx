@@ -72,7 +72,7 @@ export function Search() {
 
     if (!hasNoteResults && !hasTaskResults) {
       return (
-        <div className="p-3 text-gray-500 text-sm">
+        <div className="p-3 text-[var(--mantine-color-dimmed)] text-sm">
           No results found
         </div>
       );
@@ -85,7 +85,7 @@ export function Search() {
           return (
             <div
               key={`note-${result.id}`}
-              className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-50"
+              className="flex flex-col p-3 cursor-pointer hover:bg-[var(--mantine-color-default-hover)] transition-colors border-b border-[var(--mantine-color-gray-1)] last:border-b-0 z-50"
               onClick={() => {
                 setSearchTerm('');
                 setSearchResults(undefined);
@@ -98,7 +98,7 @@ export function Search() {
               </div>
               {result.snippet && (
                 <div 
-                  className="text-xs text-gray-500 italic mt-1" 
+                  className="text-xs text-[var(--mantine-color-dimmed)] italic mt-1" 
                   dangerouslySetInnerHTML={{ __html: result.snippet }} 
                 />
               )}
@@ -111,7 +111,7 @@ export function Search() {
           return (
             <div
               key={`task-${result.id}`}
-              className="flex flex-col p-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0 z-index-[1000]"
+              className="flex flex-col p-3 cursor-pointer hover:bg-[var(--mantine-color-default-hover)] transition-colors border-b border-[var(--mantine-color-gray-1)] last:border-b-0 z-index-[1000]"
               onClick={() => {
                 setSearchTerm('');
                 setSearchResults(undefined);
@@ -124,7 +124,7 @@ export function Search() {
               </div>
               {result.snippet && (
                 <div 
-                  className="text-xs text-gray-500 italic mt-1" 
+                  className="text-xs text-[var(--mantine-color-dimmed)] italic mt-1" 
                   dangerouslySetInnerHTML={{ __html: result.snippet }} 
                 />
               )}
@@ -145,12 +145,12 @@ export function Search() {
         leftSection={<IconSearch size={16} />}
         styles={{
           input: {
-            backgroundColor: 'white',
+            backgroundColor: 'var(--mantine-color-body)',
           }
         }}
       />
       {searchTerm && searchResults && (
-        <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-index-[1000] max-h-96 overflow-y-auto">
+        <div className="absolute left-0 right-0 mt-1 bg-[var(--mantine-color-body)] border border-[var(--mantine-color-gray-3)] rounded-md shadow-lg z-index-[1000] max-h-96 overflow-y-auto">
           {renderResults()}
         </div>
       )}

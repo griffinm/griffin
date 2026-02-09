@@ -83,7 +83,7 @@ export function Component(props: NodeViewProps) {
     return (
       <form
         onSubmit={handleSave}
-        className="flex flex-col gap-3 p-3 bg-gray-50 rounded"
+        className="flex flex-col gap-3 p-3 bg-[var(--mantine-color-default-hover)] rounded"
       >
         <div className="flex flex-row gap-2">
           <div className="flex-1">
@@ -155,18 +155,18 @@ export function Component(props: NodeViewProps) {
 
   const renderShow = () => {
     return (
-      <div className="flex items-center gap-2 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer transition-colors">
+      <div className="flex items-center gap-2 py-1 px-2 hover:bg-[var(--mantine-color-default-hover)] rounded cursor-pointer transition-colors">
         <Checkbox
           checked={completed}
           onChange={handleToggleCompleted}
         />
         <div 
-          className={`flex-1 ${completed ? 'line-through text-gray-400' : ''}`}
+          className={`flex-1 ${completed ? 'line-through text-[var(--mantine-color-dimmed)]' : ''}`}
           onClick={() => setIsSelected(true)}
         >
           {title || 'Untitled Task'}
         </div>
-        <div className="text-xs text-gray-500 text-right">
+        <div className="text-xs text-[var(--mantine-color-dimmed)] text-right">
           <div>{format(dueDate, 'M/dd')}</div>
           <div className="text-[10px]">
             {formatDistanceToNow(dueDate, { addSuffix: true })}

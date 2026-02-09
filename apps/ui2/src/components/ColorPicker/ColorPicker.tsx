@@ -41,7 +41,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                 borderRadius: '4px',
                 cursor: 'pointer',
                 backgroundColor: colors.bg,
-                border: value === color ? '3px solid #228be6' : '1px solid #dee2e6',
+                border: value === color ? '3px solid var(--mantine-color-blue-6)' : '1px solid var(--mantine-color-gray-3)',
                 transition: 'transform 0.1s ease',
               }}
               onClick={() => onChange(color)}

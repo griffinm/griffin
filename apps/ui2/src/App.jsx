@@ -1,6 +1,7 @@
 import { RouterProvider } from 'react-router-dom'
 import { router } from './components/AppRouter'
 import { MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import { theme } from './theme'
 import './index.css'
 import { UserProvider } from './providers/UserProvider'
@@ -9,7 +10,8 @@ import { queryClient } from './api/baseClient'
 
 function App() {
   return (
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} defaultColorScheme="auto">
+      <Notifications position="top-right" />
       <QueryClientProvider client={queryClient}>
         <UserProvider>
           <RouterProvider router={router} />

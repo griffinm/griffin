@@ -68,7 +68,7 @@ export function Component(props: NodeViewProps) {
     return (
       <div
         onClick={() => setEditing(true)}
-        className="transition-colors hover:bg-gray-50 cursor-pointer flex-1 px-2 py-1 rounded"
+        className="transition-colors hover:bg-[var(--mantine-color-default-hover)] cursor-pointer flex-1 px-2 py-1 rounded"
       >
         <p className="text-sm">
           {node.attrs.questionContent}
@@ -86,7 +86,7 @@ export function Component(props: NodeViewProps) {
     return (
       <form
         onSubmit={handleSave}
-        className="flex flex-col flex-1 bg-gray-50 p-3 rounded"
+        className="flex flex-col flex-1 bg-[var(--mantine-color-default-hover)] p-3 rounded"
       >
         <div className="mb-2">
           <TextInput
@@ -142,7 +142,7 @@ export function Component(props: NodeViewProps) {
         {isAnswered ? (
           <IconSquareCheck size={20} className="text-green-500 flex-shrink-0 mt-1" />
         ) : (
-          <IconSquare size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+          <IconSquare size={20} className="text-[var(--mantine-color-dimmed)] flex-shrink-0 mt-1" />
         )}
         <div className="flex flex-1">
           {editing ? renderEditing() : renderShow()}

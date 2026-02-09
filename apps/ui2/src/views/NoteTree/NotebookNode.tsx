@@ -148,7 +148,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
                 onClick={(e) => e.stopPropagation()}
                 style={{
                   width: '100%',
-                  border: '1px solid #ced4da',
+                  border: '1px solid var(--mantine-color-gray-4)',
                   borderRadius: '4px',
                   padding: '4px 8px',
                   fontSize: '14px',
@@ -168,7 +168,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
                 right: 0, 
                 transform: 'translateY(-50%)', 
                 zIndex: 10,
-                background: theme.colors.gray[0],
+                background: 'var(--mantine-color-body)',
                 backdropFilter: 'blur(8px)',
                 borderRadius: '4px',
                 padding: '2px',

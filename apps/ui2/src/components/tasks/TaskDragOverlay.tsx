@@ -9,10 +9,10 @@ export function TaskDragOverlay({ activeTask }: TaskDragOverlayProps) {
   return (
     <DragOverlay>
       {activeTask ? (
-        <div className="border border-gray-300 rounded-lg p-3 bg-white shadow-lg opacity-90 rotate-3">
-          <h4 className="mb-2 text-sm font-medium text-gray-900 break-words">{activeTask.title}</h4>
+        <div className="border border-[var(--mantine-color-gray-4)] rounded-lg p-3 bg-[var(--mantine-color-body)] shadow-lg opacity-90 rotate-3">
+          <h4 className="mb-2 text-sm font-medium text-[var(--mantine-color-text)] break-words">{activeTask.title}</h4>
           {activeTask.description && (
-            <p className="mb-2 text-xs text-gray-600 break-words">
+            <p className="mb-2 text-xs text-[var(--mantine-color-dimmed)] break-words">
               {activeTask.description}
             </p>
           )}

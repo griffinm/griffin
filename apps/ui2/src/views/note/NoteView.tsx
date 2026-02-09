@@ -232,12 +232,14 @@ export function NoteView() {
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      style={{ 
+      style={{
         position: 'relative',
         width: '100%',
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         overflowY: 'auto',
         overflowX: 'hidden',
       }}
@@ -247,11 +249,11 @@ export function NoteView() {
         style={{ 
           position: isScrolled ? 'sticky' : 'relative',
           top: isScrolled ? 0 : 'auto',
-          background: 'white',
+          background: 'var(--mantine-color-body)',
           zIndex: 50,
           padding: isScrolled ? '8px 20px' : '16px 20px 0',
           marginBottom: isScrolled ? 0 : '12px',
-          borderBottom: isScrolled ? '1px solid #e0e0e0' : 'none',
+          borderBottom: isScrolled ? '1px solid var(--mantine-color-gray-3)' : 'none',
           transition: 'all 0.2s ease',
         }}
       >
@@ -274,7 +276,7 @@ export function NoteView() {
                 flex: 1,
                 minWidth: '200px',
                 border: 'none',
-                borderBottom: '2px solid #228be6',
+                borderBottom: '2px solid var(--mantine-color-blue-6)',
                 fontSize: isScrolled ? '16px' : '20px',
                 fontWeight: '600',
                 padding: '4px 0',
@@ -345,13 +347,12 @@ export function NoteView() {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 20px' }}>
+      <div style={{ padding: '0 20px 20px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <Editor
           key={noteId}
           value={note.content || ''}
           onUpdate={debouncedUpdate}
-          minHeight="calc(100vh - 200px)"
-          maxHeight="none"
+          fillHeight
           noteId={noteId}
         />
       </div>

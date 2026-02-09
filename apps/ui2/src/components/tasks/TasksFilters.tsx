@@ -22,7 +22,7 @@ export function TasksFilters({
   availableTags,
 }: TasksFiltersProps) {
   return (
-    <div className="flex gap-3 items-center border-b border-gray-200 pb-4">
+    <div className="flex gap-3 items-center border-b border-[var(--mantine-color-gray-3)] pb-4">
       <div>
         <Input
           value={search}

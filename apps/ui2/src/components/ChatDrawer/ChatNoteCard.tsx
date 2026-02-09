@@ -41,7 +41,7 @@ export function ChatNoteCard({ note }: ChatNoteCardProps) {
   return (
     <div
       onClick={handleClick}
-      className="flex flex-row bg-white rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-200 hover:border-gray-300 overflow-hidden"
+      className="flex flex-row bg-[var(--mantine-color-body)] rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-[var(--mantine-color-gray-3)] hover:border-[var(--mantine-color-gray-4)] overflow-hidden"
     >
       {/* Left accent bar */}
       <div className="w-1 bg-blue-400 rounded-l-md" />

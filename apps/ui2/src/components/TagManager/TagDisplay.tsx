@@ -32,22 +32,22 @@ export function TagDisplay({
         cursor: disabled ? 'not-allowed' : 'pointer',
         minHeight: '36px',
         padding: '6px 12px',
-        border: '1px solid #ced4da',
+        border: '1px solid var(--mantine-color-gray-4)',
         borderRadius: '4px',
-        backgroundColor: disabled ? '#f1f3f5' : 'white',
+        backgroundColor: disabled ? 'var(--mantine-color-gray-1)' : 'var(--mantine-color-body)',
         transition: 'border-color 0.2s ease',
       }}
       onMouseEnter={(e) => {
         if (!disabled) {
-          e.currentTarget.style.borderColor = '#868e96';
+          e.currentTarget.style.borderColor = 'var(--mantine-color-gray-6)';
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#ced4da';
+        e.currentTarget.style.borderColor = 'var(--mantine-color-gray-4)';
       }}
     >
       {tags.length === 0 ? (
-        <Group gap="xs" style={{ color: '#868e96', fontSize: '14px' }}>
+        <Group gap="xs" style={{ color: 'var(--mantine-color-gray-6)', fontSize: '14px' }}>
           <IconTag size={16} />
           {placeholder}
         </Group>

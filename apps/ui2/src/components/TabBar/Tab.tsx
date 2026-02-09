@@ -21,8 +21,8 @@ export function Tab({ title, isActive, onClose, onClick }: TabProps) {
         gap: 4,
         padding: '4px 8px',
         borderRadius: theme.radius.sm,
-        background: isActive ? theme.colors.blue[0] : theme.colors.gray[1],
-        border: `1px solid ${isActive ? theme.colors.blue[3] : theme.colors.gray[3]}`,
+        background: isActive ? 'var(--mantine-color-blue-light)' : 'var(--mantine-color-default-hover)',
+        border: `1px solid ${isActive ? 'var(--mantine-color-blue-3)' : 'var(--mantine-color-default-border)'}`,
         cursor: 'pointer',
         maxWidth: 150,
         minWidth: 80,
@@ -32,19 +32,19 @@ export function Tab({ title, isActive, onClose, onClick }: TabProps) {
       }}
       onMouseEnter={(e) => {
         if (!isActive) {
-          e.currentTarget.style.background = theme.colors.gray[2];
+          e.currentTarget.style.background = 'var(--mantine-color-default)';
         }
       }}
       onMouseLeave={(e) => {
         if (!isActive) {
-          e.currentTarget.style.background = theme.colors.gray[1];
+          e.currentTarget.style.background = 'var(--mantine-color-default-hover)';
         }
       }}
     >
       <Text
         size="xs"
         fw={isActive ? 500 : 400}
-        c={isActive ? 'blue.7' : 'gray.7'}
+        c={isActive ? 'blue.7' : undefined}
         style={{
           flex: 1,
           overflow: 'hidden',

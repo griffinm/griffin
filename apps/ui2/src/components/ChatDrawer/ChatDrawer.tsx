@@ -131,8 +131,8 @@ export const ChatDrawer = ({
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: 'white',
-            borderLeft: '1px solid #dee2e6',
+            backgroundColor: 'var(--mantine-color-body)',
+            borderLeft: '1px solid var(--mantine-color-default-border)',
             boxShadow: '-2px 0 8px rgba(0,0,0,0.1)',
           }}
         >
@@ -197,7 +197,7 @@ export const ChatDrawer = ({
             padding: 0,
           },
           header: {
-            borderBottom: '1px solid #dee2e6',
+            borderBottom: '1px solid var(--mantine-color-default-border)',
             padding: 0,
           },
         }}

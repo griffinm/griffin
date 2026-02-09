@@ -77,10 +77,10 @@ export function TaskRow({
   };
 
   return (
-    <div className="flex flex-col gap-2 border border-gray-200 p-2 hover:bg-gray-50 transition-all duration-100 rounded-md shadow-md" onClick={() => setActiveTask(task)}>
+    <div className="flex flex-col gap-2 border border-[var(--mantine-color-gray-3)] p-2 hover:bg-[var(--mantine-color-default-hover)] transition-all duration-100 rounded-md shadow-md" onClick={() => setActiveTask(task)}>
       <div className="flex flex-row items-center">
         <div className="w-1/3">
-          <h2 className="text-sm text-gray-700 font-bold">{task.title}</h2>
+          <h2 className="text-sm text-[var(--mantine-color-text)] font-bold">{task.title}</h2>
         </div>
         <div className="flex w-1/3 justify-center gap-2" onClick={(e) => e.stopPropagation()}>
           <TaskStatusBadge status={task.status} onChange={handleStatusChange} />

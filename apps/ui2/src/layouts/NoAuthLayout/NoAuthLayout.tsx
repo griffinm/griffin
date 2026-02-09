@@ -17,7 +17,7 @@ export const NoAuthLayout = () => {
   }, [user, loading, navigate]);
 
   return (
-    <div className="bg-gray-50 h-screen w-screen flex-1">
+    <div className="bg-[var(--mantine-color-gray-0)] h-screen w-screen flex-1">
       <div className="p-4 flex align-center justify-center items-center gap-2">
         <img 
           src="/notes-icon.png" 

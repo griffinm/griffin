@@ -61,7 +61,7 @@ export function DraggableTask({ task, isLastTask, lastTaskElementRef }: Draggabl
       style={style}
       {...attributes}
       {...listeners}
-      className="border border-gray-300 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow min-w-0 cursor-grab active:cursor-grabbing w-full"
+      className="border border-[var(--mantine-color-gray-4)] rounded-lg bg-[var(--mantine-color-body)] shadow-sm hover:shadow-md transition-shadow min-w-0 cursor-grab active:cursor-grabbing w-full"
     >
       <TaskContent task={task} onClick={handleClick} />
       {showModal && <TaskModal task={task} open={showModal} onClose={() => setShowModal(false)} />}
@@ -148,7 +148,7 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
 
     return (
       <div className="flex justify-end mt-2">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-[var(--mantine-color-dimmed)]">
           Completed: {formatDistanceToNowStrict(new Date(task.completedAt), { addSuffix: true })}
         </p>
       </div>
@@ -162,7 +162,7 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
     
     return (
       <div className="flex justify-end">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-[var(--mantine-color-dimmed)]">
           Due: {new Date(task.dueDate).toLocaleDateString()}
         </p>
       </div>
@@ -219,7 +219,7 @@ function TaskContent({ task, onClick }: { task: Task, onClick: React.MouseEventH
 
           {/* Due Date Footer */}
           <div className="flex justify-between items-center mt-2">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-[var(--mantine-color-dimmed)]">
               {task.dueDate && formatDistanceToNowStrict(new Date(task.dueDate), { addSuffix: true })}
             </div>
 

@@ -14,7 +14,7 @@ export function TruncatedDescription({ description }: { description?: string }) 
 
   return (
     <div className="overflow-hidden">
-      <p onClick={() => setExpanded(!expanded)} className="text-xs text-gray-600 break-words">
+      <p onClick={() => setExpanded(!expanded)} className="text-xs text-[var(--mantine-color-dimmed)] break-words">
         {description.substring(0, isTruncated ? TRUNCATION_LENGTH : description.length)}
         {isTruncated && !expanded && '...'}
       </p>

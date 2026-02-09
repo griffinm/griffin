@@ -138,7 +138,7 @@ export const AppLayout = () => {
           zIndex: 100,
           height: HEADER_HEIGHT,
           padding: theme.spacing.md,
-          background: theme.colors.gray[0],
+          background: 'var(--mantine-color-body)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -191,7 +191,7 @@ export const AppLayout = () => {
       <div style={{ 
         display: 'flex', 
         marginTop: HEADER_HEIGHT,
-        background: theme.colors.gray[0],
+        background: 'var(--mantine-color-body)',
         minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
         height: `calc(100vh - ${HEADER_HEIGHT}px)`,
         position: 'relative'
@@ -222,7 +222,7 @@ export const AppLayout = () => {
             minWidth: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
             transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
             overflow: 'hidden',
-            background: theme.colors.gray[0],
+            background: 'var(--mantine-color-body)',
             padding: opened ? '15px' : 0,
             display: 'flex',
             flexDirection: 'column',
@@ -286,7 +286,7 @@ export const AppLayout = () => {
 
         {/* Main content */}
         <div 
-          className="flex-1 bg-white w-full rounded-lg border border-gray-200 shadow-md sm:mr-4 mb-4"
+          className="flex-1 bg-[var(--mantine-color-body)] w-full rounded-lg shadow-md sm:mr-4 mb-4 main-content-area"
           style={{ 
             height: 'calc(100% - 1rem)',
             overflowY: 'auto',

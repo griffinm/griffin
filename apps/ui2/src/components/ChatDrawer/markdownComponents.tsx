@@ -59,7 +59,7 @@ export const markdownComponents: Components = {
         size="sm"
         component="code"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          backgroundColor: 'var(--mantine-color-default-hover)',
           padding: '2px 4px',
           borderRadius: '4px',
           fontFamily: 'monospace',
@@ -72,7 +72,7 @@ export const markdownComponents: Components = {
       <Box
         component="pre"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          backgroundColor: 'var(--mantine-color-gray-0)',
           padding: '12px',
           borderRadius: '6px',
           overflow: 'auto',
@@ -91,11 +91,11 @@ export const markdownComponents: Components = {
     <Box
       component="blockquote"
       style={{
-        borderLeft: '3px solid #dee2e6',
+        borderLeft: '3px solid var(--mantine-color-gray-3)',
         paddingLeft: '12px',
         margin: '8px 0',
         fontStyle: 'italic',
-        color: '#868e96',
+        color: 'var(--mantine-color-gray-6)',
       }}
     >
       <Text size="sm">{children}</Text>
@@ -109,7 +109,7 @@ export const markdownComponents: Components = {
       target="_blank"
       rel="noopener noreferrer"
       style={{
-        color: '#228be6',
+        color: 'var(--mantine-color-blue-6)',
         textDecoration: 'underline',
         cursor: 'pointer',
       }}
@@ -131,13 +131,13 @@ export const markdownComponents: Components = {
     </Box>
   ),
   thead: ({ children }) => (
-    <Box component="thead" style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
+    <Box component="thead" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
       {children}
     </Box>
   ),
   tbody: ({ children }) => <Box component="tbody">{children}</Box>,
   tr: ({ children }) => (
-    <Box component="tr" style={{ borderBottom: '1px solid #dee2e6' }}>
+    <Box component="tr" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
       {children}
     </Box>
   ),
@@ -149,7 +149,7 @@ export const markdownComponents: Components = {
       style={{
         padding: '8px',
         textAlign: 'left',
-        borderRight: '1px solid #dee2e6',
+        borderRight: '1px solid var(--mantine-color-gray-3)',
       }}
     >
       {children}
@@ -161,7 +161,7 @@ export const markdownComponents: Components = {
       component="td"
       style={{
         padding: '8px',
-        borderRight: '1px solid #dee2e6',
+        borderRight: '1px solid var(--mantine-color-gray-3)',
       }}
     >
       {children}
@@ -172,7 +172,7 @@ export const markdownComponents: Components = {
       component="hr"
       style={{
         border: 'none',
-        borderTop: '1px solid #dee2e6',
+        borderTop: '1px solid var(--mantine-color-gray-3)',
         margin: '12px 0',
       }}
     />

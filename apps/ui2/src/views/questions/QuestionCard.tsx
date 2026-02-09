@@ -21,7 +21,7 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
   return (
     <div
       onClick={handleClick}
-      className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:bg-gray-50"
+      className="p-3 bg-[var(--mantine-color-body)] border border-[var(--mantine-color-gray-3)] rounded-lg shadow-sm flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:bg-[var(--mantine-color-default-hover)]"
     >
       <p className="text-sm line-clamp-2 mb-2">
         {questionPreview}
@@ -30,18 +30,18 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
         <span
           className={`text-xs px-2 py-0.5 rounded-full ${
             isAnswered
-              ? 'bg-green-100 text-green-700'
-              : 'bg-orange-100 text-orange-700'
+              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+              : 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200'
           }`}
         >
           {isAnswered ? 'Answered' : 'Unanswered'}
         </span>
         {question.notebookName && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--mantine-color-gray-1)] text-[var(--mantine-color-dimmed)]">
             {question.notebookName}
           </span>
         )}
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-[var(--mantine-color-dimmed)]">
           {formatDistanceToNowStrict(new Date(question.createdAt), {
             addSuffix: true,
           })}

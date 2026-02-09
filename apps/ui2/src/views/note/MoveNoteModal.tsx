@@ -68,20 +68,20 @@ export function MoveNoteModal({
                   style={{
                     padding: '12px',
                     borderRadius: '4px',
-                    border: '1px solid #e0e0e0',
+                    border: '1px solid var(--mantine-color-gray-3)',
                     transition: 'all 0.2s ease',
                   }}
                   styles={{
                     root: {
                       '&:hover': {
-                        backgroundColor: '#f5f5f5',
-                        borderColor: '#228be6',
+                        backgroundColor: 'var(--mantine-color-gray-1)',
+                        borderColor: 'var(--mantine-color-blue-6)',
                       },
                     },
                   }}
                 >
                   <Group gap="sm">
-                    <IconFolder size={18} style={{ color: '#666' }} />
+                    <IconFolder size={18} style={{ color: 'var(--mantine-color-gray-6)' }} />
                     <div style={{ flex: 1 }}>
                       <Text size="sm" fw={500}>
                         {notebook.title}

@@ -70,8 +70,8 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#868e96',
-              color: 'white',
+              backgroundColor: 'var(--mantine-color-gray-6)',
+              color: 'var(--mantine-color-white)',
               flexShrink: 0,
               lineHeight: '1',
             }}
@@ -82,10 +82,10 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Box
             style={{
-              backgroundColor: isUser ? '#e7f5ff' : '#f1f3f5',
+              backgroundColor: isUser ? 'var(--mantine-color-blue-light)' : 'var(--mantine-color-default-hover)',
               padding: '3px 10px',
               borderRadius: 12,
-              border: `1px solid ${isUser ? '#d0ebff' : '#dee2e6'}`,
+              border: `1px solid ${isUser ? 'var(--mantine-color-blue-3)' : 'var(--mantine-color-default-border)'}`,
               lineHeight: '1',
             }}
           >

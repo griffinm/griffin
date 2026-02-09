@@ -1,0 +1,14 @@
+/* Dark mode overrides for edge cases not covered by CSS variables */
+
+/* Ensure editor content areas look correct in dark mode */
+[data-mantine-color-scheme="dark"] .html-preview pre {
+  background: var(--mantine-color-gray-1) !important;
+}
+
+/* Main content area border: visible in light mode, hidden in dark mode */
+.main-content-area {
+  border: 1px solid var(--mantine-color-gray-3);
+}
+[data-mantine-color-scheme="dark"] .main-content-area {
+  border-color: transparent;
+}
