@@ -63,7 +63,7 @@ NestJS application with feature-based module organization:
 - **tasks**: Task management with status history tracking
 - **tags**: Polymorphic tagging system (ObjectTag links tags to notes or tasks)
 - **search**: Typesense full-text search integration
-- **llm**: LangChain-based AI features with OpenAI and Tavily
+- **llm**: LangChain-based AI features with OpenAI
 - **audio**: Audio transcription via OpenAI Whisper
 - **questions**: Note-linked Q&A feature
 

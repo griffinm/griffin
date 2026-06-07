@@ -11,7 +11,6 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
 import { ConversationItemRole, ConversationStatus } from '@prisma/client';
-import { TavilySearch } from '@langchain/tavily';
 import { LLM_QUEUE } from '../queue/queue.module';
 import { LlmMessageJobData } from './llm.processor';
 
@@ -23,7 +22,6 @@ const MAX_HISTORY_MESSAGES = 50;
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
   private chatModel: ChatOpenAI;
-  private tavilyApiKey: string;
 
   constructor(
     private prisma: PrismaService,
@@ -39,21 +37,18 @@ export class LlmService {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    // Configurable model settings with defaults
-    const modelName = this.configService.get<string>('LLM_MODEL') || 'gpt-4o-mini';
-    const temperature = parseFloat(this.configService.get<string>('LLM_TEMPERATURE') || '0.7');
+    // Configurable model settings with defaults.
+    // gpt-5.5 is a reasoning model: it rejects a custom temperature and routes
+    // through the Responses API, so reasoning effort is set instead of temperature.
+    const modelName = this.configService.get<string>('LLM_MODEL') || 'gpt-5.5';
+    const reasoningEffort = this.configService.get<string>('LLM_REASONING_EFFORT') || 'medium';
 
     this.chatModel = new ChatOpenAI({
       openAIApiKey: apiKey,
       modelName,
-      temperature,
+      reasoning: { effort: reasoningEffort as 'low' | 'medium' | 'high' },
+      useResponsesApi: true,
     });
-
-    const tavilyKey = this.configService.get<string>('TAVILY_API_KEY');
-    if (!tavilyKey) {
-      throw new Error('TAVILY_API_KEY is not configured');
-    }
-    this.tavilyApiKey = tavilyKey;
   }
 
   /**
@@ -279,8 +274,13 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
     // Get tools
     const tools = this.getTools(userId);
 
-    // Bind tools to the model
-    const modelWithTools = this.chatModel.bindTools(tools);
+    // Bind tools to the model. The function tools above are executed client-side
+    // by the loop below; OpenAI's built-in web search runs server-side via the
+    // Responses API and never surfaces as a client-executed tool call.
+    const modelWithTools = this.chatModel.bindTools([
+      ...tools,
+      { type: 'web_search' } as any,
+    ]);
 
     // Track iterations
     let iterations = 0;
@@ -294,13 +294,14 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       iterations++;
       this.logger.debug(`Tool iteration ${iterations}/${MAX_TOOL_ITERATIONS}`);
 
-      // Save AI message with tool calls
-      const aiMessageContent = aiResponse.content || 'Using tools...';
+      // Save AI message with tool calls. Use `.text` so Responses API content
+      // (an array of content blocks) is flattened to plain text rather than JSON.
+      const aiMessageContent = aiResponse.text || 'Using tools...';
       await this.prisma.conversationItem.create({
         data: {
           conversationId,
           role: ConversationItemRole.ASSISTANT,
-          content: typeof aiMessageContent === 'string' ? aiMessageContent : JSON.stringify(aiMessageContent),
+          content: aiMessageContent,
           toolCalls: JSON.parse(JSON.stringify(aiResponse.tool_calls)),
         },
       });
@@ -380,10 +381,9 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       this.logger.debug(`AI Response (iteration ${iterations}): ${JSON.stringify(aiResponse)}`);
     }
 
-    // Save final AI response
-    const finalContent = typeof aiResponse.content === 'string'
-      ? aiResponse.content
-      : JSON.stringify(aiResponse.content);
+    // Save final AI response. `.text` flattens Responses API content blocks
+    // (e.g. [{ type: 'text', text: '...' }]) into a plain string.
+    const finalContent = aiResponse.text;
 
     await this.prisma.conversationItem.create({
       data: {
@@ -479,8 +479,9 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
 
     const client = openaiClient.getClient();
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      max_tokens: 30,
+      model: 'gpt-5.4-mini',
+      max_completion_tokens: 100,
+      reasoning_effort: 'minimal',
       messages: [
         {
           role: 'system',
@@ -708,14 +709,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       },
     });
 
-    const searchInternetTool = new TavilySearch({
-      name: 'search_internet',
-      description: 'Search the internet for current information, news, facts, or answers to questions. Use this when you need up-to-date information that you may not have in your training data.',
-      maxResults: 5,
-      tavilyApiKey: this.tavilyApiKey,
-      includeRawContent: true,
-    });
-
     // Notes tools
     const searchNotesTool = new DynamicStructuredTool({
       name: 'search_notes',
@@ -869,7 +862,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       searchNotesTool,
       createNoteTool,
       getNoteTool,
-      searchInternetTool,
     ];
   }
 }
