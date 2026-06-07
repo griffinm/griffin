@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Griffin is a personal notes and task management application built as an Nx monorepo with a NestJS API backend and React frontend.
 
+## Documentation
+
+Longer-form docs live in [docs/](docs/):
+- [docs/editor-plugins.md](docs/editor-plugins.md) — custom TipTap editor plugins (note links, prompts, tasks, questions, collapsible headings): catalog, shared conventions, and a recipe for adding a new plugin.
+
 ## Common Commands
 
 ### Development
@@ -66,7 +71,7 @@ NestJS application with feature-based module organization:
 - React 18 with React Router for navigation
 - Mantine v8 component library
 - TanStack Query for server state
-- TipTap for rich text editing
+- TipTap for rich text editing — custom editor plugins (note links, prompts, tasks, questions, collapsible headings) are documented in [docs/editor-plugins.md](docs/editor-plugins.md). Read it before building or modifying an editor plugin.
 - API client in `src/api/` with React Query hooks in `src/hooks/`
 
 ### Database
