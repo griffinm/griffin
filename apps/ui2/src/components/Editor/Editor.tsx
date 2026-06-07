@@ -47,7 +47,9 @@ import { QuestionMenuItem } from './plugins/Question/MenuItem';
 import { PromptExtension } from './plugins/Prompt/Extension';
 import { PromptMenuItem } from './plugins/Prompt/MenuItem';
 import { CollapsibleHeading } from './plugins/CollapsibleHeading/Extension';
+import { NoteLinkExtension } from './plugins/NoteLink/Extension';
 import { createMedia } from '@/api/mediaApi';
+import { useOpenNote } from '@/hooks/useOpenNote';
 import './styles.scss';
 
 const extensions = [
@@ -76,6 +78,7 @@ const extensions = [
   TaskExtension,
   QuestionExtension,
   PromptExtension,
+  NoteLinkExtension,
 ];
 
 export function Editor({
@@ -96,6 +99,7 @@ export function Editor({
   noteId?: string;
 }) {
   const rteRef = useRef<RichTextEditorRef>(null);
+  const { openNote } = useOpenNote();
   const computedColorScheme = useComputedColorScheme('light');
   const muiTheme = useMemo(
     () => createTheme({ palette: { mode: computedColorScheme } }),
@@ -174,6 +178,23 @@ export function Editor({
       [handleNewImageFiles, noteId],
     );
   
+  const handleClick: NonNullable<EditorOptions["editorProps"]["handleClick"]> =
+    useCallback(
+      (_view, _pos, event) => {
+        const target = event.target as HTMLElement | null;
+        const noteLinkEl = target?.closest('[data-type="noteLink"]') as HTMLElement | null;
+        if (noteLinkEl) {
+          const linkedNoteId = noteLinkEl.getAttribute('data-id');
+          if (linkedNoteId) {
+            openNote(linkedNoteId);
+            return true;
+          }
+        }
+        return false;
+      },
+      [openNote],
+    );
+
   const handleDrop: NonNullable<EditorOptions["editorProps"]["handleDrop"]> =
     useCallback(
       (view, event, _slice, _moved) => {
@@ -205,10 +226,10 @@ export function Editor({
       <RichTextEditor
         ref={rteRef}
         onUpdate={handleUpdate}
-        editorProps={noteId ? {
-          handlePaste,
-          handleDrop,
-        } : undefined}
+        editorProps={{
+          handleClick,
+          ...(noteId ? { handlePaste, handleDrop } : {}),
+        }}
         extensions={extensions}
         content={value}
         RichTextFieldProps={{

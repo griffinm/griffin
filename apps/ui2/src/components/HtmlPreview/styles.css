@@ -23,3 +23,32 @@
     }
   }
 }
+
+/* Inline note-to-note link "pill" (NoteLink extension), read-only rendering. */
+/* Kept in sync with Editor/styles.scss. */
+.note-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px 0 4px;
+  border-radius: 4px;
+  background-color: var(--mantine-color-blue-light);
+  color: var(--mantine-color-blue-light-color);
+  font-weight: 500;
+  font-size: 0.95em;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.note-link-pill::before {
+  content: '';
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2224%22%20height=%2224%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M14%203v4a1%201%200%200%200%201%201h4%22/%3E%3Cpath%20d=%22M17%2021h-10a2%202%200%200%201%20-2%20-2v-14a2%202%200%200%201%202%20-2h7l5%205v11a2%202%200%200%201%20-2%202z%22/%3E%3Cpath%20d=%22M9%209h1%22/%3E%3Cpath%20d=%22M9%2013h6%22/%3E%3Cpath%20d=%22M9%2017h6%22/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2224%22%20height=%2224%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M14%203v4a1%201%200%200%200%201%201h4%22/%3E%3Cpath%20d=%22M17%2021h-10a2%202%200%200%201%20-2%20-2v-14a2%202%200%200%201%202%20-2h7l5%205v11a2%202%200%200%201%20-2%202z%22/%3E%3Cpath%20d=%22M9%209h1%22/%3E%3Cpath%20d=%22M9%2013h6%22/%3E%3Cpath%20d=%22M9%2017h6%22/%3E%3C/svg%3E") no-repeat center / contain;
+}
