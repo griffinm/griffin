@@ -35,7 +35,7 @@ import {
   type RichTextEditorRef,
   RichTextEditorProvider,
 } from "mui-tiptap";
-import { useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo, type MouseEvent } from "react";
 import { useEditor } from "@tiptap/react";
 import { Editor as TiptapEditor, type EditorOptions } from "@tiptap/core";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -195,6 +195,28 @@ export function Editor({
       [openNote],
     );
 
+  // Focus the editor when the user clicks in the empty area of the field (below
+  // the content), not just on the editable content itself. Clicks on the content
+  // or the toolbar keep their native behavior.
+  const handleEditorAreaClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      const activeEditor = rteRef.current?.editor;
+      if (!activeEditor) {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      if (
+        !target ||
+        target.closest('.ProseMirror') ||
+        target.closest('.MuiTiptap-RichTextField-menuBar')
+      ) {
+        return;
+      }
+      activeEditor.commands.focus('end');
+    },
+    [],
+  );
+
   const handleDrop: NonNullable<EditorOptions["editorProps"]["handleDrop"]> =
     useCallback(
       (view, event, _slice, _moved) => {
@@ -234,23 +256,14 @@ export function Editor({
         content={value}
         RichTextFieldProps={{
           variant: "outlined",
-          ...(fillHeight && {
-            sx: {
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              '& .MuiInputBase-root': {
-                flex: 1,
-                alignItems: 'stretch',
-              },
-            },
-          }),
+          onClick: handleEditorAreaClick,
         }}
         sx={{
           ...(fillHeight && {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
+            cursor: 'text',
           }),
           '& .ProseMirror': {
             minHeight: fillHeight ? 0 : (minHeight || '200px'),
