@@ -1,5 +1,6 @@
 import {
   IsDateString,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -29,6 +30,11 @@ export class NoteEntity {
   @IsOptional()
   @Expose()
   notebookId?: string;
+
+  @IsInt()
+  @IsOptional()
+  @Expose()
+  version?: number;
 
   @IsDateString()
   @IsOptional()

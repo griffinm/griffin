@@ -120,6 +120,7 @@ export class NoteService {
         id: true,
         title: true,
         content: true, // load content for preview
+        version: true,
         createdAt: true,
         updatedAt: true,
         notebookId: true,
@@ -184,10 +185,17 @@ export class NoteService {
       }
     }
 
+    // Bump the version only when the content actually changes
+    const contentChanged =
+      data.content !== undefined && data.content !== existingNote.content;
+
     // Now update the note
     const updatedNote = await this.prisma.note.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        ...(contentChanged ? { version: { increment: 1 } } : {}),
+      },
     });
 
     this.searchService.addNote(updatedNote, userId);

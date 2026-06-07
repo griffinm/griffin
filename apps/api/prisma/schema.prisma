@@ -76,6 +76,7 @@ model Note {
   title      String?    @map("title")
   content    String?    @map("content")
   notebookId String     @map("notebook_id")
+  version    Int        @default(1) @map("version")
   createdAt  DateTime   @default(now()) @map("created_at")
   updatedAt  DateTime   @updatedAt @map("updated_at")
   deletedAt  DateTime?  @map("deleted_at")
