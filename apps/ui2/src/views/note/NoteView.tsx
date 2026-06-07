@@ -13,6 +13,7 @@ import { Tag } from '@/types/tag';
 import { addTagToNote, removeTagFromNote } from '@/api/notesApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTabsContext } from '@/providers/TabsProvider';
+import { format } from 'date-fns';
 
 const SAVE_TIMEOUT = 500;
 
@@ -335,13 +336,20 @@ export function NoteView() {
                 Duplicate note
               </Menu.Item>
               <Menu.Divider />
-              <Menu.Item 
-                color="red" 
+              <Menu.Item
+                color="red"
                 leftSection={<IconTrash size={16} />}
                 onClick={() => setDeleteModalOpened(true)}
               >
                 Delete note
               </Menu.Item>
+              <Menu.Divider />
+              <div style={{ padding: '6px 12px' }}>
+                <Text size="xs" c="dimmed">Version {note.version}</Text>
+                <Text size="xs" c="dimmed">
+                  Last saved {format(new Date(note.updatedAt), 'MMM d, yyyy, h:mm a')}
+                </Text>
+              </div>
             </Menu.Dropdown>
           </Menu>
         </div>
