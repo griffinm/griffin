@@ -39,13 +39,6 @@ export const PromptExtension = Node.create({
       content: {
         default: '',
       },
-      collapsed: {
-        default: false,
-        parseHTML: element => element.getAttribute('collapsed') === 'true',
-        renderHTML: attributes => ({
-          collapsed: attributes.collapsed ? 'true' : 'false',
-        }),
-      },
     }
   },
 

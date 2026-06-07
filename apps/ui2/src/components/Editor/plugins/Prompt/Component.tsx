@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, TextInput, Textarea, Select, Badge } from '@mantine/core'
 import { NodeViewWrapper } from '@tiptap/react'
-import { IconChevronRight, IconChevronDown, IconCheck, IconX, IconCopy } from '@tabler/icons-react'
+import { IconCheck, IconX, IconCopy } from '@tabler/icons-react'
 import type { NodeViewProps } from '@tiptap/react'
 
 const statusOptions = [
@@ -39,14 +39,9 @@ export function Component(props: NodeViewProps) {
   const [editStatus, setEditStatus] = useState(node.attrs.status)
   const [editContent, setEditContent] = useState(node.attrs.content)
 
-  const collapsed = node.attrs.collapsed
   const status = node.attrs.status
   const title = node.attrs.title
   const content = node.attrs.content
-
-  const handleToggleCollapse = () => {
-    updateAttributes({ collapsed: !collapsed })
-  }
 
   const handleStartEdit = () => {
     setEditTitle(title)
@@ -71,17 +66,6 @@ export function Component(props: NodeViewProps) {
 
   const renderHeader = () => (
     <div className="flex items-center gap-2 py-1 px-2 border-1 border-[var(--mantine-color-gray-3)] cursor-pointer select-none text-2xl">
-      <button
-        type="button"
-        onClick={handleToggleCollapse}
-        className="p-0 bg-transparent border-none cursor-pointer flex items-center"
-      >
-        {collapsed ? (
-          <IconChevronRight size={16} className="text-[var(--mantine-color-dimmed)]" />
-        ) : (
-          <IconChevronDown size={16} className="text-[var(--mantine-color-dimmed)]" />
-        )}
-      </button>
       <span className="flex-shrink-0 text-base leading-none">{statusIcons[status] || '🟠'}</span>
       <span className="flex-1 font-medium" onClick={handleStartEdit}>{title}</span>
       <button
@@ -104,17 +88,6 @@ export function Component(props: NodeViewProps) {
   const renderShow = () => (
     <div className={`rounded ${statusBgColors[status]}`}>
       {renderHeader()}
-      {!collapsed && (
-        <div className="px-2 pb-2 cursor-pointer hover:opacity-80 rounded transition-colors" onClick={handleStartEdit}>
-          {content ? (
-            <div className="m-0 p-2 bg-[var(--mantine-color-gray-0)] rounded text-sm font-mono whitespace-pre-wrap break-words">
-              {content}
-            </div>
-          ) : (
-            <p className="m-0 p-2 text-[var(--mantine-color-dimmed)] text-sm italic">Click to add prompt content...</p>
-          )}
-        </div>
-      )}
     </div>
   )
 
