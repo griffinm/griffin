@@ -35,10 +35,17 @@ apps/ui2/src/components/Editor/
     ├── CollapsibleHeading/ # extends @tiptap/extension-heading
     │   ├── Extension.ts
     │   └── Component.tsx
+    ├── Dropdown/           # inline node (backend-backed instance reference)
+    │   ├── Extension.ts
+    │   ├── Component.tsx
+    │   └── MenuItem.tsx
     ├── NoteLink/           # extends @tiptap/extension-mention (inline)
     │   ├── Extension.ts
     │   ├── suggestion.ts
-    │   └── NoteLinkList.tsx
+    │   ├── ActionMenuList.tsx    # "@" stage 1: actions menu
+    │   ├── AtMenuList.tsx        # routes between stages
+    │   ├── NoteLinkList.tsx      # stage 2: note search
+    │   └── DropdownPickerList.tsx # stage 2: dropdown picker
     ├── Prompt/             # block node (self-contained attributes)
     │   ├── Extension.ts
     │   ├── Component.tsx
@@ -55,12 +62,14 @@ apps/ui2/src/components/Editor/
 
 ### Registration
 
-All extensions are listed in the module-level `extensions` array in `Editor.tsx`, and
-their toolbar buttons are placed in `renderControls()`. Notable detail:
+Most extensions are listed in the module-level `baseExtensions` array in `Editor.tsx`,
+and their toolbar buttons are placed in `renderControls()`. Extensions that need the
+current note's id are appended per-instance in a `useMemo` so each editor gets its own
+configured copy (see **Dropdown** and the `noteId`-gating note in §5):
 
 ```ts
 // Editor.tsx
-const extensions = [
+const baseExtensions = [
   StarterKit.configure({
     heading: false, // disabled — CollapsibleHeading replaces it
   }),
@@ -71,6 +80,12 @@ const extensions = [
   PromptExtension,
   NoteLinkExtension,
 ];
+
+// Inside the Editor component — inject this note's id into the Dropdown plugin:
+const extensions = useMemo(
+  () => [...baseExtensions, DropdownExtension.configure({ noteId })],
+  [noteId],
+);
 ```
 
 ### Stock extensions (do not reimplement)
@@ -245,6 +260,7 @@ or a [suggestion](https://tiptap.dev/docs/editor/api/utilities/suggestion) popup
 | Prompt | type `/prompt ` (trailing space) | `nodeInputRule({ find: /\/prompt\s$/ })` |
 | Question | type `qq` | `nodeInputRule({ find: /qq/ })` — note: a bare `qq`, not `/qq` |
 | NoteLink | type `@` | Mention `suggestion` popup |
+| Dropdown | toolbar `Menu` + `@ → Dropdown` | `setDropdown(id)` command / `insertContentAt` |
 | Task | toolbar button only | `setTask()` command |
 
 ```ts
@@ -270,6 +286,52 @@ addInputRules() {
   Types in [types/task.ts](../apps/ui2/src/types/task.ts).
 - **Trigger:** Toolbar button (`TaskMenuItem`, checkbox icon).
 - **Files:** `Extension.ts`, `Component.tsx`, `MenuItem.tsx`.
+
+### Dropdown — `plugins/Dropdown/`
+
+- **What:** A reusable Google-Sheets-style dropdown. A user defines a dropdown once (a
+  name + colored options) and stamps it into notes many times; each placement renders
+  the selected option as a colored pill; clicking it opens an anchored Mantine `Menu`
+  of the options (each shown as its own colored pill, the current one checked) — the
+  pill keeps its inline footprint rather than swapping to a full input.
+- **Base / type:** Custom `Node`, **inline** (`group: 'inline'`, `inline: true`,
+  `atom: true`) — it flows within a paragraph rather than occupying its own line, so a
+  line can hold text plus one or more dropdowns. The NodeView renders through a
+  `NodeViewWrapper as="span"`.
+- **Attributes:** `dropdownId` (the definition) and `instanceId` (the per-placement row).
+- **Storage:** Backend-backed **by reference**, with three tables behind it
+  (`Dropdown` → `DropdownOption`, and `DropdownInstance`). The node stores only ids; the
+  NodeView loads the definition via `useDropdown(dropdownId)` (shared cache across all
+  placements of the same definition) and the selection via
+  `useDropdownInstance(instanceId)`. See
+  [dropdownsApi.ts](../apps/ui2/src/api/dropdownsApi.ts),
+  [useDropdowns.ts](../apps/ui2/src/hooks/useDropdowns.ts),
+  [types/dropdown.ts](../apps/ui2/src/types/dropdown.ts). Each option has a single
+  Mantine color token (its "color scheme") that drives both the pill background and
+  text, resolved by [components/dropdowns/colors.ts](../apps/ui2/src/components/dropdowns/colors.ts).
+- **Lifecycle (important):**
+  - **Lazy instance creation** — a freshly inserted node has `instanceId === ''`; the
+    NodeView creates the `DropdownInstance` row (POST `/dropdown-instances`) on mount and
+    writes the id back with `updateAttributes`. New instances start with
+    `selectedOptionId = null`, which renders the definition's **default** option.
+  - **Independent on paste** — an `appendTransaction` ProseMirror plugin (in
+    `Extension.ts`) detects two nodes sharing a non-empty `instanceId` (copy/paste) and
+    resets the later one's `instanceId` to `''`, so it mints its own instance. This keeps
+    every placement independent.
+  - **Association on save** — like Task/Question, the backend prunes orphaned rows:
+    [associateDropdownInstances.ts](../apps/api/src/notes/associateDropdownInstances.ts)
+    (called from `NoteService.update`) soft-deletes instances of the note whose
+    `instanceid="…"` no longer appears in the saved content.
+  - **Definition/option deletes** cascade server-side: deleting a dropdown soft-deletes
+    its options and instances; deleting an option nulls the selection of instances that
+    used it (so they fall back to the default) and promotes a new default if needed.
+- **Trigger:** Toolbar `Menu` (`DropdownMenuItem` — lists the user's dropdowns + a
+  "Configure…" item opening [DropdownConfigModal](../apps/ui2/src/components/dropdowns/DropdownConfigModal.tsx))
+  and the `@ → Dropdown` action (see NoteLink). The toolbar button and `@` action both
+  require a `noteId` (an instance must belong to a note).
+- **Files:** `Extension.ts`, `Component.tsx`, `MenuItem.tsx`; plus
+  `components/dropdowns/` (config modal, color picker, color util) and the
+  `dropdowns` API/hooks/types.
 
 ### Question — `plugins/Question/`
 
@@ -310,10 +372,17 @@ addInputRules() {
   [`ReactRenderer`](https://tiptap.dev/docs/editor/extensions/custom-extensions/node-views/react)
   (so the popup inherits
   the editor's Mantine/MUI React context) and positions it manually at the caret via
-  `clientRect` — **deliberately not** `tippy.js`. The list component
+  `clientRect` — **deliberately not** `tippy.js`.
+- **Multi-stage menu:** the popup is mounted as
+  [AtMenuList.tsx](../apps/ui2/src/components/Editor/plugins/NoteLink/AtMenuList.tsx),
+  which starts on an actions list
+  ([ActionMenuList.tsx](../apps/ui2/src/components/Editor/plugins/NoteLink/ActionMenuList.tsx),
+  `EDITOR_ACTIONS`) and routes to a stage-2 list per action: **Link To Note** →
   [NoteLinkList.tsx](../apps/ui2/src/components/Editor/plugins/NoteLink/NoteLinkList.tsx)
-  resolves items two ways: a debounced Typesense search, or a pasted note URL matched by
-  a `/notes/:id` regex.
+  (debounced Typesense search, or a pasted `/notes/:id` URL); **Dropdown** →
+  [DropdownPickerList.tsx](../apps/ui2/src/components/Editor/plugins/NoteLink/DropdownPickerList.tsx)
+  (lists the user's dropdowns and inserts a placement via `insertContentAt`). To add an
+  action, add an entry to `EDITOR_ACTIONS` and a branch + stage to `AtMenuList`.
 - **Rendering & storage:** Custom `renderHTML`/`renderText` return just the note title;
   Mention wraps it in `<span data-type="noteLink" data-id=… data-label=…>` which is what
   round-trips. Styled via the `.note-link-pill` class so it looks consistent in the
@@ -397,6 +466,11 @@ does.
   exact behavior you want; test it.
 - **Keep `parseHTML`/`renderHTML` symmetric.** Notes are stored as TipTap HTML; an
   asymmetric pair silently drops node data on reload.
+- **Backend-backed nodes are blank in `HtmlPreview`.** Reference nodes (Task, Dropdown)
+  store only ids in the HTML, so the read-only `HtmlPreview` (raw `dangerouslySetInnerHTML`)
+  shows nothing for them — their visible data lives in the DB and is only rendered by the
+  live NodeView. Self-contained nodes (Prompt) keep their data in attributes but are
+  likewise not specially rendered in the preview. Don't rely on previews to show them.
 
 ---
 

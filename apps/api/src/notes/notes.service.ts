@@ -5,6 +5,7 @@ import { UpdateDto } from "./dto/update.dto";
 import { SearchService } from "../search/search.service";
 import { associateTasks } from "./associateTasks";
 import { associateQuestions } from "./associateQuestions";
+import { associateDropdownInstances } from "./associateDropdownInstances";
 import { Note, Tag } from "@prisma/client";
 
 @Injectable()
@@ -201,6 +202,7 @@ export class NoteService {
     this.searchService.addNote(updatedNote, userId);
     associateTasks(updatedNote, userId, this.prisma, this.logger);
     associateQuestions(updatedNote, userId, this.prisma, this.logger);
+    associateDropdownInstances(updatedNote, this.prisma, this.logger);
 
     return updatedNote;
   }

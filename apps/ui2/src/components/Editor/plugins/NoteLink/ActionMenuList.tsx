@@ -4,7 +4,7 @@ import {
   useImperativeHandle,
   useState,
 } from 'react'
-import { IconFileText, type TablerIcon } from '@tabler/icons-react'
+import { IconFileText, IconChevronDown, type TablerIcon } from '@tabler/icons-react'
 
 /** An entry in the "@" actions menu (stage 1 of the popup). */
 export interface EditorAction {
@@ -17,6 +17,7 @@ export interface EditorAction {
 // AtMenuList branches on `action.id` to decide what selecting one does.
 export const EDITOR_ACTIONS: EditorAction[] = [
   { id: 'link-note', label: 'Link To Note', Icon: IconFileText },
+  { id: 'dropdown', label: 'Dropdown', Icon: IconChevronDown },
 ]
 
 export interface ActionMenuListRef {

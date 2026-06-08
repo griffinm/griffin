@@ -22,6 +22,7 @@ model User {
   tags                Tag[]
   audioTranscriptions AudioTranscription[]
   conversations       Conversation[]
+  dropdowns           Dropdown[]
 
   @@map("users")
 }
@@ -84,6 +85,7 @@ model Note {
   notebook   Notebook   @relation(fields: [notebookId], references: [id])
   questions  Question[]
   tasks      Task[]
+  dropdownInstances DropdownInstance[]
 
   @@map("notes")
 }
@@ -228,4 +230,51 @@ model ConversationItem {
 
   @@index([conversationId])
   @@map("conversation_items")
+}
+
+model Dropdown {
+  id        String             @id @default(uuid()) @map("id")
+  name      String             @map("name")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+  deletedAt DateTime?          @map("deleted_at")
+  userId    String             @map("user_id")
+  user      User               @relation(fields: [userId], references: [id])
+  options   DropdownOption[]
+  instances DropdownInstance[]
+
+  @@index([userId])
+  @@map("dropdowns")
+}
+
+model DropdownOption {
+  id              String    @id @default(uuid()) @map("id")
+  dropdownId      String    @map("dropdown_id")
+  label           String    @map("label")
+  color           String    @default("gray") @map("color")
+  isDefault       Boolean   @default(false) @map("is_default")
+  order           Int       @default(0) @map("order")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  dropdown        Dropdown  @relation(fields: [dropdownId], references: [id])
+
+  @@index([dropdownId])
+  @@map("dropdown_options")
+}
+
+model DropdownInstance {
+  id               String    @id @default(uuid()) @map("id")
+  dropdownId       String    @map("dropdown_id")
+  noteId           String    @map("note_id")
+  selectedOptionId String?   @map("selected_option_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+  dropdown         Dropdown  @relation(fields: [dropdownId], references: [id])
+  note             Note      @relation(fields: [noteId], references: [id])
+
+  @@index([dropdownId])
+  @@index([noteId])
+  @@map("dropdown_instances")
 }

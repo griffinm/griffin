@@ -11,6 +11,11 @@ import {
   type EditorAction,
 } from './ActionMenuList'
 import { NoteLinkList, type NoteLinkListRef } from './NoteLinkList'
+import {
+  DropdownPickerList,
+  type DropdownPickerListRef,
+} from './DropdownPickerList'
+import { createDropdownInstance } from '@/api/dropdownsApi'
 
 export interface AtMenuListRef {
   /** Returns true if the key was handled by the popup. */
@@ -18,10 +23,11 @@ export interface AtMenuListRef {
 }
 
 /**
- * Two-stage popup mounted by the "@" suggestion (see `suggestion.ts`):
- * stage 1 is the actions menu (`ActionMenuList`), stage 2 is the note search
- * (`NoteLinkList`). Selecting "Link To Note" clears the typed filter text and
- * switches to the search. Keyboard events are routed to the active stage.
+ * Multi-stage popup mounted by the "@" suggestion (see `suggestion.ts`):
+ * stage 1 is the actions menu (`ActionMenuList`); selecting an action clears the
+ * typed filter text and switches to a stage-2 list — note search (`NoteLinkList`)
+ * for "Link To Note" or dropdown picker (`DropdownPickerList`) for "Dropdown".
+ * Keyboard events are routed to the active stage.
  */
 interface AtMenuListProps {
   /** Text typed after the "@" trigger. */
@@ -33,18 +39,19 @@ interface AtMenuListProps {
   range: { from: number; to: number }
 }
 
-type Mode = 'actions' | 'noteLink'
+type Mode = 'actions' | 'noteLink' | 'dropdown'
 
 export const AtMenuList = forwardRef<AtMenuListRef, AtMenuListProps>(
   ({ query, command, editor, range }, ref) => {
     const [mode, setMode] = useState<Mode>('actions')
     const actionListRef = useRef<ActionMenuListRef>(null)
     const noteListRef = useRef<NoteLinkListRef>(null)
+    const dropdownListRef = useRef<DropdownPickerListRef>(null)
 
     const handleActionSelect = (action: EditorAction) => {
-      if (action.id === 'link-note') {
+      if (action.id === 'link-note' || action.id === 'dropdown') {
         // Drop the action-filter text but keep the "@" (range.from), so the
-        // suggestion stays active and stage-2 note search starts from empty.
+        // suggestion stays active and the stage-2 list starts from empty.
         if (range.to > range.from + 1) {
           editor
             .chain()
@@ -52,29 +59,69 @@ export const AtMenuList = forwardRef<AtMenuListRef, AtMenuListProps>(
             .deleteRange({ from: range.from + 1, to: range.to })
             .run()
         }
-        setMode('noteLink')
+        setMode(action.id === 'link-note' ? 'noteLink' : 'dropdown')
       }
+    }
+
+    // Replace the whole suggestion range ("@" + query) with a dropdown node.
+    // Removing the "@" ends the suggestion, which dismisses the popup. The
+    // instance is created up front (noteId comes from the Dropdown plugin's
+    // storage, kept current by Editor.tsx) so the node carries its instanceId.
+    const insertDropdown = async (dropdownId: string) => {
+      const noteId = editor.storage?.dropdown?.noteId as string | undefined
+      let instanceId = ''
+      if (noteId) {
+        try {
+          const instance = await createDropdownInstance({ dropdownId, noteId })
+          instanceId = instance.id
+        } catch {
+          instanceId = ''
+        }
+      }
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(range, {
+          type: 'dropdown',
+          attrs: { dropdownId, instanceId },
+        })
+        .run()
     }
 
     useImperativeHandle(
       ref,
       () => ({
-        onKeyDown: (event: KeyboardEvent) =>
-          mode === 'actions'
-            ? actionListRef.current?.onKeyDown(event) ?? false
-            : noteListRef.current?.onKeyDown(event) ?? false,
+        onKeyDown: (event: KeyboardEvent) => {
+          if (mode === 'actions') {
+            return actionListRef.current?.onKeyDown(event) ?? false
+          }
+          if (mode === 'noteLink') {
+            return noteListRef.current?.onKeyDown(event) ?? false
+          }
+          return dropdownListRef.current?.onKeyDown(event) ?? false
+        },
       }),
       [mode],
     )
 
-    return mode === 'actions' ? (
-      <ActionMenuList
-        ref={actionListRef}
+    if (mode === 'actions') {
+      return (
+        <ActionMenuList
+          ref={actionListRef}
+          query={query}
+          onSelect={handleActionSelect}
+        />
+      )
+    }
+    if (mode === 'noteLink') {
+      return <NoteLinkList ref={noteListRef} query={query} command={command} />
+    }
+    return (
+      <DropdownPickerList
+        ref={dropdownListRef}
         query={query}
-        onSelect={handleActionSelect}
+        onSelect={insertDropdown}
       />
-    ) : (
-      <NoteLinkList ref={noteListRef} query={query} command={command} />
     )
   },
 )

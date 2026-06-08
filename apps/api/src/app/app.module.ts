@@ -17,6 +17,7 @@ import { TagModule } from '../tag/tag.module';
 import { AudioModule } from '../audio/audio.module';
 import { LlmModule } from '../llm/llm.module';
 import { QueueModule } from '../queue/queue.module';
+import { DropdownsModule } from '../dropdowns/dropdowns.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { QueueModule } from '../queue/queue.module';
     TagModule,
     QueueModule,
     LlmModule,
+    DropdownsModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],
