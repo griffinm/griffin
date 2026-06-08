@@ -207,6 +207,11 @@ export function Editor({
       const target = event.target as HTMLElement | null;
       if (
         !target ||
+        // Ignore clicks that bubble in through React's tree from portaled UI
+        // rendered inside the editor (e.g. a Mantine Select dropdown in the
+        // Prompt node) — their DOM lives in document.body, not the field, so
+        // they would otherwise trigger focus('end') and scroll to the bottom.
+        !event.currentTarget.contains(target) ||
         target.closest('.ProseMirror') ||
         target.closest('.MuiTiptap-RichTextField-menuBar')
       ) {
