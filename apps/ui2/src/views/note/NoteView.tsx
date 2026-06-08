@@ -8,6 +8,7 @@ import { Editor as TiptapEditor } from '@tiptap/core';
 import { ConfirmationModal } from '../NoteTree/ConfirmationModal';
 import { MoveNoteModal } from './MoveNoteModal';
 import { notifications } from '@mantine/notifications';
+import { useMediaQuery } from '@mantine/hooks';
 import { TagManager } from '@/components/TagManager/TagManager';
 import { Tag } from '@/types/tag';
 import { addTagToNote, removeTagFromNote } from '@/api/notesApi';
@@ -22,6 +23,7 @@ export function NoteView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { updateTabTitle, closeTab } = useTabsContext();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const { data: note, isLoading, error } = useNote(noteId || '');
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
@@ -355,7 +357,7 @@ export function NoteView() {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 20px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ padding: isMobile ? '0 0 20px' : '0 20px 20px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <Editor
           key={noteId}
           value={note.content || ''}

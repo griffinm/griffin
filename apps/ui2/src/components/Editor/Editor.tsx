@@ -40,6 +40,7 @@ import { useEditor } from "@tiptap/react";
 import { Editor as TiptapEditor, type EditorOptions } from "@tiptap/core";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useComputedColorScheme } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { TaskExtension } from './plugins/Task/Extension';
 import { TaskMenuItem } from './plugins/Task/MenuItem';
 import { QuestionExtension } from './plugins/Question/Extension';
@@ -101,6 +102,7 @@ export function Editor({
   const rteRef = useRef<RichTextEditorRef>(null);
   const { openNote } = useOpenNote();
   const computedColorScheme = useComputedColorScheme('light');
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const muiTheme = useMemo(
     () => createTheme({ palette: { mode: computedColorScheme } }),
     [computedColorScheme],
@@ -280,6 +282,14 @@ export function Editor({
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: computedColorScheme === 'dark' ? 'transparent' : undefined,
           },
+          ...(isMobile && {
+            // On mobile, remove the editor's horizontal padding so content
+            // runs right up to the screen edges and maximizes usable area.
+            '& .MuiTiptap-RichTextField-content': {
+              paddingLeft: '5px',
+              paddingRight: '5px',
+            },
+          }),
         }}
         renderControls={() => (
           <MenuControlsContainer>
