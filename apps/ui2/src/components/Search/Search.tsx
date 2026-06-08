@@ -5,6 +5,8 @@ import { SearchResults } from '@/types/search';
 import { fetchSearchResults } from '@/api/searchApi';
 import { useNavigate } from 'react-router-dom';
 import { useOpenNote } from '@/hooks/useOpenNote';
+import { useNotebooks } from '@/hooks/useNotebooks';
+import { getNotebookPathString } from '@/utils/notebookPath';
 
 const SEARCH_TIMEOUT = 300;
 
@@ -15,6 +17,7 @@ export function Search() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { openNote } = useOpenNote();
+  const { data: allNotebooks } = useNotebooks();
 
   const debouncedSearch = useCallback(() => {
     if (updateTimeoutRef.current) {
@@ -82,6 +85,7 @@ export function Search() {
       <>
         {/* Note Results */}
         {searchResults.noteResults?.map((result) => {
+          const notebookPath = getNotebookPathString(result.notebookId, allNotebooks);
           return (
             <div
               key={`note-${result.id}`}
@@ -96,6 +100,11 @@ export function Search() {
                 <Badge size="xs" color="blue" variant="light">Note</Badge>
                 <div className="font-medium text-sm">{result.title}</div>
               </div>
+              {notebookPath && (
+                <div className="text-xs text-[var(--mantine-color-dimmed)]">
+                  {notebookPath}
+                </div>
+              )}
               {result.snippet && (
                 <div 
                   className="text-xs text-[var(--mantine-color-dimmed)] italic mt-1" 

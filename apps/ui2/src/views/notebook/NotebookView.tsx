@@ -24,6 +24,14 @@ import { notifications } from '@mantine/notifications';
 import { useNotebookSearch } from '@/hooks/useNotebookSearch';
 import { ActionPanel } from '@/components/ActionPanel';
 import { useOpenNote } from '@/hooks/useOpenNote';
+import { getNotebookPathSegments } from '@/utils/notebookPath';
+import { TagManager } from '@/components/TagManager/TagManager';
+import {
+  useNotebookDefaultTags,
+  useAddNotebookDefaultTag,
+  useRemoveNotebookDefaultTag,
+} from '@/hooks/useNotebookDefaultTags';
+import { Tag } from '@/types/tag';
 
 export function NotebookView() {
   const { notebookId } = useParams<{ notebookId: string }>();
@@ -35,10 +43,13 @@ export function NotebookView() {
   const { data: notebook, isLoading: notebookLoading, error: notebookError } = useNotebook(notebookId || '');
   const { data: notes, isLoading: notesLoading, error: notesError } = useNotesByNotebook(notebookId || '');
   const { data: allNotebooks } = useNotebooks();
+  const { data: defaultTags } = useNotebookDefaultTags(notebookId || '');
+  const addDefaultTag = useAddNotebookDefaultTag(notebookId || '');
+  const removeDefaultTag = useRemoveNotebookDefaultTag(notebookId || '');
   const { searchTerm, setSearchTerm, results: searchResults, isSearching, isLoading: searchLoading, clearSearch } = useNotebookSearch(notebookId || '');
 
-  const getNotebookName = useCallback((nbId: string) => {
-    return allNotebooks?.find(nb => nb.id === nbId)?.title || 'Unknown Notebook';
+  const getNotebookPath = useCallback((nbId: string) => {
+    return getNotebookPathSegments(nbId, allNotebooks);
   }, [allNotebooks]);
 
   // Sort notes by updatedAt (most recent first)
@@ -53,6 +64,34 @@ export function NotebookView() {
 
   const handleNoteClick = (noteId: string, title?: string) => {
     openNote(noteId, title);
+  };
+
+  // Tags applied here become the notebook's default tags, seeded onto descendant notes.
+  const handleDefaultTagsChange = async (newTags: Tag[]) => {
+    const original = defaultTags || [];
+
+    const removed = original.filter(
+      (tag) => !newTags.some((newTag) => newTag.id === tag.id)
+    );
+    const added = newTags.filter(
+      (tag) => !original.some((origTag) => origTag.id === tag.id)
+    );
+
+    try {
+      for (const tag of removed) {
+        await removeDefaultTag.mutateAsync(tag.id);
+      }
+      for (const tag of added) {
+        await addDefaultTag.mutateAsync(tag.id);
+      }
+    } catch (error) {
+      console.error('Error updating default tags:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update default tags',
+        color: 'red',
+      });
+    }
   };
 
   const handleCreateNote = async () => {
@@ -126,6 +165,16 @@ export function NotebookView() {
               </Text>
             )}
           </div>
+          <Group gap="xs" align="center" wrap="nowrap">
+            <Text size="sm" c="dimmed">
+              Default tags:
+            </Text>
+            <TagManager
+              tags={defaultTags || []}
+              onChange={handleDefaultTagsChange}
+              placeholder="Add default tags..."
+            />
+          </Group>
         </Group>
 
         {/* Search Bar */}
@@ -194,7 +243,7 @@ export function NotebookView() {
                 <SearchResultCard
                   key={result.id}
                   result={result}
-                  notebookName={getNotebookName(result.notebookId)}
+                  notebookPath={getNotebookPath(result.notebookId)}
                   onClick={() => handleNoteClick(result.id, result.title)}
                 />
               ))}

@@ -6,6 +6,7 @@ import { SearchService } from "../search/search.service";
 import { associateTasks } from "./associateTasks";
 import { associateQuestions } from "./associateQuestions";
 import { associateDropdownInstances } from "./associateDropdownInstances";
+import { applyNotebookDefaultTags } from "./applyNotebookDefaultTags";
 import { Note, Tag } from "@prisma/client";
 
 @Injectable()
@@ -226,6 +227,12 @@ export class NoteService {
     });
 
     this.searchService.addNote(note, userId);
+
+    // Seed default tags inherited from the notebook and its ancestors. Awaited (unlike
+    // the fire-and-forget associate* calls in update) so the tags are present when the
+    // client refetches the note.
+    await applyNotebookDefaultTags(note, this.prisma, this.logger);
+
     this.logger.debug(`Note ${note.id.substring(0, 7)} created`);
 
     return note;

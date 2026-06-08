@@ -20,6 +20,8 @@ import { NoteService } from '../notes/notes.service';
 import { NoteEntity } from '../notes/dto/note.entity';
 import { UpdateDto } from './dto/update.dto';
 import { CreateDto as NoteCreateDto } from '../notes/dto/create.dto';
+import { TagEntity } from '../tag/entities/tag.entity';
+import { AddDefaultTagDto } from './dto/add-default-tag.dto';
 
 @Controller('notebooks')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -75,10 +77,36 @@ export class NotebooksController {
   }
 
   @Delete("/:id")
-  async delete( 
+  async delete(
     @Req() request: any,
     @Param('id') id: string,
   ): Promise<NotebookEntity> {
     return this.notebookService.deleteNotebook(request.user.id, id);
+  }
+
+  @Get("/:id/default-tags")
+  async getDefaultTags(
+    @Req() request: any,
+    @Param('id') id: string,
+  ): Promise<TagEntity[]> {
+    return this.notebookService.getDefaultTags(id, request.user.id);
+  }
+
+  @Post("/:id/default-tags")
+  async addDefaultTag(
+    @Req() request: any,
+    @Param('id') id: string,
+    @Body() dto: AddDefaultTagDto,
+  ): Promise<TagEntity[]> {
+    return this.notebookService.addDefaultTag(request.user.id, id, dto.tagId);
+  }
+
+  @Delete("/:id/default-tags/:tagId")
+  async removeDefaultTag(
+    @Req() request: any,
+    @Param('id') id: string,
+    @Param('tagId') tagId: string,
+  ): Promise<TagEntity[]> {
+    return this.notebookService.removeDefaultTag(request.user.id, id, tagId);
   }
 }

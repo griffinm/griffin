@@ -37,6 +37,7 @@ model Tag {
   user       User        @relation(fields: [userId], references: [id])
   userId     String      @map("user_id")
   objectTags ObjectTag[]
+  defaultForNotebooks NotebookDefaultTag[]
 
   @@unique([userId, name])
   @@map("tags")
@@ -68,8 +69,23 @@ model Notebook {
   children  Notebook[] @relation("NotebookChildren")
   user      User       @relation(fields: [userId], references: [id])
   notes     Note[]
+  defaultTags NotebookDefaultTag[]
 
   @@map("notebooks")
+}
+
+model NotebookDefaultTag {
+  id         String   @id @default(uuid()) @map("id")
+  notebookId String   @map("notebook_id")
+  tagId      String   @map("tag_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([notebookId, tagId])
+  @@index([notebookId])
+  @@index([tagId])
+  @@map("notebook_default_tags")
 }
 
 model Note {
