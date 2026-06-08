@@ -5,6 +5,7 @@ import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 import { NoteService } from '../notes/notes.service';
+import { NotebookService } from '../notebooks/notebook.service';
 import { SearchService } from '../search/search.service';
 import { ChatOpenAI } from '@langchain/openai';
 import { DynamicStructuredTool } from '@langchain/core/tools';
@@ -27,6 +28,7 @@ export class LlmService {
     private prisma: PrismaService,
     private tasksService: TasksService,
     private noteService: NoteService,
+    private notebookService: NotebookService,
     private searchService: SearchService,
     private configService: ConfigService,
     @InjectQueue(LLM_QUEUE) private llmQueue: Queue<LlmMessageJobData>,
@@ -61,13 +63,16 @@ export class LlmService {
 
 You can help users:
 - Create, search, update, and manage their tasks
-- Search and create notes
+- Create, search, edit, and organize notes — including moving notes between notebooks and pinning them
+- View their notebooks and create new ones
 - Look up information on the internet
 
 Today's date is ${today}.
 
 Be concise and helpful. When creating tasks, infer reasonable due dates and priorities from context if not specified.
 When searching for tasks or notes, use the search tools to find relevant items before making changes.
+When the user refers to a notebook by name, call list_notebooks to resolve its ID before creating a note in it or moving a note to it.
+When editing part of a note's content, first call get_note to read the current content, then submit the full revised content (content is replaced, not appended).
 
 IMPORTANT: When you use tools that return visual results (like searching notes or tasks), the user will see the results displayed as cards in the UI. Do NOT repeat or list the same information in your text response. Instead, just provide a brief summary like "Here are your notes" or "I found 3 matching tasks" without listing titles, IDs, or details that are already shown in the cards.`
     );
@@ -764,7 +769,8 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       func: async ({ title, content, notebookId }) => {
         this.logger.debug(`Creating note: ${title}`);
         try {
-          // If no notebook specified, get the user's first notebook
+          // If no notebook specified, fall back to the user's default notebook,
+          // then to their first top-level notebook if none is marked default.
           let targetNotebookId = notebookId;
           if (!targetNotebookId) {
             const notebooks = await this.prisma.notebook.findMany({
@@ -774,7 +780,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
                 parentId: null, // Top-level notebooks
               },
               orderBy: { createdAt: 'asc' },
-              take: 1,
             });
 
             if (notebooks.length === 0) {
@@ -784,7 +789,8 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
                 componentData: null,
               };
             }
-            targetNotebookId = notebooks[0].id;
+            const defaultNotebook = notebooks.find((nb) => nb.isDefault);
+            targetNotebookId = (defaultNotebook ?? notebooks[0]).id;
           }
 
           const note = await this.noteService.create(
@@ -854,6 +860,144 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       },
     });
 
+    const updateNoteTool = new DynamicStructuredTool({
+      name: 'update_note',
+      description:
+        "Edit an existing note. Use this to change a note's title or content, move it to a different notebook, or pin/unpin it. " +
+        'IMPORTANT: content is REPLACED wholesale, not appended. When making a partial edit (e.g. adding a line), first call get_note to read the current content, then submit the full revised HTML content. ' +
+        'Only provide the fields you want to change.',
+      schema: z.object({
+        noteId: z.string().describe('The ID of the note to update'),
+        title: z.string().optional().describe('The new title of the note'),
+        content: z
+          .string()
+          .optional()
+          .describe(
+            'The full new content of the note (HTML). This replaces the existing content entirely.',
+          ),
+        notebookId: z
+          .string()
+          .optional()
+          .describe('Move the note to the notebook with this ID. Use list_notebooks to resolve a notebook name to its ID.'),
+        pinned: z
+          .boolean()
+          .optional()
+          .describe('Set to true to pin the note, false to unpin it'),
+      }),
+      func: async ({ noteId, title, content, notebookId, pinned }) => {
+        this.logger.debug(`Updating note: ${noteId}`);
+        try {
+          const data: {
+            title?: string;
+            content?: string;
+            notebookId?: string;
+            pinnedAt?: Date | null;
+          } = {};
+          if (title !== undefined) data.title = title;
+          if (content !== undefined) data.content = content;
+          if (notebookId !== undefined) data.notebookId = notebookId;
+          if (pinned !== undefined) data.pinnedAt = pinned ? new Date() : null;
+
+          const note = await this.noteService.update(noteId, data, userId);
+
+          return {
+            success: true,
+            message: `Note "${note.title}" has been updated successfully.`,
+            componentData: {
+              type: 'note',
+              data: {
+                id: note.id,
+                title: note.title,
+                notebookId: note.notebookId,
+              },
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error updating note: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to update note: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    // Notebook tools
+    const listNotebooksTool = new DynamicStructuredTool({
+      name: 'list_notebooks',
+      description:
+        "List the user's notebooks. Use this to see what notebooks exist, to answer questions about them, or to resolve a notebook name to its ID before creating or moving a note. Returns each notebook's id, title, parentId (for nesting), and whether it is the default notebook.",
+      schema: z.object({}),
+      func: async () => {
+        this.logger.debug(`Listing notebooks for user ${userId.substring(0, 7)}`);
+        try {
+          const notebooks = await this.notebookService.getNotebooksForUser(userId);
+          const data = notebooks.map((nb) => ({
+            id: nb.id,
+            title: nb.title,
+            parentId: nb.parentId ?? null,
+            isDefault: nb.isDefault,
+          }));
+
+          return {
+            success: true,
+            message: `Found ${data.length} notebook${data.length === 1 ? '' : 's'}.`,
+            notebooks: data,
+            componentData: null,
+          };
+        } catch (error) {
+          this.logger.error(`Error listing notebooks: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to list notebooks: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const createNotebookTool = new DynamicStructuredTool({
+      name: 'create_notebook',
+      description:
+        'Create a new notebook for the user. Use this when the user asks to create or add a notebook. To nest the notebook under an existing one, pass that notebook\'s ID as parentId (use list_notebooks to find it).',
+      schema: z.object({
+        title: z.string().describe('The title of the notebook'),
+        parentId: z
+          .string()
+          .optional()
+          .describe('The ID of the parent notebook to nest this notebook under. Omit for a top-level notebook.'),
+      }),
+      func: async ({ title, parentId }) => {
+        this.logger.debug(`Creating notebook: ${title}`);
+        try {
+          const notebook = await this.notebookService.createNotebook(userId, {
+            title,
+            parentId,
+            isDefault: false,
+          });
+
+          return {
+            success: true,
+            message: `Notebook "${notebook.title}" has been created successfully.`,
+            notebook: {
+              id: notebook.id,
+              title: notebook.title,
+              parentId: notebook.parentId ?? null,
+            },
+            componentData: null,
+          };
+        } catch (error) {
+          this.logger.error(`Error creating notebook: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to create notebook: ${error.message}`,
+          };
+        }
+      },
+    });
+
     return [
       createTaskTool,
       searchTasksTool,
@@ -862,6 +1006,9 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       searchNotesTool,
       createNoteTool,
       getNoteTool,
+      updateNoteTool,
+      listNotebooksTool,
+      createNotebookTool,
     ];
   }
 }

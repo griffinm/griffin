@@ -8,6 +8,7 @@ import { TasksModule } from '../tasks/tasks.module';
 import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { NoteModule } from '../notes/notes.module';
+import { NotebookModule } from '../notebooks/notebook.module';
 import { SearchModule } from '../search/search.module';
 import { LLM_QUEUE } from '../queue/queue.module';
 
@@ -18,6 +19,7 @@ import { LLM_QUEUE } from '../queue/queue.module';
     forwardRef(() => AuthModule),
     ConfigModule,
     NoteModule,
+    NotebookModule,
     SearchModule,
     BullModule.registerQueue({
       name: LLM_QUEUE,
