@@ -4,7 +4,15 @@ import {
   useImperativeHandle,
   useState,
 } from 'react'
-import { IconFileText, IconChevronDown, type TablerIcon } from '@tabler/icons-react'
+import {
+  IconFileText,
+  IconChevronDown,
+  IconTerminal2,
+  IconHelp,
+  IconCheckbox,
+  IconTable,
+  type TablerIcon,
+} from '@tabler/icons-react'
 
 /** An entry in the "@" actions menu (stage 1 of the popup). */
 export interface EditorAction {
@@ -18,6 +26,10 @@ export interface EditorAction {
 export const EDITOR_ACTIONS: EditorAction[] = [
   { id: 'link-note', label: 'Link To Note', Icon: IconFileText },
   { id: 'dropdown', label: 'Dropdown', Icon: IconChevronDown },
+  { id: 'prompt', label: 'Prompt', Icon: IconTerminal2 },
+  { id: 'question', label: 'Question', Icon: IconHelp },
+  { id: 'task', label: 'Task', Icon: IconCheckbox },
+  { id: 'table', label: 'Table', Icon: IconTable },
 ]
 
 export interface ActionMenuListRef {

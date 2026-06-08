@@ -24,10 +24,11 @@ export interface AtMenuListRef {
 
 /**
  * Multi-stage popup mounted by the "@" suggestion (see `suggestion.ts`):
- * stage 1 is the actions menu (`ActionMenuList`); selecting an action clears the
- * typed filter text and switches to a stage-2 list — note search (`NoteLinkList`)
- * for "Link To Note" or dropdown picker (`DropdownPickerList`) for "Dropdown".
- * Keyboard events are routed to the active stage.
+ * stage 1 is the actions menu (`ActionMenuList`). "Link To Note" and "Dropdown"
+ * switch to a stage-2 list — note search (`NoteLinkList`) or dropdown picker
+ * (`DropdownPickerList`). The remaining actions (Prompt, Question, Task, Table)
+ * insert their node directly and dismiss the popup. Keyboard events are routed
+ * to the active stage.
  */
 interface AtMenuListProps {
   /** Text typed after the "@" trigger. */
@@ -49,17 +50,43 @@ export const AtMenuList = forwardRef<AtMenuListRef, AtMenuListProps>(
     const dropdownListRef = useRef<DropdownPickerListRef>(null)
 
     const handleActionSelect = (action: EditorAction) => {
-      if (action.id === 'link-note' || action.id === 'dropdown') {
-        // Drop the action-filter text but keep the "@" (range.from), so the
-        // suggestion stays active and the stage-2 list starts from empty.
-        if (range.to > range.from + 1) {
+      switch (action.id) {
+        case 'link-note':
+        case 'dropdown': {
+          // Drop the action-filter text but keep the "@" (range.from), so the
+          // suggestion stays active and the stage-2 list starts from empty.
+          if (range.to > range.from + 1) {
+            editor
+              .chain()
+              .focus()
+              .deleteRange({ from: range.from + 1, to: range.to })
+              .run()
+          }
+          setMode(action.id === 'link-note' ? 'noteLink' : 'dropdown')
+          break
+        }
+        case 'prompt':
+        case 'question':
+        case 'task':
+          // Direct insert (no stage 2): replacing the whole suggestion range
+          // ("@" + query) drops in the atom block node and, by removing the
+          // "@", ends the suggestion and dismisses the popup.
           editor
             .chain()
             .focus()
-            .deleteRange({ from: range.from + 1, to: range.to })
+            .insertContentAt(range, { type: action.id })
             .run()
-        }
-        setMode(action.id === 'link-note' ? 'noteLink' : 'dropdown')
+          break
+        case 'table':
+          // Tables have no single node `type`, so use the insertTable command
+          // after clearing the suggestion range (matches MenuButtonAddTable).
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run()
+          break
       }
     }
 
