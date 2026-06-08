@@ -13,6 +13,7 @@ import {
   IconTable,
   type TablerIcon,
 } from '@tabler/icons-react'
+import { MenuPanel, MenuRow, MenuStatus } from './MenuPrimitives'
 
 /** An entry in the "@" actions menu (stage 1 of the popup). */
 export interface EditorAction {
@@ -82,33 +83,21 @@ export const ActionMenuList = forwardRef<ActionMenuListRef, ActionMenuListProps>
     )
 
     return (
-      <div className="w-80 max-h-80 overflow-y-auto bg-[var(--mantine-color-body)] border border-[var(--mantine-color-gray-3)] rounded-md shadow-lg">
+      <MenuPanel>
         {actions.length === 0 ? (
-          <div className="p-3 text-sm text-[var(--mantine-color-dimmed)]">
-            No actions
-          </div>
+          <MenuStatus>No actions</MenuStatus>
         ) : (
           actions.map((action, index) => (
-            <div
+            <MenuRow
               key={action.id}
-              // Keep the editor focused so the transition keeps the suggestion alive.
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => onSelect(action)}
-              className={`flex items-center gap-2 p-2 cursor-pointer border-b border-[var(--mantine-color-gray-1)] last:border-b-0 ${
-                index === selectedIndex
-                  ? 'bg-[var(--mantine-color-default-hover)]'
-                  : 'hover:bg-[var(--mantine-color-default-hover)]'
-              }`}
-            >
-              <action.Icon
-                size={14}
-                className="text-[var(--mantine-color-dimmed)] flex-shrink-0"
-              />
-              <span className="font-medium text-sm truncate">{action.label}</span>
-            </div>
+              selected={index === selectedIndex}
+              onSelect={() => onSelect(action)}
+              leading={<action.Icon size={16} />}
+              title={action.label}
+            />
           ))
         )}
-      </div>
+      </MenuPanel>
     )
   },
 )

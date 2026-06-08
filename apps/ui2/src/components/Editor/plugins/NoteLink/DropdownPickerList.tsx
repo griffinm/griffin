@@ -6,6 +6,7 @@ import {
 } from 'react'
 import { useDropdowns } from '@/hooks/useDropdowns'
 import { defaultColorOf, dotStyle } from '@/components/dropdowns/colors'
+import { MenuPanel, MenuRow, MenuStatus } from './MenuPrimitives'
 
 export interface DropdownPickerListRef {
   /** Returns true if the key was handled by the popup. */
@@ -62,32 +63,25 @@ export const DropdownPickerList = forwardRef<
   )
 
   return (
-    <div className="w-80 max-h-80 overflow-y-auto bg-[var(--mantine-color-body)] border border-[var(--mantine-color-gray-3)] rounded-md shadow-lg">
+    <MenuPanel label="Dropdowns">
       {items.length === 0 ? (
-        <div className="p-3 text-sm text-[var(--mantine-color-dimmed)]">
+        <MenuStatus>
           {dropdowns && dropdowns.length === 0
             ? 'No dropdowns configured yet'
             : 'No matching dropdowns'}
-        </div>
+        </MenuStatus>
       ) : (
         items.map((item, index) => (
-          <div
+          <MenuRow
             key={item.id}
-            // Keep the editor focused so the insert lands at the suggestion range.
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => onSelect(item.id)}
-            className={`flex items-center gap-2 p-2 cursor-pointer border-b border-[var(--mantine-color-gray-1)] last:border-b-0 ${
-              index === selectedIndex
-                ? 'bg-[var(--mantine-color-default-hover)]'
-                : 'hover:bg-[var(--mantine-color-default-hover)]'
-            }`}
-          >
-            <span style={dotStyle(defaultColorOf(item))} />
-            <span className="font-medium text-sm truncate">{item.name}</span>
-          </div>
+            selected={index === selectedIndex}
+            onSelect={() => onSelect(item.id)}
+            leading={<span style={dotStyle(defaultColorOf(item))} />}
+            title={item.name}
+          />
         ))
       )}
-    </div>
+    </MenuPanel>
   )
 })
 
