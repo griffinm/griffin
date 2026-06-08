@@ -92,6 +92,7 @@ model Note {
   id         String     @id @default(uuid()) @map("id")
   title      String?    @map("title")
   content    String?    @map("content")
+  preview    String?    @map("preview")
   notebookId String     @map("notebook_id")
   version    Int        @default(1) @map("version")
   createdAt  DateTime   @default(now()) @map("created_at")

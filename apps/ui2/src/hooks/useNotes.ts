@@ -13,12 +13,16 @@ export const useNotesByNotebook = (notebookId: string): UseQueryResult<Note[], E
   });
 };
 
-// Hook for fetching a single note by ID
-export const useNote = (id: string): UseQueryResult<Note, Error> => {
+// Hook for fetching a single note by ID. Pass { enabled: false } to defer the fetch
+// (e.g. load full content only when a hover preview opens).
+export const useNote = (
+  id: string,
+  options?: { enabled?: boolean },
+): UseQueryResult<Note, Error> => {
   return useQuery({
     queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
-    enabled: !!id, // Only run query if id is provided
+    enabled: !!id && (options?.enabled ?? true), // Only run query if id is provided and not deferred
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

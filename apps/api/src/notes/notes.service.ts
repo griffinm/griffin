@@ -7,7 +7,21 @@ import { associateTasks } from "./associateTasks";
 import { associateQuestions } from "./associateQuestions";
 import { associateDropdownInstances } from "./associateDropdownInstances";
 import { applyNotebookDefaultTags } from "./applyNotebookDefaultTags";
-import { Note, Tag } from "@prisma/client";
+import { buildNotePreview } from "./buildNotePreview";
+import { Prisma, Tag } from "@prisma/client";
+
+// Fields returned by list endpoints — note `content` is intentionally omitted so the
+// large column never leaves the database for previews; `preview` carries the excerpt.
+const noteListSelect = {
+  id: true,
+  title: true,
+  preview: true,
+  version: true,
+  createdAt: true,
+  updatedAt: true,
+  notebookId: true,
+  pinnedAt: true,
+} satisfies Prisma.NoteSelect;
 
 @Injectable()
 export class NoteService {
@@ -18,8 +32,8 @@ export class NoteService {
     private searchService: SearchService,
   ) {}
 
-  private async addTagsToNotes(notes: Note[]): Promise<Note[]> {
-    if (notes.length === 0) return notes;
+  private async addTagsToNotes<T extends { id: string }>(notes: T[]): Promise<(T & { tags: Tag[] })[]> {
+    if (notes.length === 0) return notes as (T & { tags: Tag[] })[];
 
     const noteIds = notes.map(note => note.id);
     
@@ -52,20 +66,6 @@ export class NoteService {
     }));
   }
 
-  private truncateContentForPreview(content: string | null, maxLength = 300): string | null {
-    if (!content) return content;
-    
-    // Simple HTML tag stripping (basic implementation)
-    const stripped = content.replace(/<[^>]*>/g, '');
-    
-    // Truncate if needed
-    if (stripped.length > maxLength) {
-      return stripped.substring(0, maxLength) + '...';
-    }
-    
-    return stripped;
-  }
-
   async findAllForUser(userId: string) {
     const notes = await this.prisma.note.findMany({
       where: {
@@ -75,16 +75,10 @@ export class NoteService {
           deletedAt: null,
         },
       },
+      select: noteListSelect,
     });
 
-    // Truncate content for preview
-    const notesWithTruncated = notes.map(note => ({
-      ...note,
-      content: this.truncateContentForPreview(note.content),
-    }));
-
-    // Add tags
-    return this.addTagsToNotes(notesWithTruncated);
+    return this.addTagsToNotes(notes);
   }
 
   async recentNotes(userId: string, limit = 5) {
@@ -100,44 +94,22 @@ export class NoteService {
         updatedAt: 'desc',
       },
       take: limit,
+      select: noteListSelect,
     });
 
-    // Truncate content for preview
-    const notesWithTruncated = notes.map(note => ({
-      ...note,
-      content: this.truncateContentForPreview(note.content),
-    }));
-
-    // Add tags
-    return this.addTagsToNotes(notesWithTruncated);
+    return this.addTagsToNotes(notes);
   }
-  
+
   async findAllForNotebook(notebookId: string, userId: string) {
     const notes = await this.prisma.note.findMany({
       where: {
         notebook: { id: notebookId, user: { id: userId } },
         deletedAt: null,
       },
-      select: {
-        id: true,
-        title: true,
-        content: true, // load content for preview
-        version: true,
-        createdAt: true,
-        updatedAt: true,
-        notebookId: true,
-        pinnedAt: true,
-      },
+      select: noteListSelect,
     });
 
-    // Truncate content for preview
-    const notesWithTruncated = notes.map(note => ({
-      ...note,
-      content: this.truncateContentForPreview(note.content),
-    }));
-
-    // Add tags
-    return this.addTagsToNotes(notesWithTruncated as Note[]);
+    return this.addTagsToNotes(notes);
   }
 
   async findOneForUser(id: string, userId: string) {
@@ -198,6 +170,7 @@ export class NoteService {
       data: {
         ...data,
         ...(contentChanged ? { version: { increment: 1 } } : {}),
+        ...(data.content !== undefined ? { preview: buildNotePreview(data.content) } : {}),
       },
     });
 
@@ -224,6 +197,7 @@ export class NoteService {
       data: {
         ...data,
         notebookId: notebook.id,
+        preview: buildNotePreview(data.content ?? null),
       },
     });
 

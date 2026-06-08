@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Card, Text, Group, ActionIcon, HoverCard, Pill } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Note } from '@/types/note';
 import { useOpenNote } from '@/hooks/useOpenNote';
+import { useNote } from '@/hooks/useNotes';
+import { HtmlPreview } from '@/components/HtmlPreview';
 
 interface RecentNoteCardProps {
   note: Note;
@@ -11,11 +14,10 @@ interface RecentNoteCardProps {
 export function RecentNoteCard({ note }: RecentNoteCardProps) {
   const { openNote } = useOpenNote();
 
-  const contentPreview = note.content
-    ? note.content.length > 100
-      ? `${note.content.substring(0, 100)}...`
-      : note.content
-    : 'No content';
+  // Lazily load the full note content only when the preview popover opens, so list
+  // views still avoid paying for full content up front.
+  const [previewOpened, setPreviewOpened] = useState(false);
+  const { data: fullNote, isLoading } = useNote(note.id, { enabled: previewOpened });
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't navigate if clicking on the preview icon
@@ -50,10 +52,10 @@ export function RecentNoteCard({ note }: RecentNoteCardProps) {
         <Text size="md" fw={600} lineClamp={1} style={{ flex: 1 }}>
           {note.title || 'Untitled Note'}
         </Text>
-        <HoverCard width={400} shadow="md" openDelay={200}>
+        <HoverCard width={400} shadow="md" openDelay={200} onOpen={() => setPreviewOpened(true)}>
           <HoverCard.Target>
-            <ActionIcon 
-              variant="subtle" 
+            <ActionIcon
+              variant="subtle"
               size="sm"
               data-preview-icon
               onClick={(e) => e.stopPropagation()}
@@ -65,16 +67,22 @@ export function RecentNoteCard({ note }: RecentNoteCardProps) {
             <Text size="sm" fw={600} mb="xs">
               {note.title || 'Untitled Note'}
             </Text>
-            <Text size="xs" c="dimmed" style={{ whiteSpace: 'pre-wrap' }}>
-              {note.content || 'No content'}
-            </Text>
+            {isLoading ? (
+              <Text size="xs" c="dimmed">Loading…</Text>
+            ) : fullNote?.content ? (
+              <HtmlPreview html={fullNote.content} scrollHeight={300} />
+            ) : (
+              <Text size="xs" c="dimmed">No content</Text>
+            )}
           </HoverCard.Dropdown>
         </HoverCard>
       </Group>
 
-      <Text size="sm" c="dimmed" lineClamp={2} mb="xs">
-        {contentPreview}
-      </Text>
+      {note.preview && (
+        <div className="mb-2">
+          <HtmlPreview html={note.preview} maxHeight={true} />
+        </div>
+      )}
 
       {/* Tags */}
       {note.tags && note.tags.length > 0 && (

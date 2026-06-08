@@ -25,7 +25,12 @@ export class NoteEntity {
   @IsOptional()
   @Expose()
   content?: string;
-  
+
+  @IsString()
+  @IsOptional()
+  @Expose()
+  preview?: string;
+
   @IsString()
   @IsOptional()
   @Expose()

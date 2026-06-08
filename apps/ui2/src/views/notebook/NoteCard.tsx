@@ -24,9 +24,9 @@ export function NoteCard({ note, onClick }: NoteCardProps) {
           {note.title || 'Untitled Note'}
         </Text>
 
-        {note.content && (
+        {note.preview && (
           <div className="mb-4">
-            <HtmlPreview html={note.content} maxHeight={true} />
+            <HtmlPreview html={note.preview} maxHeight={true} />
           </div>
         )}
       </div>
