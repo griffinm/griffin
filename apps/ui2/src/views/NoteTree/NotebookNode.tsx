@@ -1,4 +1,4 @@
-import { NavLink, Loader, Text, Group, Menu, ActionIcon, useMantineTheme } from '@mantine/core';
+import { NavLink, Loader, Text, Menu, ActionIcon, useMantineTheme } from '@mantine/core';
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotebooksByParent, useDeleteNotebook, useUpdateNotebook } from '@/hooks';
@@ -20,7 +20,7 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(notebook.title);
-  const [isHovered, setIsHovered] = useState(false);
+  const [menuOpened, setMenuOpened] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -136,95 +136,99 @@ export function NotebookNode({ notebook, childrenOffset = 10 }: NotebookNodeProp
     <>
       <NavLink
         label={
-          <div style={{ position: 'relative', width: '100%' }}>
-            {isEditing ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleSaveRename}
-                onKeyDown={handleKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  width: '100%',
-                  border: '1px solid var(--mantine-color-gray-4)',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
-              />
-            ) : (
-              <span onClick={handleClick} style={{ cursor: 'pointer', display: 'block' }}>
+          isEditing ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSaveRename}
+              onKeyDown={handleKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                border: '1px solid var(--mantine-color-gray-4)',
+                borderRadius: '4px',
+                padding: '4px 8px',
+                fontSize: '14px',
+                outline: 'none',
+              }}
+            />
+          ) : (
+            <div className="flex w-full items-center gap-1">
+              <span onClick={handleClick} className="min-w-0 flex-1 cursor-pointer truncate">
                 {notebook.title}
                 {opened && isLoading && <Loader size="xs" ml={8} />}
               </span>
-            )}
-            {isHovered && (
-              <div style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                right: 0, 
-                transform: 'translateY(-50%)', 
-                zIndex: 10,
-                background: 'var(--mantine-color-body)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: '4px',
-                padding: '2px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-              }}>
-                <Menu shadow="md" width={200} position="right-start">
-                  <Menu.Target>
-                    <ActionIcon
-                      size="xs"
-                      variant="subtle"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <IconDots size={14} color="gray" />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item
-                      leftSection={<IconPlus size={14} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCreateModalOpened(true);
-                      }}
-                    >
-                      Create Notebook
-                    </Menu.Item>
-                    <Menu.Item
-                      leftSection={<IconEdit size={14} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStartRename();
-                      }}
-                    >
-                      Rename
-                    </Menu.Item>
-                    <Menu.Item
-                      color="red"
-                      leftSection={<IconTrash size={14} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteModalOpened(true);
-                      }}
-                    >
-                      Delete
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </div>
-            )}
-          </div>
+              <Menu
+                opened={menuOpened}
+                onChange={setMenuOpened}
+                position="bottom-end"
+                offset={4}
+                width={190}
+                shadow="md"
+                radius="md"
+                withinPortal
+                transitionProps={{ transition: 'pop', duration: 120 }}
+              >
+                <Menu.Target>
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="gray"
+                    aria-label="Notebook actions"
+                    className={`shrink-0 transition-opacity duration-150 ${
+                      menuOpened ? 'opacity-100' : 'opacity-0 group-hover/nb:opacity-100'
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <IconDots size={16} stroke={1.5} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<IconPlus size={15} stroke={1.5} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCreateModalOpened(true);
+                    }}
+                  >
+                    Add sub-notebook
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconEdit size={15} stroke={1.5} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartRename();
+                    }}
+                  >
+                    Rename
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={15} stroke={1.5} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteModalOpened(true);
+                    }}
+                  >
+                    Delete
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </div>
+          )
         }
         childrenOffset={childrenOffset}
         opened={opened}
         onChange={setOpened}
         active={isActive}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        className="group/nb"
+        styles={{
+          root: { borderRadius: theme.radius.sm, paddingTop: 4, paddingBottom: 4 },
+          label: { fontSize: '13px', minWidth: 0 },
+        }}
       >
         {childContent}
       </NavLink>
