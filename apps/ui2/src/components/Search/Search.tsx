@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { TextInput, Badge } from '@mantine/core';
-import { IconSearch } from '@tabler/icons-react';
+import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
+import { TextInput } from '@mantine/core';
+import { IconSearch, IconFileText, IconChecklist } from '@tabler/icons-react';
 import { SearchResults } from '@/types/search';
 import { fetchSearchResults } from '@/api/searchApi';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,19 @@ import { useNotebooks } from '@/hooks/useNotebooks';
 import { getNotebookPathString } from '@/utils/notebookPath';
 
 const SEARCH_TIMEOUT = 300;
+
+// Shared treatment for highlighted match tokens in snippets — teal-tinted and
+// color-scheme aware, instead of the harsh default yellow.
+const MARK_STYLES =
+  '[&_mark]:rounded-sm [&_mark]:bg-[var(--mantine-color-teal-light)] [&_mark]:px-1 [&_mark]:py-px [&_mark]:font-medium [&_mark]:text-[var(--mantine-color-teal-light-color)]';
+
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="px-3 pb-1 pt-2.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--mantine-color-dimmed)]">
+      {children}
+    </div>
+  );
+}
 
 export function Search() {
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -64,7 +77,12 @@ export function Search() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [searchTerm, searchResults]);
-  
+
+  const dismiss = () => {
+    setSearchTerm('');
+    setSearchResults(undefined);
+  };
+
   const renderResults = () => {
     if (!searchResults) {
       return null;
@@ -75,95 +93,99 @@ export function Search() {
 
     if (!hasNoteResults && !hasTaskResults) {
       return (
-        <div className="p-3 text-[var(--mantine-color-dimmed)] text-sm">
-          No results found
+        <div className="px-4 py-6 text-center text-sm text-[var(--mantine-color-dimmed)]">
+          No results for <span className="font-medium">“{searchTerm}”</span>
         </div>
       );
     }
 
     return (
-      <>
+      <div className="py-1">
         {/* Note Results */}
+        {hasNoteResults && <SectionLabel>Notes</SectionLabel>}
         {searchResults.noteResults?.map((result) => {
           const notebookPath = getNotebookPathString(result.notebookId, allNotebooks);
           return (
-            <div
+            <button
               key={`note-${result.id}`}
-              className="flex flex-col p-3 cursor-pointer hover:bg-[var(--mantine-color-default-hover)] transition-colors border-b border-[var(--mantine-color-gray-1)] last:border-b-0 z-50"
+              type="button"
+              className="group flex w-full items-start gap-3 px-3 py-2 text-left transition-colors hover:bg-[var(--mantine-color-default-hover)]"
               onClick={() => {
-                setSearchTerm('');
-                setSearchResults(undefined);
+                dismiss();
                 openNote(result.id, result.title);
               }}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <Badge size="xs" color="blue" variant="light">Note</Badge>
-                <div className="font-medium text-sm">{result.title}</div>
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--mantine-color-teal-light)] text-[var(--mantine-color-teal-light-color)]">
+                <IconFileText size={15} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{result.title || 'Untitled Note'}</div>
+                {notebookPath && (
+                  <div className="truncate text-xs text-[var(--mantine-color-dimmed)]">{notebookPath}</div>
+                )}
+                {result.snippet && (
+                  <div
+                    className={`mt-0.5 truncate text-xs text-[var(--mantine-color-dimmed)] ${MARK_STYLES}`}
+                    dangerouslySetInnerHTML={{ __html: result.snippet }}
+                  />
+                )}
               </div>
-              {notebookPath && (
-                <div className="text-xs text-[var(--mantine-color-dimmed)]">
-                  {notebookPath}
-                </div>
-              )}
-              {result.snippet && (
-                <div 
-                  className="text-xs text-[var(--mantine-color-dimmed)] italic mt-1" 
-                  dangerouslySetInnerHTML={{ __html: result.snippet }} 
-                />
-              )}
-            </div>
+            </button>
           );
         })}
 
         {/* Task Results */}
+        {hasTaskResults && <SectionLabel>Tasks</SectionLabel>}
         {searchResults.taskResults?.map((result) => {
           return (
-            <div
+            <button
               key={`task-${result.id}`}
-              className="flex flex-col p-3 cursor-pointer hover:bg-[var(--mantine-color-default-hover)] transition-colors border-b border-[var(--mantine-color-gray-1)] last:border-b-0 z-index-[1000]"
+              type="button"
+              className="group flex w-full items-start gap-3 px-3 py-2 text-left transition-colors hover:bg-[var(--mantine-color-default-hover)]"
               onClick={() => {
-                setSearchTerm('');
-                setSearchResults(undefined);
+                dismiss();
                 navigate(`/tasks?taskId=${result.id}`);
               }}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <Badge size="xs" color="green" variant="light">Task</Badge>
-                <div className="font-medium text-sm">{result.title}</div>
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--mantine-color-green-light)] text-[var(--mantine-color-green-light-color)]">
+                <IconChecklist size={15} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{result.title}</div>
+                {result.snippet && (
+                  <div
+                    className={`mt-0.5 truncate text-xs text-[var(--mantine-color-dimmed)] ${MARK_STYLES}`}
+                    dangerouslySetInnerHTML={{ __html: result.snippet }}
+                  />
+                )}
               </div>
-              {result.snippet && (
-                <div 
-                  className="text-xs text-[var(--mantine-color-dimmed)] italic mt-1" 
-                  dangerouslySetInnerHTML={{ __html: result.snippet }} 
-                />
-              )}
-            </div>
+            </button>
           );
         })}
-      </>
+      </div>
     );
   };
 
   return (
-    <div ref={searchContainerRef} className="relative w-full max-w-md z-index-[1000]" style={{ flexShrink: 1 }}>
+    <div ref={searchContainerRef} className="relative w-full max-w-md" style={{ flexShrink: 1 }}>
       <TextInput
         placeholder="Search notes and tasks..."
         size="sm"
+        radius="md"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         leftSection={<IconSearch size={16} />}
         styles={{
           input: {
             backgroundColor: 'var(--mantine-color-body)',
-          }
+          },
         }}
       />
       {searchTerm && searchResults && (
-        <div className="absolute left-0 right-0 mt-1 bg-[var(--mantine-color-body)] border border-[var(--mantine-color-gray-3)] rounded-md shadow-lg z-index-[1000] max-h-96 overflow-y-auto">
+        <div className="absolute left-0 z-50 mt-2 w-[34rem] max-w-[90vw] max-h-96 overflow-y-auto overflow-hidden rounded-lg border border-[var(--mantine-color-default-border)] bg-[var(--mantine-color-body)] shadow-xl">
           {renderResults()}
         </div>
       )}
     </div>
   );
 }
-

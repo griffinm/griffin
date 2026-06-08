@@ -38,7 +38,7 @@ export function SearchResultCard({ result, notebookPath, onClick }: SearchResult
             className="mt-1.5 flex items-center gap-1.5"
           >
             <IconNotebook size={13} className="shrink-0 opacity-60" />
-            <span className="truncate">
+            <span className="min-w-0 truncate">
               {notebookPath.map((segment, i) => (
                 <span key={i}>
                   {i > 0 && <span className="mx-1 opacity-40">›</span>}
