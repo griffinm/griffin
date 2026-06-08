@@ -46,6 +46,11 @@ export class NoteEntity {
   @Expose()
   updatedAt?: Date;
 
+  @IsDateString()
+  @IsOptional()
+  @Expose()
+  pinnedAt?: Date | null;
+
   @IsArray()
   @IsOptional()
   @Expose()

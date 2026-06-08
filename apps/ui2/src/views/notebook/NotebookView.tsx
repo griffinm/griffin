@@ -13,7 +13,7 @@ import {
   ActionIcon,
   TextInput,
 } from '@mantine/core';
-import { IconPlus, IconNotebook, IconNote, IconArrowLeft, IconSearch, IconX } from '@tabler/icons-react';
+import { IconPlus, IconNotebook, IconNote, IconArrowLeft, IconSearch, IconX, IconPin } from '@tabler/icons-react';
 import { useNotesByNotebook, useCreateNote } from '@/hooks/useNotes';
 import { useNotebook, useNotebooks } from '@/hooks/useNotebooks';
 import { NoteCard } from './NoteCard';
@@ -61,6 +61,13 @@ export function NotebookView() {
       return dateB - dateA; // Most recent first
     });
   }, [notes]);
+
+  // Pinned direct-child notes, most recently pinned first
+  const pinnedNotes = useMemo(() => {
+    return sortedNotes
+      .filter((note) => note.pinnedAt)
+      .sort((a, b) => new Date(b.pinnedAt ?? 0).getTime() - new Date(a.pinnedAt ?? 0).getTime());
+  }, [sortedNotes]);
 
   const handleNoteClick = (noteId: string, title?: string) => {
     openNote(noteId, title);
@@ -300,15 +307,37 @@ export function NotebookView() {
               </Center>
             </Paper>
           ) : (
-            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
-              {sortedNotes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onClick={() => handleNoteClick(note.id, note.title)}
-                />
-              ))}
-            </SimpleGrid>
+            <Stack gap="xl">
+              {/* Pinned Section */}
+              {pinnedNotes.length > 0 && (
+                <Stack gap="md">
+                  <Group gap="xs">
+                    <IconPin size={18} />
+                    <Text fw={600}>Pinned</Text>
+                  </Group>
+                  <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+                    {pinnedNotes.map((note) => (
+                      <NoteCard
+                        key={note.id}
+                        note={note}
+                        onClick={() => handleNoteClick(note.id, note.title)}
+                      />
+                    ))}
+                  </SimpleGrid>
+                </Stack>
+              )}
+
+              {/* All Notes */}
+              <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+                {sortedNotes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onClick={() => handleNoteClick(note.id, note.title)}
+                  />
+                ))}
+              </SimpleGrid>
+            </Stack>
           )
         )}
       </Stack>

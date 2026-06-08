@@ -16,6 +16,7 @@ export interface CreateOrUpdateNoteData {
   title: string;
   content?: string;
   notebookId?: string;
+  pinnedAt?: string | null;
 }
 
 export const createNote = async (notebookId: string, note: CreateOrUpdateNoteData): Promise<Note> => {

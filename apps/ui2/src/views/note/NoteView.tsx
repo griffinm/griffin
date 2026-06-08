@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Center, Loader, Text, Menu, ActionIcon } from '@mantine/core';
+import { Center, Loader, Text, Menu, ActionIcon, Switch } from '@mantine/core';
 import { IconDots, IconTrash, IconCopy, IconFolderSymlink } from '@tabler/icons-react';
 import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/useNotes';
 import { Editor } from '@/components/Editor';
@@ -130,6 +130,16 @@ export function NoteView() {
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle toggling the pinned state
+  const handleTogglePin = useCallback((pinned: boolean) => {
+    if (!noteId || !note) return;
+
+    updateNoteMutation.mutate({
+      id: noteId,
+      note: { title: note.title, pinnedAt: pinned ? new Date().toISOString() : null },
+    });
+  }, [noteId, note, updateNoteMutation]);
 
   // Handle deleting the note
   const handleDelete = async () => {
@@ -328,7 +338,15 @@ export function NoteView() {
 
             <Menu.Dropdown>
               <Menu.Label>Note actions</Menu.Label>
-              <Menu.Item 
+              <div style={{ padding: '6px 12px' }}>
+                <Switch
+                  label="Pinned"
+                  checked={!!note.pinnedAt}
+                  onChange={(e) => handleTogglePin(e.currentTarget.checked)}
+                />
+              </div>
+              <Menu.Divider />
+              <Menu.Item
                 leftSection={<IconFolderSymlink size={16} />}
                 onClick={() => setMoveModalOpened(true)}
               >

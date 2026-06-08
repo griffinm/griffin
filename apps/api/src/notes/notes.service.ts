@@ -126,6 +126,7 @@ export class NoteService {
         createdAt: true,
         updatedAt: true,
         notebookId: true,
+        pinnedAt: true,
       },
     });
 

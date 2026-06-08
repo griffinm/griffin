@@ -8,6 +8,7 @@ export interface Note {
   version: number;
   createdAt: Date;
   updatedAt: Date;
+  pinnedAt?: string | null;
   tags?: Tag[];
 }
 
