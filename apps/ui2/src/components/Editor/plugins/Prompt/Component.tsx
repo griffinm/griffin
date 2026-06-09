@@ -34,7 +34,8 @@ const statusIcons: Record<string, string> = {
 
 export function Component(props: NodeViewProps) {
   const { node, updateAttributes } = props
-  const [editing, setEditing] = useState(false)
+  const initialEditing = node.attrs.content === ''
+  const [editing, setEditing] = useState(initialEditing)
   const [editTitle, setEditTitle] = useState(node.attrs.title)
   const [editStatus, setEditStatus] = useState(node.attrs.status)
   const [editContent, setEditContent] = useState(node.attrs.content)

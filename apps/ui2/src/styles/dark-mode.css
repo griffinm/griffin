@@ -1,8 +1,10 @@
 /* Dark mode overrides for edge cases not covered by CSS variables */
 
-/* Ensure editor content areas look correct in dark mode */
+/* Ensure editor content areas look correct in dark mode.
+   The light-mode pre uses gray-1 (a light tint); reusing it here would paint a
+   glaring light box on the dark card, so use an elevated dark surface instead. */
 [data-mantine-color-scheme="dark"] .html-preview pre {
-  background: var(--mantine-color-gray-1) !important;
+  background: var(--mantine-color-dark-6) !important;
 }
 
 /* Main content area border: visible in light mode, hidden in dark mode */

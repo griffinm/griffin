@@ -1,80 +1,44 @@
-import { Box, Group } from '@mantine/core';
-import { IconRobot } from '@tabler/icons-react';
+import { Box } from '@mantine/core';
+import { AssistantMark } from './AssistantMark';
 
-const typingDotStyle = {
-  width: 8,
-  height: 8,
-  borderRadius: '50%',
-  backgroundColor: 'var(--mantine-color-gray-6)',
-};
-
-export const TypingIndicator = () => {
-  return (
+/**
+ * Assistant "thinking" state: the signature mark pulses above a sweeping
+ * aurora shimmer line, matching the bubbleless assistant turn styling.
+ */
+export const TypingIndicator = () => (
+  <div className="chat-message-in" style={{ padding: '8px 0' }}>
     <Box
       style={{
-        display: 'flex',
-        justifyContent: 'flex-start',
-        marginBottom: 12,
+        background: 'var(--chat-assistant-tint)',
+        border: '1px solid var(--mantine-color-default-border)',
+        borderRadius: 14,
+        padding: '12px 16px',
       }}
     >
-      <Group gap="xs">
-        <Box
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'var(--mantine-color-gray-6)',
-            color: 'var(--mantine-color-white)',
-          }}
-        >
-          <IconRobot size={18} />
-        </Box>
-        <Box
-          style={{
-            backgroundColor: 'var(--mantine-color-default-hover)',
-            padding: '10px 14px',
-            borderRadius: 12,
-            border: '1px solid var(--mantine-color-default-border)',
-            display: 'flex',
-            gap: 4,
-            alignItems: 'center',
-          }}
-        >
-          <Box
-            style={{
-              ...typingDotStyle,
-              animation: 'typingBounce 1.4s ease-in-out infinite',
-            }}
-          />
-          <Box
-            style={{
-              ...typingDotStyle,
-              animation: 'typingBounce 1.4s ease-in-out 0.2s infinite',
-            }}
-          />
-          <Box
-            style={{
-              ...typingDotStyle,
-              animation: 'typingBounce 1.4s ease-in-out 0.4s infinite',
-            }}
-          />
-        </Box>
-      </Group>
-      <style>
-        {`
-          @keyframes typingBounce {
-            0%, 60%, 100% {
-              transform: translateY(0);
-            }
-            30% {
-              transform: translateY(-4px);
-            }
-          }
-        `}
-      </style>
+      <div
+        className="chat-mono"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          marginBottom: 10,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.09em',
+          textTransform: 'uppercase',
+          color: 'var(--mantine-color-dimmed)',
+        }}
+      >
+        <AssistantMark size={13} pulsing />
+        <span>Assistant</span>
+        <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400, opacity: 0.8 }}>
+          · thinking
+        </span>
+      </div>
+      <div
+        className="chat-shimmer"
+        style={{ height: 3, width: '42%', borderRadius: 2, opacity: 0.75 }}
+      />
     </Box>
-  );
-};
+  </div>
+);

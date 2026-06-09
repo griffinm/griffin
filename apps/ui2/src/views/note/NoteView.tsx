@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Center, Loader, Text, Menu, ActionIcon } from '@mantine/core';
+import { Center, Loader, Text, Menu, ActionIcon, Switch } from '@mantine/core';
 import { IconDots, IconTrash, IconCopy, IconFolderSymlink } from '@tabler/icons-react';
 import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/useNotes';
 import { Editor } from '@/components/Editor';
@@ -8,6 +8,7 @@ import { Editor as TiptapEditor } from '@tiptap/core';
 import { ConfirmationModal } from '../NoteTree/ConfirmationModal';
 import { MoveNoteModal } from './MoveNoteModal';
 import { notifications } from '@mantine/notifications';
+import { useMediaQuery } from '@mantine/hooks';
 import { TagManager } from '@/components/TagManager/TagManager';
 import { Tag } from '@/types/tag';
 import { addTagToNote, removeTagFromNote } from '@/api/notesApi';
@@ -22,6 +23,7 @@ export function NoteView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { updateTabTitle, closeTab } = useTabsContext();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const { data: note, isLoading, error } = useNote(noteId || '');
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
@@ -128,6 +130,16 @@ export function NoteView() {
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle toggling the pinned state
+  const handleTogglePin = useCallback((pinned: boolean) => {
+    if (!noteId || !note) return;
+
+    updateNoteMutation.mutate({
+      id: noteId,
+      note: { title: note.title, pinnedAt: pinned ? new Date().toISOString() : null },
+    });
+  }, [noteId, note, updateNoteMutation]);
 
   // Handle deleting the note
   const handleDelete = async () => {
@@ -326,7 +338,15 @@ export function NoteView() {
 
             <Menu.Dropdown>
               <Menu.Label>Note actions</Menu.Label>
-              <Menu.Item 
+              <div style={{ padding: '6px 12px' }}>
+                <Switch
+                  label="Pinned"
+                  checked={!!note.pinnedAt}
+                  onChange={(e) => handleTogglePin(e.currentTarget.checked)}
+                />
+              </div>
+              <Menu.Divider />
+              <Menu.Item
                 leftSection={<IconFolderSymlink size={16} />}
                 onClick={() => setMoveModalOpened(true)}
               >
@@ -355,7 +375,7 @@ export function NoteView() {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 20px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ padding: isMobile ? '0 0 20px' : '0 20px 20px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <Editor
           key={noteId}
           value={note.content || ''}

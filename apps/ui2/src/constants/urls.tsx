@@ -16,13 +16,14 @@ const TaskPage = lazy(() => import('@/pages/TaskPage/TaskPage'));
 const TagsPage = lazy(() => import('@/pages/TagsPage/TagsPage'));
 const QuestionsPage = lazy(() => import('@/pages/QuestionsPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
+const ChatPage = lazy(() => import('@/pages/ChatPage/ChatPage'));
 
 function pageTitle(pageName?: string) {
   if (!pageName) return APP_NAME;
   return `${pageName} | ${APP_NAME}`;
 }
 
-export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'task' | 'notebooks' | 'notebook' | 'createNote' | 'note' | 'tags' | 'questions' | 'settings';
+export type UrlName = 'login' | 'signup' | 'dashboard' | 'tasks' | 'task' | 'notebooks' | 'notebook' | 'createNote' | 'note' | 'tags' | 'questions' | 'settings' | 'chat' | 'chatConversation';
 
 export interface Url {
   name: UrlName;
@@ -128,6 +129,22 @@ export const urls: Url[] = [
     urlTemplate: '/settings',
     pageComponent: SettingsPage,
     title: pageTitle('Settings'),
+    layoutComponent: AppLayout
+  },
+  {
+    name: 'chat',
+    path: () => '/chat',
+    urlTemplate: '/chat',
+    pageComponent: ChatPage,
+    title: pageTitle('AI Chat'),
+    layoutComponent: AppLayout
+  },
+  {
+    name: 'chatConversation',
+    path: (conversationId?: string) => conversationId ? `/chat/${conversationId}` : '/chat/:conversationId',
+    urlTemplate: '/chat/:conversationId',
+    pageComponent: ChatPage,
+    title: pageTitle('AI Chat'),
     layoutComponent: AppLayout
   }
 ];

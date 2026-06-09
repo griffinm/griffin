@@ -25,7 +25,12 @@ export class NoteEntity {
   @IsOptional()
   @Expose()
   content?: string;
-  
+
+  @IsString()
+  @IsOptional()
+  @Expose()
+  preview?: string;
+
   @IsString()
   @IsOptional()
   @Expose()
@@ -45,6 +50,11 @@ export class NoteEntity {
   @IsOptional()
   @Expose()
   updatedAt?: Date;
+
+  @IsDateString()
+  @IsOptional()
+  @Expose()
+  pinnedAt?: Date | null;
 
   @IsArray()
   @IsOptional()

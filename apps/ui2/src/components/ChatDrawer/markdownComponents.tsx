@@ -60,10 +60,10 @@ export const markdownComponents: Components = {
         component="code"
         style={{
           backgroundColor: 'var(--mantine-color-default-hover)',
-          padding: '2px 4px',
+          padding: '2px 5px',
           borderRadius: '4px',
-          fontFamily: 'monospace',
-          fontSize: '13px',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '12.5px',
         }}
       >
         {children}
@@ -72,16 +72,18 @@ export const markdownComponents: Components = {
       <Box
         component="pre"
         style={{
-          backgroundColor: 'var(--mantine-color-gray-0)',
-          padding: '12px',
-          borderRadius: '6px',
+          backgroundColor: 'var(--mantine-color-default-hover)',
+          border: '1px solid var(--mantine-color-default-border)',
+          padding: '12px 14px',
+          borderRadius: '10px',
           overflow: 'auto',
-          margin: '8px 0',
-          fontSize: '13px',
-          fontFamily: 'monospace',
+          margin: '10px 0',
+          fontSize: '12.5px',
+          fontFamily: 'var(--font-mono)',
+          lineHeight: 1.55,
         }}
       >
-        <Text size="sm" component="code" style={{ fontFamily: 'monospace' }}>
+        <Text size="sm" component="code" style={{ fontFamily: 'var(--font-mono)' }}>
           {children}
         </Text>
       </Box>
@@ -109,8 +111,9 @@ export const markdownComponents: Components = {
       target="_blank"
       rel="noopener noreferrer"
       style={{
-        color: 'var(--mantine-color-blue-6)',
+        color: 'var(--chat-accent)',
         textDecoration: 'underline',
+        textUnderlineOffset: '2px',
         cursor: 'pointer',
       }}
     >

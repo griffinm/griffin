@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getConversation, sendMessage, listConversations, deleteConversation } from '@/api/conversationApi';
-import { ConversationItem, ConversationItemRole, ConversationWithItems } from '@/types/conversation';
+import { getConversation, sendMessage, listConversations, deleteConversation, updateConversation } from '@/api/conversationApi';
+import { AttachedNoteRef, ConversationItem, ConversationItemRole, ConversationWithItems } from '@/types/conversation';
 import { notifications } from '@mantine/notifications';
 import { useConversationPolling } from '@/hooks/useConversationPolling';
 
 interface UseChatOptions {
   conversationId: string | null;
   isActive: boolean; // Whether the chat is visible (opened, pinned, or sidebar)
-  onConversationChange?: (conversationId: string) => void;
+  onConversationChange?: (_conversationId: string) => void;
 }
 
 export const useChat = ({ conversationId, isActive, onConversationChange }: UseChatOptions) => {
@@ -22,6 +22,10 @@ export const useChat = ({ conversationId, isActive, onConversationChange }: UseC
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const lastMessageTimeRef = useRef<Date>(new Date());
+  // Kept current so polling callbacks (stored in refs) can target the right
+  // conversation without a stale closure.
+  const conversationIdRef = useRef(conversationId);
+  conversationIdRef.current = conversationId;
 
   // Setup polling for AI responses
   const { startPolling } = useConversationPolling({
@@ -37,6 +41,9 @@ export const useChat = ({ conversationId, isActive, onConversationChange }: UseC
     },
     onTitleUpdate: (title) => {
       setConversationTitle(title);
+      // Reflect auto-generated titles in the conversation list without a reload.
+      const id = conversationIdRef.current;
+      setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title } : c)));
     },
     onComplete: () => {
       setIsWaitingForResponse(false);
@@ -76,7 +83,7 @@ export const useChat = ({ conversationId, isActive, onConversationChange }: UseC
   const loadConversationHistory = useCallback(async () => {
     setIsLoadingHistory(true);
     try {
-      const response = await listConversations(1, 50);
+      const response = await listConversations(1, 100);
       setConversations(response.data);
     } catch (error) {
       console.error('Error loading conversation history:', error);
@@ -114,45 +121,97 @@ export const useChat = ({ conversationId, isActive, onConversationChange }: UseC
     }
   }, [messages]);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || !conversationId || isSending) return;
+  // Core send used by the composer, suggested prompts, and regenerate.
+  const submitMessage = useCallback(
+    async (rawContent: string, attachedNotes: AttachedNoteRef[] = []) => {
+      const userMessage = rawContent.trim();
+      if (!userMessage || !conversationId || isSending) return;
 
-    const userMessage = inputValue.trim();
-    setInputValue('');
-    setIsSending(true);
-    setIsWaitingForResponse(true);
+      setInputValue('');
+      setIsSending(true);
+      setIsWaitingForResponse(true);
 
-    const tempUserMessage: ConversationItem = {
-      id: `temp-${Date.now()}`,
-      conversationId,
-      role: ConversationItemRole.USER,
-      content: userMessage,
-      createdAt: new Date(),
-    };
-    setMessages((prev) => [...prev, tempUserMessage]);
+      const tempUserMessage: ConversationItem = {
+        id: `temp-${Date.now()}`,
+        conversationId,
+        role: ConversationItemRole.USER,
+        content: userMessage,
+        // Show the attached-note chips immediately; the server response (which
+        // also carries componentData) replaces this temp message shortly after.
+        componentData: attachedNotes.length
+          ? { type: 'attached-notes', data: attachedNotes }
+          : undefined,
+        createdAt: new Date(),
+      };
+      setMessages((prev) => [...prev, tempUserMessage]);
 
-    try {
-      const response = await sendMessage(conversationId, userMessage);
+      try {
+        const response = await sendMessage(
+          conversationId,
+          userMessage,
+          attachedNotes.map((n) => n.id)
+        );
 
-      setMessages((prev) => [
-        ...prev.filter((m) => m.id !== tempUserMessage.id),
-        response.userMessage,
-      ]);
+        setMessages((prev) => [
+          ...prev.filter((m) => m.id !== tempUserMessage.id),
+          response.userMessage,
+        ]);
 
-      lastMessageTimeRef.current = new Date(response.userMessage.createdAt);
-      startPolling(lastMessageTimeRef.current);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to send message',
-        color: 'red',
-      });
-      setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
-      setIsSending(false);
-      setIsWaitingForResponse(false);
-    }
-  }, [inputValue, conversationId, isSending, startPolling]);
+        lastMessageTimeRef.current = new Date(response.userMessage.createdAt);
+        startPolling(lastMessageTimeRef.current);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to send message',
+          color: 'red',
+        });
+        setMessages((prev) => prev.filter((m) => m.id !== tempUserMessage.id));
+        setIsSending(false);
+        setIsWaitingForResponse(false);
+      }
+    },
+    [conversationId, isSending, startPolling]
+  );
+
+  const handleSendMessage = useCallback(
+    (attachedNotes: AttachedNoteRef[] = []) => submitMessage(inputValue, attachedNotes),
+    [submitMessage, inputValue]
+  );
+
+  // Best-effort regenerate: re-send the most recent user message as a new turn
+  // (there is no dedicated regenerate endpoint).
+  const handleRegenerate = useCallback(() => {
+    if (isSending || isWaitingForResponse) return;
+    const lastUser = [...messages]
+      .reverse()
+      .find((m) => m.role === ConversationItemRole.USER);
+    if (lastUser?.content) submitMessage(lastUser.content);
+  }, [messages, isSending, isWaitingForResponse, submitMessage]);
+
+  const handleRenameConversation = useCallback(
+    async (renamedConversationId: string, title: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+      try {
+        await updateConversation(renamedConversationId, trimmed);
+        setConversations((prev) =>
+          prev.map((c) => (c.id === renamedConversationId ? { ...c, title: trimmed } : c))
+        );
+        if (renamedConversationId === conversationId) {
+          setConversationTitle(trimmed);
+        }
+      } catch (error) {
+        console.error('Error renaming conversation:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to rename conversation',
+          color: 'red',
+        });
+      }
+    },
+    [conversationId]
+  );
 
   const handleDeleteConversation = useCallback(async (deletedConversationId: string) => {
     try {
@@ -194,7 +253,10 @@ export const useChat = ({ conversationId, isActive, onConversationChange }: UseC
     // Actions
     setInputValue,
     handleSendMessage,
+    submitMessage,
+    handleRegenerate,
     handleDeleteConversation,
+    handleRenameConversation,
     loadConversationHistory,
   };
 };

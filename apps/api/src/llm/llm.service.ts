@@ -5,7 +5,9 @@ import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from '../tasks/tasks.service';
 import { NoteService } from '../notes/notes.service';
+import { NotebookService } from '../notebooks/notebook.service';
 import { SearchService } from '../search/search.service';
+import { GoogleService, GmailNotConnectedError } from '../auth/google.service';
 import { ChatOpenAI } from '@langchain/openai';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
@@ -13,10 +15,79 @@ import { HumanMessage, AIMessage, SystemMessage, ToolMessage } from '@langchain/
 import { ConversationItemRole, ConversationStatus } from '@prisma/client';
 import { LLM_QUEUE } from '../queue/queue.module';
 import { LlmMessageJobData } from './llm.processor';
+import { parse } from 'node-html-parser';
 
 // Configuration constants
 const MAX_TOOL_ITERATIONS = 5;
 const MAX_HISTORY_MESSAGES = 50;
+const MAX_EMAIL_BODY_CHARS = 8000; // cap email body length sent to the LLM
+const MAX_ATTACHED_NOTE_CHARS = 6000; // cap each attached note's text in context
+
+/**
+ * Convert a note's TipTap HTML into readable plain text for LLM context,
+ * truncated to a sane length. `structuredText` preserves block-level line
+ * breaks so lists/paragraphs stay legible.
+ */
+function noteHtmlToText(
+  html: string | null | undefined,
+  maxChars = MAX_ATTACHED_NOTE_CHARS,
+): string {
+  if (!html) return '';
+  const text = parse(html).structuredText.replace(/\n{3,}/g, '\n\n').trim();
+  return text.length > maxChars ? `${text.slice(0, maxChars)}…` : text;
+}
+
+// --- Gmail helpers ---
+
+type GmailHeader = { name?: string | null; value?: string | null };
+
+function getHeader(headers: GmailHeader[] | undefined, name: string): string {
+  return (
+    headers?.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value ??
+    ''
+  );
+}
+
+function decodeBase64Url(data: string): string {
+  return Buffer.from(data, 'base64url').toString('utf8');
+}
+
+/**
+ * Extract a readable plain-text body from a Gmail message payload. Prefers a
+ * text/plain part, falls back to a tag-stripped text/html part, then to the
+ * top-level body.
+ */
+function extractEmailBody(payload: any): string {
+  if (!payload) return '';
+
+  const findPart = (part: any, mimeType: string): string | null => {
+    if (!part) return null;
+    if (part.mimeType === mimeType && part.body?.data) {
+      return decodeBase64Url(part.body.data);
+    }
+    if (Array.isArray(part.parts)) {
+      for (const child of part.parts) {
+        const found = findPart(child, mimeType);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const plain = findPart(payload, 'text/plain');
+  if (plain) return plain;
+
+  const html = findPart(payload, 'text/html');
+  if (html) {
+    return html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  if (payload.body?.data) return decodeBase64Url(payload.body.data);
+  return '';
+}
 
 @Injectable()
 export class LlmService {
@@ -27,7 +98,9 @@ export class LlmService {
     private prisma: PrismaService,
     private tasksService: TasksService,
     private noteService: NoteService,
+    private notebookService: NotebookService,
     private searchService: SearchService,
+    private googleService: GoogleService,
     private configService: ConfigService,
     @InjectQueue(LLM_QUEUE) private llmQueue: Queue<LlmMessageJobData>,
   ) {
@@ -61,13 +134,19 @@ export class LlmService {
 
 You can help users:
 - Create, search, update, and manage their tasks
-- Search and create notes
+- Create, search, edit, and organize notes — including moving notes between notebooks and pinning them
+- View their notebooks and create new ones
 - Look up information on the internet
+- Search and read their Gmail (read-only) with search_gmail and get_email
 
 Today's date is ${today}.
 
 Be concise and helpful. When creating tasks, infer reasonable due dates and priorities from context if not specified.
 When searching for tasks or notes, use the search tools to find relevant items before making changes.
+When the user refers to a notebook by name, call list_notebooks to resolve its ID before creating a note in it or moving a note to it.
+When the user asks about their email, use search_gmail with Gmail search operators (e.g. from:, subject:, newer_than:, has:attachment) to find messages, then call get_email to read a specific message's full body when you need its contents. If Gmail is not connected, tell the user to connect it in Settings → Integrations rather than guessing.
+When editing part of a note's content, first call get_note to read the current content, then submit the full revised content (content is replaced, not appended).
+When the user attaches notes to a message, their current content is included inline beneath that message, delimited by "--- Attached note: ... ---" markers. Treat that as authoritative context the user wants you to use; you do not need to call get_note for notes that are already attached.
 
 IMPORTANT: When you use tools that return visual results (like searching notes or tasks), the user will see the results displayed as cards in the UI. Do NOT repeat or list the same information in your text response. Instead, just provide a brief summary like "Here are your notes" or "I found 3 matching tasks" without listing titles, IDs, or details that are already shown in the cards.`
     );
@@ -158,6 +237,31 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
   }
 
   /**
+   * Rename a conversation
+   */
+  async updateConversation(
+    conversationId: string,
+    userId: string,
+    title: string,
+  ) {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        userId,
+      },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    return this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { title },
+    });
+  }
+
+  /**
    * Delete a conversation
    */
   async deleteConversation(conversationId: string, userId: string) {
@@ -184,9 +288,30 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
    * Send a message to a conversation - queues for async processing
    * Returns immediately with the user message
    */
-  async sendMessage(conversationId: string, userId: string, content: string) {
+  async sendMessage(
+    conversationId: string,
+    userId: string,
+    content: string,
+    attachedNoteIds?: string[],
+  ) {
     // Verify conversation exists and belongs to user
     await this.getConversation(conversationId, userId);
+
+    // Resolve any attached notes (ownership-checked) so we can store compact
+    // refs on the message — these drive the chips in the UI and let the
+    // processor re-read the notes' content into context each turn.
+    const attachedNotes = await this.resolveAttachedNotes(attachedNoteIds, userId);
+    const componentData =
+      attachedNotes.length > 0
+        ? {
+            type: 'attached-notes',
+            data: attachedNotes.map((n) => ({
+              id: n.id,
+              title: n.title,
+              notebookId: n.notebookId,
+            })),
+          }
+        : null;
 
     // Save user message
     const userMessage = await this.prisma.conversationItem.create({
@@ -194,6 +319,9 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
         conversationId,
         role: ConversationItemRole.USER,
         content,
+        componentData: componentData
+          ? JSON.parse(JSON.stringify(componentData))
+          : null,
       },
     });
 
@@ -222,6 +350,40 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
   }
 
   /**
+   * Resolve attached note IDs to owned notes, deduped and order-preserving.
+   * IDs that don't resolve (deleted or not the user's) are silently dropped.
+   */
+  private async resolveAttachedNotes(
+    noteIds: string[] | undefined,
+    userId: string,
+  ) {
+    if (!noteIds || noteIds.length === 0) return [];
+    const uniqueIds = [...new Set(noteIds)];
+    const notes = await Promise.all(
+      uniqueIds.map((id) => this.noteService.findOneForUser(id, userId)),
+    );
+    return notes.filter((n): n is NonNullable<typeof n> => !!n);
+  }
+
+  /**
+   * Build a context suffix containing the current content of the given notes,
+   * re-read fresh from the DB so the AI always sees the latest version.
+   * Returns '' when there is nothing to attach.
+   */
+  private async buildAttachedNotesContext(
+    noteIds: string[],
+    userId: string,
+  ): Promise<string> {
+    const notes = await this.resolveAttachedNotes(noteIds, userId);
+    const blocks = notes.map((n) => {
+      const text = noteHtmlToText(n.content);
+      return `--- Attached note: "${n.title || 'Untitled'}" ---\n${text || '(empty note)'}`;
+    });
+    if (blocks.length === 0) return '';
+    return `\n\n[The user attached the following note(s) for context]\n\n${blocks.join('\n\n')}`;
+  }
+
+  /**
    * Process message asynchronously (called by processor)
    * This contains the core LLM logic
    */
@@ -245,9 +407,26 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
     // Convert history to LangChain messages
     for (const item of history) {
       switch (item.role) {
-        case ConversationItemRole.USER:
-          messages.push(new HumanMessage(item.content));
+        case ConversationItemRole.USER: {
+          // Fold any notes the user attached to this turn into its context.
+          const attached = item.componentData as
+            | { type?: string; data?: Array<{ id: string }> }
+            | null;
+          const attachedNoteIds =
+            attached?.type === 'attached-notes' && Array.isArray(attached.data)
+              ? attached.data.map((n) => n.id)
+              : [];
+          const noteContext = await this.buildAttachedNotesContext(
+            attachedNoteIds,
+            userId,
+          );
+          messages.push(
+            new HumanMessage(
+              noteContext ? `${item.content}${noteContext}` : item.content,
+            ),
+          );
           break;
+        }
         case ConversationItemRole.ASSISTANT:
           // If the assistant message has tool_calls, include them in the AIMessage
           if (item.toolCalls) {
@@ -472,26 +651,24 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
    * Generate a brief title for a conversation based on message content
    */
   private async generateConversationTitle(content: string): Promise<string> {
-    const { OpenAIClient } = await import('@griffin/open-ai');
-    const openaiClient = new OpenAIClient({
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
-    });
+    // Reuse the same chat model as the rest of the assistant (LLM_MODEL) so
+    // titling stays consistent with the conversation it summarizes.
+    const response = await this.chatModel.invoke([
+      new SystemMessage(
+        "Generate a brief, descriptive title (3-8 words) for a conversation based on the user's first message. Respond with only the title, no quotes or trailing punctuation.",
+      ),
+      new HumanMessage(content),
+    ]);
 
-    const client = openaiClient.getClient();
-    const response = await client.chat.completions.create({
-      model: 'gpt-5.4-mini',
-      max_completion_tokens: 100,
-      reasoning_effort: 'minimal',
-      messages: [
-        {
-          role: 'system',
-          content: 'Generate a brief, descriptive title (3-8 words) for a conversation. Respond with only the title, no quotes.',
-        },
-        { role: 'user', content },
-      ],
-    });
+    const responseContent = response.content;
+    const title =
+      typeof responseContent === 'string'
+        ? responseContent
+        : responseContent
+            .map((part) => ('text' in part ? part.text : ''))
+            .join('');
 
-    return response.choices[0]?.message?.content?.trim() || 'New Conversation';
+    return title.trim() || 'New Conversation';
   }
 
   /**
@@ -764,7 +941,8 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       func: async ({ title, content, notebookId }) => {
         this.logger.debug(`Creating note: ${title}`);
         try {
-          // If no notebook specified, get the user's first notebook
+          // If no notebook specified, fall back to the user's default notebook,
+          // then to their first top-level notebook if none is marked default.
           let targetNotebookId = notebookId;
           if (!targetNotebookId) {
             const notebooks = await this.prisma.notebook.findMany({
@@ -774,7 +952,6 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
                 parentId: null, // Top-level notebooks
               },
               orderBy: { createdAt: 'asc' },
-              take: 1,
             });
 
             if (notebooks.length === 0) {
@@ -784,7 +961,8 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
                 componentData: null,
               };
             }
-            targetNotebookId = notebooks[0].id;
+            const defaultNotebook = notebooks.find((nb) => nb.isDefault);
+            targetNotebookId = (defaultNotebook ?? notebooks[0]).id;
           }
 
           const note = await this.noteService.create(
@@ -854,6 +1032,259 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       },
     });
 
+    const updateNoteTool = new DynamicStructuredTool({
+      name: 'update_note',
+      description:
+        "Edit an existing note. Use this to change a note's title or content, move it to a different notebook, or pin/unpin it. " +
+        'IMPORTANT: content is REPLACED wholesale, not appended. When making a partial edit (e.g. adding a line), first call get_note to read the current content, then submit the full revised HTML content. ' +
+        'Only provide the fields you want to change.',
+      schema: z.object({
+        noteId: z.string().describe('The ID of the note to update'),
+        title: z.string().optional().describe('The new title of the note'),
+        content: z
+          .string()
+          .optional()
+          .describe(
+            'The full new content of the note (HTML). This replaces the existing content entirely.',
+          ),
+        notebookId: z
+          .string()
+          .optional()
+          .describe('Move the note to the notebook with this ID. Use list_notebooks to resolve a notebook name to its ID.'),
+        pinned: z
+          .boolean()
+          .optional()
+          .describe('Set to true to pin the note, false to unpin it'),
+      }),
+      func: async ({ noteId, title, content, notebookId, pinned }) => {
+        this.logger.debug(`Updating note: ${noteId}`);
+        try {
+          const data: {
+            title?: string;
+            content?: string;
+            notebookId?: string;
+            pinnedAt?: Date | null;
+          } = {};
+          if (title !== undefined) data.title = title;
+          if (content !== undefined) data.content = content;
+          if (notebookId !== undefined) data.notebookId = notebookId;
+          if (pinned !== undefined) data.pinnedAt = pinned ? new Date() : null;
+
+          const note = await this.noteService.update(noteId, data, userId);
+
+          return {
+            success: true,
+            message: `Note "${note.title}" has been updated successfully.`,
+            componentData: {
+              type: 'note',
+              data: {
+                id: note.id,
+                title: note.title,
+                notebookId: note.notebookId,
+              },
+            },
+          };
+        } catch (error) {
+          this.logger.error(`Error updating note: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to update note: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    // Notebook tools
+    const listNotebooksTool = new DynamicStructuredTool({
+      name: 'list_notebooks',
+      description:
+        "List the user's notebooks. Use this to see what notebooks exist, to answer questions about them, or to resolve a notebook name to its ID before creating or moving a note. Returns each notebook's id, title, parentId (for nesting), and whether it is the default notebook.",
+      schema: z.object({}),
+      func: async () => {
+        this.logger.debug(`Listing notebooks for user ${userId.substring(0, 7)}`);
+        try {
+          const notebooks = await this.notebookService.getNotebooksForUser(userId);
+          const data = notebooks.map((nb) => ({
+            id: nb.id,
+            title: nb.title,
+            parentId: nb.parentId ?? null,
+            isDefault: nb.isDefault,
+          }));
+
+          return {
+            success: true,
+            message: `Found ${data.length} notebook${data.length === 1 ? '' : 's'}.`,
+            notebooks: data,
+            componentData: null,
+          };
+        } catch (error) {
+          this.logger.error(`Error listing notebooks: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to list notebooks: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const createNotebookTool = new DynamicStructuredTool({
+      name: 'create_notebook',
+      description:
+        'Create a new notebook for the user. Use this when the user asks to create or add a notebook. To nest the notebook under an existing one, pass that notebook\'s ID as parentId (use list_notebooks to find it).',
+      schema: z.object({
+        title: z.string().describe('The title of the notebook'),
+        parentId: z
+          .string()
+          .optional()
+          .describe('The ID of the parent notebook to nest this notebook under. Omit for a top-level notebook.'),
+      }),
+      func: async ({ title, parentId }) => {
+        this.logger.debug(`Creating notebook: ${title}`);
+        try {
+          const notebook = await this.notebookService.createNotebook(userId, {
+            title,
+            parentId,
+            isDefault: false,
+          });
+
+          return {
+            success: true,
+            message: `Notebook "${notebook.title}" has been created successfully.`,
+            notebook: {
+              id: notebook.id,
+              title: notebook.title,
+              parentId: notebook.parentId ?? null,
+            },
+            componentData: null,
+          };
+        } catch (error) {
+          this.logger.error(`Error creating notebook: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to create notebook: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const searchGmailTool = new DynamicStructuredTool({
+      name: 'search_gmail',
+      description:
+        "Search the user's Gmail and return matching message summaries (sender, subject, date, snippet). " +
+        'Use Gmail search operators in the query, e.g. "from:alice@example.com", "subject:invoice", ' +
+        '"newer_than:7d", "after:2024/01/01", "has:attachment", "is:unread", "label:work". ' +
+        'This returns only metadata and a short snippet — to read the full body of a result, call get_email with its messageId.',
+      schema: z.object({
+        query: z.string().describe('Gmail search query using Gmail search operators'),
+        maxResults: z.number().optional().describe('Maximum number of emails to return (default 10, max 25)'),
+      }),
+      func: async ({ query, maxResults }) => {
+        this.logger.debug(`Searching Gmail: ${query}`);
+        try {
+          const gmail = await this.googleService.getGmailClient(userId);
+          const limit = Math.min(maxResults ?? 10, 25);
+          const listRes = await gmail.users.messages.list({
+            userId: 'me',
+            q: query,
+            maxResults: limit,
+          });
+          const ids = (listRes.data.messages ?? [])
+            .map((m) => m.id)
+            .filter((id): id is string => Boolean(id));
+          const emails = await Promise.all(
+            ids.map(async (id) => {
+              const msg = await gmail.users.messages.get({
+                userId: 'me',
+                id,
+                format: 'metadata',
+                metadataHeaders: ['From', 'Subject', 'Date'],
+              });
+              const headers = msg.data.payload?.headers ?? undefined;
+              return {
+                messageId: id,
+                threadId: msg.data.threadId,
+                from: getHeader(headers, 'From'),
+                subject: getHeader(headers, 'Subject'),
+                date: getHeader(headers, 'Date'),
+                snippet: msg.data.snippet ?? '',
+              };
+            }),
+          );
+          return { success: true, count: emails.length, emails };
+        } catch (error) {
+          if (error instanceof GmailNotConnectedError) {
+            return {
+              success: false,
+              message: 'Gmail is not connected. Tell the user to connect it in Settings → Integrations.',
+            };
+          }
+          this.logger.error(`Error searching Gmail: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to search Gmail: ${error.message}`,
+          };
+        }
+      },
+    });
+
+    const getEmailTool = new DynamicStructuredTool({
+      name: 'get_email',
+      description:
+        'Read the full content of a single Gmail message by its messageId (obtained from search_gmail). ' +
+        'Returns sender, recipients, subject, date, and the plain-text body.',
+      schema: z.object({
+        messageId: z.string().describe('The Gmail message ID to read (from search_gmail results)'),
+      }),
+      func: async ({ messageId }) => {
+        this.logger.debug(`Reading Gmail message: ${messageId}`);
+        try {
+          const gmail = await this.googleService.getGmailClient(userId);
+          const msg = await gmail.users.messages.get({
+            userId: 'me',
+            id: messageId,
+            format: 'full',
+          });
+          const headers = msg.data.payload?.headers ?? undefined;
+          let body = extractEmailBody(msg.data.payload);
+          let truncated = false;
+          if (body.length > MAX_EMAIL_BODY_CHARS) {
+            body = body.slice(0, MAX_EMAIL_BODY_CHARS);
+            truncated = true;
+          }
+          return {
+            success: true,
+            email: {
+              messageId,
+              threadId: msg.data.threadId,
+              from: getHeader(headers, 'From'),
+              to: getHeader(headers, 'To'),
+              subject: getHeader(headers, 'Subject'),
+              date: getHeader(headers, 'Date'),
+              body,
+              truncated,
+            },
+          };
+        } catch (error) {
+          if (error instanceof GmailNotConnectedError) {
+            return {
+              success: false,
+              message: 'Gmail is not connected. Tell the user to connect it in Settings → Integrations.',
+            };
+          }
+          this.logger.error(`Error reading Gmail message: ${error.message}`);
+          return {
+            success: false,
+            error: error.message,
+            message: `Failed to read email: ${error.message}`,
+          };
+        }
+      },
+    });
+
     return [
       createTaskTool,
       searchTasksTool,
@@ -862,6 +1293,11 @@ IMPORTANT: When you use tools that return visual results (like searching notes o
       searchNotesTool,
       createNoteTool,
       getNoteTool,
+      updateNoteTool,
+      listNotebooksTool,
+      createNotebookTool,
+      searchGmailTool,
+      getEmailTool,
     ];
   }
 }

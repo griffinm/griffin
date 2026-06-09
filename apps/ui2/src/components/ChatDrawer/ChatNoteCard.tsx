@@ -8,6 +8,7 @@ interface ChatNoteCardProps {
     notebookId?: string;
     snippet?: string;        // From search results
     matchedField?: string;   // From search results
+    preview?: string;        // HTML excerpt from list endpoints
     content?: string;        // From full note
   };
 }
@@ -20,14 +21,15 @@ export function ChatNoteCard({ note }: ChatNoteCardProps) {
     }
   };
 
-  // Get preview text - use snippet (from search) or content (from full note)
+  // Get preview text - use snippet (from search), else the stored preview excerpt or
+  // full content (from a full note). This card shows plain text, so strip any HTML.
   const getPreview = () => {
     if (note.snippet) {
       return note.snippet;
     }
-    if (note.content) {
-      // Strip HTML tags and truncate
-      const stripped = note.content
+    const html = note.preview ?? note.content;
+    if (html) {
+      const stripped = html
         .replace(/<[^>]*>/g, '')
         .replace(/&nbsp;/g, ' ')
         .trim();

@@ -8,8 +8,9 @@ interface ChatHistoryDrawerProps {
   conversations: ConversationWithItems[];
   isLoading: boolean;
   activeConversationId: string | null;
-  onSelectConversation: (conversationId: string) => void;
-  onDeleteConversation: (conversationId: string) => void;
+  onSelectConversation: (_conversationId: string) => void;
+  onDeleteConversation: (_conversationId: string) => void;
+  onRenameConversation?: (_conversationId: string, _title: string) => void;
 }
 
 export const ChatHistoryDrawer = ({
@@ -20,6 +21,7 @@ export const ChatHistoryDrawer = ({
   activeConversationId,
   onSelectConversation,
   onDeleteConversation,
+  onRenameConversation,
 }: ChatHistoryDrawerProps) => {
   return (
     <Drawer
@@ -37,6 +39,7 @@ export const ChatHistoryDrawer = ({
             activeConversationId={activeConversationId}
             onSelectConversation={onSelectConversation}
             onDeleteConversation={onDeleteConversation}
+            onRenameConversation={onRenameConversation}
           />
         </Box>
       </ScrollArea>

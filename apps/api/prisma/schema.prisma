@@ -22,8 +22,23 @@ model User {
   tags                Tag[]
   audioTranscriptions AudioTranscription[]
   conversations       Conversation[]
+  dropdowns           Dropdown[]
+  googleConnection    GoogleConnection?
 
   @@map("users")
+}
+
+model GoogleConnection {
+  id           String   @id @default(uuid()) @map("id")
+  userId       String   @unique @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email        String   @map("email")
+  refreshToken String   @map("refresh_token") // AES-256-GCM encrypted (iv:authTag:ciphertext)
+  scope        String   @map("scope")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("google_connections")
 }
 
 model Tag {
@@ -36,6 +51,7 @@ model Tag {
   user       User        @relation(fields: [userId], references: [id])
   userId     String      @map("user_id")
   objectTags ObjectTag[]
+  defaultForNotebooks NotebookDefaultTag[]
 
   @@unique([userId, name])
   @@map("tags")
@@ -67,23 +83,41 @@ model Notebook {
   children  Notebook[] @relation("NotebookChildren")
   user      User       @relation(fields: [userId], references: [id])
   notes     Note[]
+  defaultTags NotebookDefaultTag[]
 
   @@map("notebooks")
+}
+
+model NotebookDefaultTag {
+  id         String   @id @default(uuid()) @map("id")
+  notebookId String   @map("notebook_id")
+  tagId      String   @map("tag_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([notebookId, tagId])
+  @@index([notebookId])
+  @@index([tagId])
+  @@map("notebook_default_tags")
 }
 
 model Note {
   id         String     @id @default(uuid()) @map("id")
   title      String?    @map("title")
   content    String?    @map("content")
+  preview    String?    @map("preview")
   notebookId String     @map("notebook_id")
   version    Int        @default(1) @map("version")
   createdAt  DateTime   @default(now()) @map("created_at")
   updatedAt  DateTime   @updatedAt @map("updated_at")
   deletedAt  DateTime?  @map("deleted_at")
+  pinnedAt   DateTime?  @map("pinned_at")
   media      Media[]
   notebook   Notebook   @relation(fields: [notebookId], references: [id])
   questions  Question[]
   tasks      Task[]
+  dropdownInstances DropdownInstance[]
 
   @@map("notes")
 }
@@ -228,4 +262,51 @@ model ConversationItem {
 
   @@index([conversationId])
   @@map("conversation_items")
+}
+
+model Dropdown {
+  id        String             @id @default(uuid()) @map("id")
+  name      String             @map("name")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+  deletedAt DateTime?          @map("deleted_at")
+  userId    String             @map("user_id")
+  user      User               @relation(fields: [userId], references: [id])
+  options   DropdownOption[]
+  instances DropdownInstance[]
+
+  @@index([userId])
+  @@map("dropdowns")
+}
+
+model DropdownOption {
+  id              String    @id @default(uuid()) @map("id")
+  dropdownId      String    @map("dropdown_id")
+  label           String    @map("label")
+  color           String    @default("gray") @map("color")
+  isDefault       Boolean   @default(false) @map("is_default")
+  order           Int       @default(0) @map("order")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  dropdown        Dropdown  @relation(fields: [dropdownId], references: [id])
+
+  @@index([dropdownId])
+  @@map("dropdown_options")
+}
+
+model DropdownInstance {
+  id               String    @id @default(uuid()) @map("id")
+  dropdownId       String    @map("dropdown_id")
+  noteId           String    @map("note_id")
+  selectedOptionId String?   @map("selected_option_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+  dropdown         Dropdown  @relation(fields: [dropdownId], references: [id])
+  note             Note      @relation(fields: [noteId], references: [id])
+
+  @@index([dropdownId])
+  @@index([noteId])
+  @@map("dropdown_instances")
 }

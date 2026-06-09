@@ -3,6 +3,7 @@ import {
   UseGuards,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -15,6 +16,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { LlmService } from './llm.service';
 import type { RequestWithUser } from '@griffin/types';
 import { NewConversationDto } from './dto/new-conversation.dto';
+import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { ConversationMessageDto } from './dto/conversation-message.dto';
 import { ConversationEntity } from './entities/conversation.entity';
 import { ConversationWithItemsDto } from './dto/conversation-with-items.dto';
@@ -106,6 +108,7 @@ export class LlmController {
       id,
       request.user.id,
       dto.content,
+      dto.attachedNoteIds,
     );
 
     return {
@@ -155,6 +158,23 @@ export class LlmController {
     @Param('id') id: string,
   ) {
     return this.llmService.getConversationStatus(id, request.user.id);
+  }
+
+  /**
+   * Rename a conversation
+   */
+  @Patch('conversations/:id')
+  async updateConversation(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateConversationDto,
+  ): Promise<ConversationEntity> {
+    const conversation = await this.llmService.updateConversation(
+      id,
+      request.user.id,
+      dto.title,
+    );
+    return new ConversationEntity(conversation);
   }
 
   /**

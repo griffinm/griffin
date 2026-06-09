@@ -1,5 +1,5 @@
 import { PagedTaskList, Task, TaskStatus, TaskFilters } from "@/types/task";
-import { useInfiniteTasksByStatus, useTasks } from "@/hooks/useTasks";
+import { useInfiniteTasksByStatus } from "@/hooks/useTasks";
 import { TaskRow } from "./TaskRow";
 import { useEffect, useRef } from "react";
 
@@ -10,7 +10,7 @@ export const TaskRows = ({
   selectedPriorities,
   selectedTags,
 }: {
-  setActiveTask: (task: Task | null) => void;
+  setActiveTask: (_task: Task | null) => void;
   activeTask: Task | null;
   searchTasks?: Task[];
   selectedPriorities?: string[];
@@ -91,22 +91,23 @@ export const TaskRows = ({
   }
 
   return (
-    <div className="flex flex-col gap-4 mt-4">
-      {tasks.map((task) => (
-        <TaskRow
-          key={task.id}
-          task={task}
-          setActiveTask={setActiveTask}
-          activeTask={activeTask}
-        />
-      ))}
-      
-      {!isSearching && <div ref={observerTarget} className="h-4" />}
-      
-      {!isSearching && isFetchingNextPage && (
-        <div className="flex items-center justify-center py-4">
-          <div className="text-muted-foreground text-sm">Loading more tasks...</div>
+    <div className="mt-4 overflow-hidden rounded-xl border border-[var(--at-line)] bg-[var(--mantine-color-body)] shadow-xs">
+      {tasks.length === 0 ? (
+        <p className="px-4 py-10 text-center text-sm italic text-[var(--mantine-color-dimmed)]">
+          {isSearching ? 'No matching tasks' : 'No open tasks'}
+        </p>
+      ) : (
+        <div className="divide-y divide-[var(--at-line)]">
+          {tasks.map((task) => (
+            <TaskRow key={task.id} task={task} setActiveTask={setActiveTask} activeTask={activeTask} />
+          ))}
         </div>
+      )}
+
+      {!isSearching && <div ref={observerTarget} className="h-2" />}
+
+      {!isSearching && isFetchingNextPage && (
+        <div className="py-4 text-center text-sm text-[var(--mantine-color-dimmed)]">Loading more tasks…</div>
       )}
     </div>
   )

@@ -31,6 +31,18 @@ export class LlmProcessor extends WorkerHost {
     this.logger.log(`Processing LLM job for conversation: ${conversationId}`);
 
     try {
+      // Name the conversation from the first message as early as possible.
+      // This runs in parallel with the (potentially slow) assistant response
+      // so the title appears almost immediately after the user sends — it does
+      // not wait for the full reply. No-ops if the conversation already has a
+      // title. Failures are logged and never block the response.
+      const titlePromise = this.llmService
+        .generateAndUpdateTitle(conversationId, content)
+        .catch((titleError) => {
+          this.logger.warn(`Failed to generate title: ${titleError.message}`);
+          return null;
+        });
+
       // Process the message (this calls the LLM logic)
       await this.llmService.processMessageAsync(
         conversationId,
@@ -38,12 +50,8 @@ export class LlmProcessor extends WorkerHost {
         content,
       );
 
-      // Generate title if this is the first message (title is null)
-      try {
-        await this.llmService.generateAndUpdateTitle(conversationId, content);
-      } catch (titleError) {
-        this.logger.warn(`Failed to generate title: ${titleError.message}`);
-      }
+      // Ensure the title write has settled before marking the conversation idle.
+      await titlePromise;
 
       // Update conversation status to IDLE (ready for next message)
       await this.prisma.conversation.update({

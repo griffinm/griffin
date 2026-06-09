@@ -1,14 +1,15 @@
 import { Input, MultiSelect } from '@mantine/core';
+import { IconSearch } from '@tabler/icons-react';
 import { TaskPriority } from '@/types/task';
 import { Tag } from '@/types/tag';
 
 interface TasksFiltersProps {
   search: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (_value: string) => void;
   selectedPriorities: string[];
-  onPrioritiesChange: (priorities: string[]) => void;
+  onPrioritiesChange: (_priorities: string[]) => void;
   selectedTags: string[];
-  onTagsChange: (tags: string[]) => void;
+  onTagsChange: (_tags: string[]) => void;
   availableTags: Tag[];
 }
 
@@ -22,43 +23,35 @@ export function TasksFilters({
   availableTags,
 }: TasksFiltersProps) {
   return (
-    <div className="flex gap-3 items-center border-b border-[var(--mantine-color-gray-3)] pb-4">
-      <div>
-        <Input
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search tasks"
-          style={{ flex: 1 }}
-        />
-      </div>
-      <div>
-        <MultiSelect
-          placeholder="Filter by priority"
-          data={[
-            { value: TaskPriority.HIGH, label: 'High' },
-            { value: TaskPriority.MEDIUM, label: 'Medium' },
-            { value: TaskPriority.LOW, label: 'Low' },
-          ]}
-          value={selectedPriorities}
-          onChange={onPrioritiesChange}
-          clearable
-          style={{ minWidth: 200 }}
-        />
-      </div>
-      <div>
-        <MultiSelect
-          placeholder="Filter by tags"
-          data={availableTags.map(tag => ({
-            value: tag.id,
-            label: tag.name,
-          }))}
-          value={selectedTags}
-          onChange={onTagsChange}
-          clearable
-          style={{ minWidth: 200 }}
-        />
-      </div>
+    <div className="flex flex-wrap items-center gap-3 border-b border-[var(--at-line)] pb-4">
+      <Input
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Search tasks"
+        leftSection={<IconSearch size={16} />}
+        style={{ flex: '1 1 220px', minWidth: 0 }}
+      />
+      <MultiSelect
+        placeholder="Priority"
+        data={[
+          { value: TaskPriority.HIGH, label: 'High' },
+          { value: TaskPriority.MEDIUM, label: 'Medium' },
+          { value: TaskPriority.LOW, label: 'Low' },
+        ]}
+        value={selectedPriorities}
+        onChange={onPrioritiesChange}
+        clearable
+        style={{ flex: '1 1 160px' }}
+      />
+      <MultiSelect
+        placeholder="Tags"
+        data={availableTags.map((tag) => ({ value: tag.id, label: tag.name }))}
+        value={selectedTags}
+        onChange={onTagsChange}
+        clearable
+        searchable
+        style={{ flex: '1 1 160px' }}
+      />
     </div>
   );
 }
-

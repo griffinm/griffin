@@ -47,3 +47,18 @@ export const updateUserProfile = async (data: UpdateProfileData): Promise<User> 
   const response = await baseClient.patch<User>('/users', data);
   return response.data;
 }
+
+export interface GoogleConnectionStatus {
+  connected: boolean;
+  email?: string;
+}
+
+export const fetchGoogleStatus = async (): Promise<GoogleConnectionStatus> => {
+  const response = await baseClient.get<GoogleConnectionStatus>('/auth/google/status');
+  return response.data;
+}
+
+export const disconnectGoogle = async (): Promise<{ message: string }> => {
+  const response = await baseClient.delete<{ message: string }>('/auth/google');
+  return response.data;
+}

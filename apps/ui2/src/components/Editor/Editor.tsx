@@ -35,11 +35,12 @@ import {
   type RichTextEditorRef,
   RichTextEditorProvider,
 } from "mui-tiptap";
-import { useRef, useCallback, useMemo, type MouseEvent } from "react";
+import { useRef, useCallback, useMemo, useEffect, type MouseEvent } from "react";
 import { useEditor } from "@tiptap/react";
 import { Editor as TiptapEditor, type EditorOptions } from "@tiptap/core";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useComputedColorScheme } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { TaskExtension } from './plugins/Task/Extension';
 import { TaskMenuItem } from './plugins/Task/MenuItem';
 import { QuestionExtension } from './plugins/Question/Extension';
@@ -48,11 +49,13 @@ import { PromptExtension } from './plugins/Prompt/Extension';
 import { PromptMenuItem } from './plugins/Prompt/MenuItem';
 import { CollapsibleHeading } from './plugins/CollapsibleHeading/Extension';
 import { NoteLinkExtension } from './plugins/NoteLink/Extension';
+import { DropdownExtension } from './plugins/Dropdown/Extension';
+import { DropdownMenuItem } from './plugins/Dropdown/MenuItem';
 import { createMedia } from '@/api/mediaApi';
 import { useOpenNote } from '@/hooks/useOpenNote';
 import './styles.scss';
 
-const extensions = [
+const baseExtensions = [
   StarterKit.configure({
     heading: false, // Disable default heading, use CollapsibleHeading instead
   }),
@@ -101,15 +104,32 @@ export function Editor({
   const rteRef = useRef<RichTextEditorRef>(null);
   const { openNote } = useOpenNote();
   const computedColorScheme = useComputedColorScheme('light');
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const muiTheme = useMemo(
     () => createTheme({ palette: { mode: computedColorScheme } }),
     [computedColorScheme],
+  );
+
+  // Build the extension list per editor instance so the Dropdown plugin can be
+  // configured with this note's id (needed to create instance rows).
+  const extensions = useMemo(
+    () => [...baseExtensions, DropdownExtension.configure({ noteId })],
+    [noteId],
   );
 
   const editor = useEditor({
     extensions: extensions,
     content: value || '',
   });
+
+  // The editor is created once, so push the current noteId into the Dropdown
+  // plugin's storage whenever it changes (its NodeViews read it from there to
+  // create instance rows).
+  useEffect(() => {
+    if (editor?.storage?.dropdown) {
+      editor.storage.dropdown.noteId = noteId;
+    }
+  }, [editor, noteId]);
 
   const handleUpdate = () => {
     if (rteRef.current?.editor) {
@@ -207,6 +227,11 @@ export function Editor({
       const target = event.target as HTMLElement | null;
       if (
         !target ||
+        // Ignore clicks that bubble in through React's tree from portaled UI
+        // rendered inside the editor (e.g. a Mantine Select dropdown in the
+        // Prompt node) — their DOM lives in document.body, not the field, so
+        // they would otherwise trigger focus('end') and scroll to the bottom.
+        !event.currentTarget.contains(target) ||
         target.closest('.ProseMirror') ||
         target.closest('.MuiTiptap-RichTextField-menuBar')
       ) {
@@ -275,6 +300,14 @@ export function Editor({
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: computedColorScheme === 'dark' ? 'transparent' : undefined,
           },
+          ...(isMobile && {
+            // On mobile, remove the editor's horizontal padding so content
+            // runs right up to the screen edges and maximizes usable area.
+            '& .MuiTiptap-RichTextField-content': {
+              paddingLeft: '5px',
+              paddingRight: '5px',
+            },
+          }),
         }}
         renderControls={() => (
           <MenuControlsContainer>
@@ -284,6 +317,7 @@ export function Editor({
             <MenuButtonRedo />
             <MenuDivider />
             <TaskMenuItem />
+            {noteId && <DropdownMenuItem noteId={noteId} />}
             <QuestionMenuItem />
             <PromptMenuItem />
             <MenuDivider />

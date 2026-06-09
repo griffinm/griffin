@@ -1,30 +1,13 @@
-import { TaskStatusHistory, TaskStatus } from "@/types/task";
+import { TaskStatusHistory } from "@/types/task";
 import { formatDistanceToNow, format } from "date-fns";
-import { IconCircleCheck, IconClock, IconProgress, IconChevronDown, IconChevronsUp, IconChevronsDown, IconChevronUp } from "@tabler/icons-react";
+import { IconChevronsUp, IconChevronsDown, IconChevronUp, IconChevronDown } from "@tabler/icons-react";
 import { useState } from "react";
-import { Button, Box, Group, Text, Stack, ThemeIcon, Collapse, ActionIcon } from "@mantine/core";
+import { Button, Box, Group, Text, ActionIcon, Collapse } from "@mantine/core";
+import { statusMeta } from "./taskVisuals";
 
 interface StatusHistoryProps {
   history?: TaskStatusHistory[];
 }
-
-const statusConfig = {
-  [TaskStatus.TODO]: {
-    icon: IconClock,
-    color: "gray",
-    label: "To Do",
-  },
-  [TaskStatus.IN_PROGRESS]: {
-    icon: IconProgress,
-    color: "blue",
-    label: "In Progress",
-  },
-  [TaskStatus.COMPLETED]: {
-    icon: IconCircleCheck,
-    color: "green",
-    label: "Completed",
-  },
-};
 
 const MAX_VISIBLE_ITEMS = 3;
 
@@ -60,51 +43,33 @@ export function StatusHistory({ history }: StatusHistoryProps) {
       </Group>
       
       <Collapse in={isExpanded}>
-        <Stack gap="xs" mb="sm">
-          {visibleHistory.map((entry, index) => {
-            const config = statusConfig[entry.status];
-            const Icon = config.icon;
-            const isLatest = index === 0;
-
+        <div className="relative mb-3 pl-5">
+          {/* timeline rail */}
+          <span className="absolute bottom-2 left-[5px] top-2 w-px bg-[var(--at-line)]" />
+          {visibleHistory.map((entry) => {
+            const meta = statusMeta(entry.status);
             return (
-              <Group
-                key={entry.id}
-                gap="sm"
-                p="xs"
-                style={{
-                  borderRadius: '8px',
-                  backgroundColor: isLatest ? 'var(--mantine-color-gray-0)' : 'transparent',
-                  border: isLatest ? '1px solid var(--mantine-color-gray-3)' : 'none',
-                }}
-              >
-                <ThemeIcon 
-                  variant="light" 
-                  color={config.color}
-                  size="sm"
-                >
-                  <Icon size={14} />
-                </ThemeIcon>
-                <Text size="sm" fw={500}>
-                  {config.label}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {format(new Date(entry.changedAt), "MMM d, h:mm a")}
-                </Text>
-                <Text size="xs" c="dimmed" ml="auto">
-                  {formatDistanceToNow(new Date(entry.changedAt), {
-                    addSuffix: true,
-                  })}
-                </Text>
-              </Group>
+              <div key={entry.id} className="relative flex items-center justify-between py-1.5">
+                <span
+                  className={`absolute -left-[15px] h-2.5 w-2.5 rounded-full ring-2 ring-[var(--mantine-color-body)] ${meta.dotClass}`}
+                />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Text size="sm" fw={500}>
+                    {meta.label}
+                  </Text>
+                  <span className="task-meta text-[10px] text-[var(--mantine-color-dimmed)]">
+                    {format(new Date(entry.changedAt), "MMM d, h:mm a")}
+                  </span>
+                </div>
+                <span className="task-meta shrink-0 text-[10px] text-[var(--mantine-color-dimmed)]">
+                  {formatDistanceToNow(new Date(entry.changedAt), { addSuffix: true })}
+                </span>
+              </div>
             );
           })}
-        </Stack>
+        </div>
 
-        <ViewMoreButton
-          onClick={() => setShowAll(!showAll)}
-          hasMore={hasMore}
-          showAll={showAll}
-        />
+        <ViewMoreButton onClick={() => setShowAll(!showAll)} hasMore={hasMore} showAll={showAll} />
       </Collapse>
     </Box>
   );

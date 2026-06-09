@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Center, Loader, Text, Button, Container, Paper, Group, ActionIcon, Menu } from '@mantine/core';
+import { Center, Loader, Text, Button, ActionIcon, Menu } from '@mantine/core';
 import { IconEdit, IconArrowLeft, IconDots, IconTrash } from '@tabler/icons-react';
 import { useTask } from '@/hooks/useTasks';
 import { useState } from 'react';
@@ -123,63 +123,60 @@ export default function TaskPage() {
   }
 
   return (
-    <Container size="100%" py="xl" px="xl">
+    <div className="task-surface min-h-full">
+      <div className="mx-auto w-full max-w-5xl px-5 py-6 sm:px-8 sm:py-8">
         {/* Header */}
-        <Group justify="space-between" mb="xl">
-          <Group>
-            <ActionIcon 
-              variant="subtle" 
+        <div className="relative z-10 mb-7 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <ActionIcon
+              variant="subtle"
               color="gray"
               onClick={() => navigate('/tasks')}
               size="lg"
+              aria-label="Back to tasks"
             >
               <IconArrowLeft size={20} />
             </ActionIcon>
-            <Text size="lg" fw={600}>Task Details</Text>
-          </Group>
-          
-          <Group>
-            {!isEditing && (
-              <>
-                <Button
-                  leftSection={<IconEdit size={16} />}
-                  onClick={() => setIsEditing(true)}
-                  variant="light"
-                >
-                  Edit
-                </Button>
-                <Menu shadow="md" width={200}>
-                  <Menu.Target>
-                    <ActionIcon variant="subtle" color="gray" size="lg">
-                      <IconDots size={20} />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Label>Task actions</Menu.Label>
-                    <Menu.Item 
-                      color="red" 
-                      leftSection={<IconTrash size={16} />}
-                      onClick={() => setDeleteModalOpened(true)}
-                    >
-                      Delete task
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </>
-            )}
-          </Group>
-        </Group>
+            <span className="task-meta text-[11px] text-[var(--mantine-color-dimmed)]">Task</span>
+          </div>
+
+          {!isEditing && (
+            <div className="flex items-center gap-2">
+              <Button leftSection={<IconEdit size={16} />} onClick={() => setIsEditing(true)} variant="light">
+                Edit
+              </Button>
+              <Menu shadow="md" width={200}>
+                <Menu.Target>
+                  <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Task actions">
+                    <IconDots size={20} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Task actions</Menu.Label>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={() => setDeleteModalOpened(true)}
+                  >
+                    Delete task
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </div>
+          )}
+        </div>
 
         {/* Content */}
         {isEditing ? (
-          <TaskForm
-            task={task}
-            onSubmit={handleSubmit}
-            onCancel={() => setIsEditing(false)}
-          />
+          <div className="relative z-10 rounded-xl border border-[var(--at-line)] bg-[var(--mantine-color-body)] shadow-xs">
+            <div className="h-[70vh]">
+              <TaskForm task={task} onSubmit={handleSubmit} onCancel={() => setIsEditing(false)} />
+            </div>
+          </div>
         ) : (
           <TaskViewMode task={task} />
         )}
+      </div>
 
       <ConfirmationModal
         opened={deleteModalOpened}
@@ -190,7 +187,7 @@ export default function TaskPage() {
         confirmLabel="Delete"
         isLoading={isDeleting}
       />
-    </Container>
+    </div>
   );
 }
 

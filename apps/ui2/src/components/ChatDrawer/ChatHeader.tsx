@@ -1,13 +1,22 @@
 import { Text, Group, ActionIcon } from '@mantine/core';
-import { IconX, IconPin, IconPinFilled, IconHistory } from '@tabler/icons-react';
+import {
+  IconX,
+  IconPin,
+  IconPinFilled,
+  IconHistory,
+  IconArrowsDiagonal,
+} from '@tabler/icons-react';
+import { AssistantMark } from './AssistantMark';
 
 interface ChatHeaderProps {
   title: string;
   pinned: boolean;
   showHistoryButton?: boolean;
   showCloseButton?: boolean;
+  showExpandButton?: boolean;
   onTogglePin: () => void;
   onOpenHistory?: () => void;
+  onExpand?: () => void;
   onClose: () => void;
 }
 
@@ -16,14 +25,32 @@ export const ChatHeader = ({
   pinned,
   showHistoryButton = false,
   showCloseButton = true,
+  showExpandButton = true,
   onTogglePin,
   onOpenHistory,
+  onExpand,
   onClose,
 }: ChatHeaderProps) => {
   return (
-    <Group justify="space-between" style={{ width: '100%', padding: '12px 16px' }}>
-      <Text fw={600}>{title}</Text>
-      <Group gap="xs">
+    <Group justify="space-between" style={{ width: '100%', padding: '12px 16px' }} wrap="nowrap">
+      <Group gap={8} wrap="nowrap" style={{ minWidth: 0 }}>
+        <AssistantMark size={16} />
+        <Text fw={600} truncate>
+          {title}
+        </Text>
+      </Group>
+      <Group gap="xs" wrap="nowrap">
+        {showExpandButton && onExpand && (
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={onExpand}
+            size="sm"
+            title="Open full page"
+          >
+            <IconArrowsDiagonal size={18} />
+          </ActionIcon>
+        )}
         {showHistoryButton && onOpenHistory && (
           <ActionIcon
             variant="subtle"

@@ -12,6 +12,7 @@ import {
   CopyButton,
   Tooltip,
   Box,
+  Textarea,
 } from '@mantine/core';
 import {
   IconMicrophone,
@@ -19,9 +20,15 @@ import {
   IconCopy,
   IconCheck,
   IconAlertCircle,
+  IconTrash,
+  IconNote,
+  IconSparkles,
 } from '@tabler/icons-react';
 import { transcribeAudio } from '@/api/audioApi';
 import { createConversation, sendMessage } from '@/api/conversationApi';
+import { useNotebooks } from '@/hooks/useNotebooks';
+import { useCreateNote } from '@/hooks/useNotes';
+import { useOpenNote } from '@/hooks/useOpenNote';
 import { notifications } from '@mantine/notifications';
 
 interface TranscriptionModalProps {
@@ -30,7 +37,31 @@ interface TranscriptionModalProps {
   onOpenChat: (conversationId: string) => void;
 }
 
-type RecordingState = 'idle' | 'recording' | 'processing' | 'success' | 'error';
+type RecordingState = 'idle' | 'recording' | 'processing' | 'review' | 'error';
+
+const escapeHtml = (value: string): string =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Turn a plain-text transcript into TipTap-compatible paragraph HTML. */
+const transcriptToHtml = (text: string): string => {
+  const html = text
+    .split('\n')
+    .map((line) => line.trim())
+    .map((line) => (line ? `<p>${escapeHtml(line)}</p>` : ''))
+    .join('');
+  return html || '<p></p>';
+};
+
+/** Derive a short note title from the transcript's opening sentence. */
+const deriveTitle = (text: string): string => {
+  const firstLine = text.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
+  const clean = firstLine.replace(/\s+/g, ' ').trim();
+  if (!clean) return 'Voice memo';
+  const sentenceEnd = clean.search(/[.!?]/);
+  const cut =
+    sentenceEnd > 0 && sentenceEnd < 60 ? clean.slice(0, sentenceEnd) : clean.slice(0, 60);
+  return cut.trim() || 'Voice memo';
+};
 
 export const TranscriptionModal = ({ opened, onClose, onOpenChat }: TranscriptionModalProps) => {
   const [state, setState] = useState<RecordingState>('idle');
@@ -38,6 +69,8 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
   const [error, setError] = useState('');
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [savingNote, setSavingNote] = useState(false);
+  const [sendingAgent, setSendingAgent] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -46,52 +79,55 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  // When true, a recorder stop should be discarded rather than transcribed
+  // (used for cancel / close / re-record).
+  const canceledRef = useRef(false);
 
-  // Start recording when modal opens
-  useEffect(() => {
-    if (opened && state === 'idle') {
-      startRecording();
-    }
-  }, [opened]);
+  const { data: notebooks } = useNotebooks();
+  const createNoteMutation = useCreateNote();
+  const { openNote } = useOpenNote();
 
-  // Cleanup on unmount or close
+  // Reset everything whenever the modal is closed so it reopens fresh in idle.
   useEffect(() => {
     if (!opened) {
       cleanup();
+      setState('idle');
+      setTranscription('');
+      setError('');
+      setSavingNote(false);
+      setSendingAgent(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opened]);
 
   const cleanup = () => {
-    // Stop timer
+    // Discard any in-flight recording rather than transcribing it.
+    canceledRef.current = true;
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    // Stop animation frame
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
 
-    // Stop media recorder
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
 
-    // Stop media stream
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
 
-    // Close audio context
     if (audioContextRef.current) {
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
 
-    // Reset state
     audioChunksRef.current = [];
     setRecordingTime(0);
     setAudioLevel(0);
@@ -99,7 +135,10 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
 
   const startRecording = async () => {
     try {
-      // Request microphone access
+      setError('');
+      canceledRef.current = false;
+      audioChunksRef.current = [];
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
@@ -112,14 +151,10 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Start visualizing audio levels
       visualizeAudio();
 
       // Set up MediaRecorder
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/mp4';
-      
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
@@ -130,14 +165,15 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
       };
 
       mediaRecorder.onstop = async () => {
+        if (canceledRef.current) return;
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         await processAudio(audioBlob, mimeType);
       };
 
       mediaRecorder.start();
+      setRecordingTime(0);
       setState('recording');
 
-      // Start timer
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
@@ -160,13 +196,8 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
 
     const updateLevel = () => {
       analyser.getByteFrequencyData(dataArray);
-      
-      // Calculate average audio level
       const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-      const normalized = average / 255; // Normalize to 0-1
-      
-      setAudioLevel(normalized);
-      
+      setAudioLevel(average / 255);
       animationFrameRef.current = requestAnimationFrame(updateLevel);
     };
 
@@ -175,24 +206,22 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      canceledRef.current = false;
       mediaRecorderRef.current.stop();
       setState('processing');
-      
-      // Stop timer
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
 
-      // Stop animation
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
 
-      // Stop stream
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     }
   };
@@ -207,113 +236,87 @@ export const TranscriptionModal = ({ opened, onClose, onOpenChat }: Transcriptio
       });
 
       if (response.success) {
-        setTranscription(response.transcription);
-        setState('success');
-        notifications.show({
-          title: 'Transcription Complete',
-          message: 'Your audio has been successfully transcribed',
-          color: 'green',
-          icon: <IconCheck size={18} />,
-        });
-
-        // Automatically send transcription to LLM
-        processWithLLM(response.transcription);
+        setTranscription(response.transcription ?? '');
+        setState('review');
       } else {
         throw new Error(response.message || 'Transcription failed');
       }
     } catch (err) {
       console.error('Error processing audio:', err);
       setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to transcribe audio. Please try again.'
+        err instanceof Error ? err.message : 'Failed to transcribe audio. Please try again.'
       );
       setState('error');
-      notifications.show({
-        title: 'Transcription Failed',
-        message: 'Failed to transcribe audio. Please try again.',
-        color: 'red',
-        icon: <IconAlertCircle size={18} />,
-      });
     }
   };
 
-  const processWithLLM = async (transcriptionText: string) => {
+  const handleSendToAgent = async () => {
+    const text = transcription.trim();
+    if (!text) return;
+
+    setSendingAgent(true);
     try {
-      // Show processing notification
-      const processingNotification = notifications.show({
-        title: 'Processing with AI Assistant',
-        message: 'Analyzing your voice note...',
-        color: 'blue',
-        loading: true,
-        autoClose: false,
-      });
-
-      // Get current date/time information for context
-      const now = new Date();
-      const currentDateTime = now.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
-      });
-      const isoDateTime = now.toISOString();
-
-      // Construct context message with current date/time
-      const contextMessage = `Current date and time: ${currentDateTime} (ISO: ${isoDateTime})
-
-This is a voice note transcription:
-
-${transcriptionText}
-
----
-
-Available tools you can use:
-- create_task: Create a new task with title, description, due date (in ISO 8601 format), and priority
-- search_tasks: Search and filter tasks by status, due date, priority, or text search
-- update_task: Update an existing task (mark as complete, change status, etc.)
-- get_task: Look up and display detailed information about a specific task
-
-Note: When the user mentions relative dates like "tomorrow", "next week", or "in 3 days", calculate the actual date based on the current date/time provided above.`;
-
-      // Create conversation (title will be auto-generated after first message)
+      // The backend system prompt already supplies the current date and the full
+      // tool catalogue, so the agent just needs the raw transcript as the message.
       const conversation = await createConversation();
-
-      // Send message to LLM
-      const messageResponse = await sendMessage(conversation.id, contextMessage);
-
-      // Hide processing notification
-      notifications.hide(processingNotification);
-
-      // Check if an action was taken
-      if (messageResponse.actionTaken) {
-        // Action was taken (e.g., task created), show notification only
-        notifications.show({
-          title: 'Action Completed',
-          message: messageResponse.aiMessage.content,
-          color: 'teal',
-          autoClose: 8000,
-          icon: <IconCheck size={18} />,
-        });
-      } else {
-        // No action taken, open chat drawer for conversation
-        onOpenChat(conversation.id);
-        onClose(); // Close transcription modal
-      }
+      await sendMessage(conversation.id, text);
+      onOpenChat(conversation.id);
+      onClose();
     } catch (err) {
-      console.error('Error processing with LLM:', err);
-      
-      // Show subtle error notification - don't disrupt user experience
+      console.error('Error sending transcript to agent:', err);
       notifications.show({
         title: 'AI Assistant Unavailable',
-        message: 'Could not process with AI assistant, but your transcription was saved.',
+        message: 'Could not reach the assistant. Your transcript is still here.',
         color: 'yellow',
-        autoClose: 5000,
       });
+      setSendingAgent(false);
     }
+  };
+
+  const handleSaveAsNote = async () => {
+    const text = transcription.trim();
+    if (!text) return;
+
+    const notebook = notebooks?.find((nb) => nb.isDefault) ?? notebooks?.[0];
+    if (!notebook) {
+      notifications.show({
+        title: 'No notebook found',
+        message: 'Create a notebook first, then save your transcript as a note.',
+        color: 'red',
+      });
+      return;
+    }
+
+    setSavingNote(true);
+    try {
+      const note = await createNoteMutation.mutateAsync({
+        notebookId: notebook.id,
+        note: { title: deriveTitle(text), content: transcriptToHtml(text) },
+      });
+      notifications.show({
+        title: 'Note created',
+        message: 'Your voice memo was saved as a note.',
+        color: 'green',
+        icon: <IconCheck size={18} />,
+      });
+      openNote(note.id, note.title);
+      onClose();
+    } catch (err) {
+      console.error('Error saving transcript as note:', err);
+      notifications.show({
+        title: 'Could not save note',
+        message: 'Something went wrong saving your note. Please try again.',
+        color: 'red',
+      });
+      setSavingNote(false);
+    }
+  };
+
+  const handleReRecord = () => {
+    cleanup();
+    setTranscription('');
+    setError('');
+    startRecording();
   };
 
   const formatTime = (seconds: number): string => {
@@ -322,64 +325,57 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleClose = () => {
-    cleanup();
-    setState('idle');
-    setTranscription('');
-    setError('');
-    onClose();
-  };
+  const title =
+    state === 'recording'
+      ? 'Recording…'
+      : state === 'processing'
+      ? 'Transcribing…'
+      : state === 'review'
+      ? 'Review transcript'
+      : state === 'error'
+      ? 'Error'
+      : 'Voice memo';
+
+  const busy = savingNote || sendingAgent;
+  const hasText = transcription.trim().length > 0;
 
   return (
-    <Modal
-      opened={opened}
-      onClose={handleClose}
-      title={
-        state === 'recording'
-          ? 'Recording...'
-          : state === 'processing'
-          ? 'Transcribing...'
-          : state === 'success'
-          ? 'Transcription Complete'
-          : state === 'error'
-          ? 'Error'
-          : 'Voice Transcription'
-      }
-      size="lg"
-      centered
-    >
+    <Modal opened={opened} onClose={onClose} title={title} size="lg" centered>
       <Stack gap="md">
+        {state === 'idle' && (
+          <Center py="xl">
+            <Stack align="center" gap="md">
+              <ActionIcon
+                onClick={startRecording}
+                variant="filled"
+                color="red"
+                radius="xl"
+                size={88}
+                aria-label="Start recording"
+              >
+                <IconMicrophone size={40} />
+              </ActionIcon>
+              <Text c="dimmed">Tap to start recording</Text>
+            </Stack>
+          </Center>
+        )}
+
         {state === 'recording' && (
           <>
             <Center>
               <Stack align="center" gap="xs">
-                <Box
-                  style={{
-                    position: 'relative',
-                    width: 80,
-                    height: 80,
-                  }}
-                >
+                <Box style={{ position: 'relative', width: 80, height: 80 }}>
                   <Box
                     style={{
                       position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
+                      inset: 0,
                       borderRadius: '50%',
                       backgroundColor: 'red',
                       opacity: 0.2,
                       animation: 'pulse 2s ease-in-out infinite',
                     }}
                   />
-                  <Center
-                    style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '100%',
-                    }}
-                  >
+                  <Center style={{ position: 'relative', width: '100%', height: '100%' }}>
                     <IconMicrophone size={40} color="red" />
                   </Center>
                 </Box>
@@ -390,24 +386,25 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
             </Center>
 
             {/* Audio level visualization */}
-            <Box>
-              <Center>
-                <Group gap="xs">
-                  {[...Array(20)].map((_, i) => (
-                    <Box
-                      key={i}
-                      style={{
-                        width: 4,
-                        height: audioLevel > i / 20 ? 30 * (1 + audioLevel) : 10,
-                        backgroundColor: audioLevel > i / 20 ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-3)',
-                        borderRadius: 2,
-                        transition: 'height 0.1s ease',
-                      }}
-                    />
-                  ))}
-                </Group>
-              </Center>
-            </Box>
+            <Center>
+              <Group gap="xs">
+                {[...Array(20)].map((_, i) => (
+                  <Box
+                    key={i}
+                    style={{
+                      width: 4,
+                      height: audioLevel > i / 20 ? 30 * (1 + audioLevel) : 10,
+                      backgroundColor:
+                        audioLevel > i / 20
+                          ? 'var(--mantine-color-blue-6)'
+                          : 'var(--mantine-color-gray-3)',
+                      borderRadius: 2,
+                      transition: 'height 0.1s ease',
+                    }}
+                  />
+                ))}
+              </Group>
+            </Center>
 
             <Button
               leftSection={<IconPlayerStop size={18} />}
@@ -416,7 +413,10 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
               size="lg"
               fullWidth
             >
-              Stop Recording
+              Stop &amp; transcribe
+            </Button>
+            <Button variant="subtle" color="gray" onClick={onClose}>
+              Cancel
             </Button>
           </>
         )}
@@ -425,47 +425,86 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
           <Center py="xl">
             <Stack align="center" gap="md">
               <Loader size="lg" />
-              <Text>Transcribing your recording...</Text>
+              <Text>Transcribing your recording…</Text>
             </Stack>
           </Center>
         )}
 
-        {state === 'success' && transcription && (
+        {state === 'review' && (
           <>
-            <Alert color="green" icon={<IconCheck size={18} />}>
-              Your audio has been successfully transcribed
-            </Alert>
+            <Textarea
+              value={transcription}
+              onChange={(e) => setTranscription(e.currentTarget.value)}
+              autosize
+              minRows={4}
+              maxRows={14}
+              placeholder="Your transcript will appear here. Edit it before saving or sending."
+              disabled={busy}
+            />
 
-            <Box
-              p="md"
-              style={{
-                backgroundColor: 'var(--mantine-color-gray-0)',
-                borderRadius: 8,
-                border: '1px solid var(--mantine-color-gray-3)',
-                maxHeight: 300,
-                overflowY: 'auto',
-              }}
-            >
-              <Text>{transcription}</Text>
-            </Box>
+            <Group justify="space-between" align="center">
+              <Group gap="xs">
+                <CopyButton value={transcription}>
+                  {({ copied, copy }) => (
+                    <Tooltip label={copied ? 'Copied!' : 'Copy to clipboard'} withArrow>
+                      <ActionIcon
+                        color={copied ? 'teal' : 'gray'}
+                        variant="subtle"
+                        onClick={copy}
+                        size="lg"
+                        disabled={!hasText}
+                        aria-label="Copy transcript"
+                      >
+                        {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </CopyButton>
+                <Tooltip label="Discard and record again" withArrow>
+                  <ActionIcon
+                    color="gray"
+                    variant="subtle"
+                    onClick={handleReRecord}
+                    size="lg"
+                    disabled={busy}
+                    aria-label="Re-record"
+                  >
+                    <IconMicrophone size={18} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip label="Discard" withArrow>
+                  <ActionIcon
+                    color="red"
+                    variant="subtle"
+                    onClick={onClose}
+                    size="lg"
+                    disabled={busy}
+                    aria-label="Discard transcript"
+                  >
+                    <IconTrash size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
 
-            <Group justify="space-between">
-              <CopyButton value={transcription}>
-                {({ copied, copy }) => (
-                  <Tooltip label={copied ? 'Copied!' : 'Copy to clipboard'}>
-                    <ActionIcon
-                      color={copied ? 'teal' : 'blue'}
-                      variant="light"
-                      onClick={copy}
-                      size="lg"
-                    >
-                      {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-              </CopyButton>
-
-              <Button onClick={handleClose}>Close</Button>
+              <Group gap="xs">
+                <Button
+                  variant="light"
+                  leftSection={<IconNote size={18} />}
+                  onClick={handleSaveAsNote}
+                  loading={savingNote}
+                  disabled={!hasText || sendingAgent}
+                >
+                  Save as note
+                </Button>
+                <Button
+                  leftSection={<IconSparkles size={18} />}
+                  onClick={handleSendToAgent}
+                  loading={sendingAgent}
+                  disabled={!hasText || savingNote}
+                >
+                  Send to agent
+                </Button>
+              </Group>
             </Group>
           </>
         )}
@@ -475,20 +514,11 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
             <Alert color="red" icon={<IconAlertCircle size={18} />} title="Error">
               {error}
             </Alert>
-
             <Group justify="flex-end">
-              <Button onClick={handleClose} variant="light">
+              <Button onClick={onClose} variant="subtle" color="gray">
                 Close
               </Button>
-              <Button
-                onClick={() => {
-                  setState('idle');
-                  setError('');
-                  startRecording();
-                }}
-              >
-                Try Again
-              </Button>
+              <Button onClick={startRecording}>Try again</Button>
             </Group>
           </>
         )}
@@ -509,4 +539,3 @@ Note: When the user mentions relative dates like "tomorrow", "next week", or "in
     </Modal>
   );
 };
-

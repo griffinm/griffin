@@ -4,16 +4,17 @@ import type {
   SuggestionProps,
   SuggestionKeyDownProps,
 } from '@tiptap/suggestion'
-import { NoteLinkList, type NoteLinkListRef } from './NoteLinkList'
+import { AtMenuList, type AtMenuListRef } from './AtMenuList'
 
 /**
- * Suggestion `render` lifecycle for the note-link popup. Mounts `NoteLinkList`
- * via TipTap's `ReactRenderer` (so it inherits the editor's React context —
+ * Suggestion `render` lifecycle for the "@" popup. Mounts `AtMenuList` via
+ * TipTap's `ReactRenderer` (so it inherits the editor's React context —
  * Mantine/MUI providers) and positions it at the caret using `clientRect`.
+ * `AtMenuList` is a two-stage menu: an actions list, then note search.
  * This replaces the `tippy.js` dependency used in the canonical TipTap example.
  */
 export const noteLinkSuggestionRender: SuggestionOptions['render'] = () => {
-  let component: ReactRenderer<NoteLinkListRef> | null = null
+  let component: ReactRenderer<AtMenuListRef> | null = null
   let popup: HTMLDivElement | null = null
   let dismissed = false
 
@@ -28,7 +29,7 @@ export const noteLinkSuggestionRender: SuggestionOptions['render'] = () => {
   return {
     onStart: (props: SuggestionProps) => {
       dismissed = false
-      component = new ReactRenderer(NoteLinkList, {
+      component = new ReactRenderer(AtMenuList, {
         props,
         editor: props.editor,
       })

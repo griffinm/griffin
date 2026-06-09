@@ -6,9 +6,180 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 @custom-variant dark (&:where([data-mantine-color-scheme=dark], [data-mantine-color-scheme=dark] *));
+
+/* ──────────────────────────────────────────────────────────────────────────
+   AI chat surface — "Atelier" design tokens
+   Scoped to chat components only; the rest of the app is untouched.
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  --chat-aurora: linear-gradient(135deg, #14b8a6 0%, #06b6d4 46%, #6366f1 100%);
+  --chat-aurora-soft: linear-gradient(
+    135deg,
+    rgba(20, 184, 166, 0.14) 0%,
+    rgba(6, 182, 212, 0.12) 46%,
+    rgba(99, 102, 241, 0.14) 100%
+  );
+  --chat-accent: #0d9488;
+  --chat-glow: rgba(13, 148, 136, 0.28);
+  --chat-assistant-tint: rgba(13, 148, 136, 0.045);
+}
+
+[data-mantine-color-scheme='dark'] {
+  --chat-accent: #2dd4bf;
+  --chat-glow: rgba(45, 212, 191, 0.34);
+  --chat-assistant-tint: rgba(45, 212, 191, 0.06);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Atelier — shared surface tokens (tasks + future surfaces)
+   Generalized aliases so non-chat code doesn't reference "chat".
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  --at-accent: #0d9488;
+  --at-accent-soft: rgba(13, 148, 136, 0.1);
+  --at-line: var(--mantine-color-default-border);
+}
+[data-mantine-color-scheme='dark'] {
+  --at-accent: #2dd4bf;
+  --at-accent-soft: rgba(45, 212, 191, 0.12);
+}
+
+/* Faint atmospheric wash for task board / detail surfaces (CSS-only). */
+.task-surface {
+  position: relative;
+  background:
+    radial-gradient(110% 70% at 100% 0%, rgba(13, 148, 136, 0.04), transparent 58%),
+    radial-gradient(90% 60% at 0% 100%, rgba(6, 182, 212, 0.035), transparent 55%);
+}
+[data-mantine-color-scheme='dark'] .task-surface {
+  background:
+    radial-gradient(110% 70% at 100% 0%, rgba(45, 212, 191, 0.07), transparent 58%),
+    radial-gradient(90% 60% at 0% 100%, rgba(6, 182, 212, 0.06), transparent 55%);
+}
+.task-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-mantine-color-scheme='dark'] .task-surface::before {
+  opacity: 0.04;
+}
+
+/* Mono "system" texture for task metadata: counts, due chips, eyebrows. */
+.task-meta {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum' 1;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* Atmospheric wash behind the conversation column (CSS-only). */
+.chat-surface {
+  position: relative;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(6, 182, 212, 0.05), transparent 60%),
+    radial-gradient(100% 70% at 0% 100%, rgba(99, 102, 241, 0.045), transparent 55%);
+}
+[data-mantine-color-scheme='dark'] .chat-surface {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(6, 182, 212, 0.11), transparent 60%),
+    radial-gradient(100% 70% at 0% 100%, rgba(99, 102, 241, 0.09), transparent 55%);
+}
+/* Barely-there grain for texture/depth. */
+.chat-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-mantine-color-scheme='dark'] .chat-surface::before {
+  opacity: 0.05;
+}
+
+/* The aurora "system" mark + gradient text. */
+.chat-aurora-text {
+  background: var(--chat-aurora);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Mono "system" texture for labels, timestamps, hints. */
+.chat-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Staggered message reveal. */
+@keyframes chatMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.chat-message-in {
+  animation: chatMessageIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Thinking-state pulse for the assistant mark. */
+@keyframes chatMarkPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+}
+.chat-mark-pulse {
+  animation: chatMarkPulse 1.5s ease-in-out infinite;
+}
+
+/* Sweeping shimmer for the typing indicator line. */
+@keyframes chatShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.chat-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--chat-accent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: chatShimmer 1.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-message-in,
+  .chat-mark-pulse,
+  .chat-shimmer {
+    animation: none;
+  }
+}
 
 body {
   -webkit-font-smoothing: antialiased;
@@ -22,4 +193,27 @@ body {
 .task-column-scroll {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* "@" editor command menu — subtle drop-in from the caret */
+@keyframes atMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.at-menu-panel {
+  animation: atMenuIn 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .at-menu-panel {
+    animation: none;
+  }
 }

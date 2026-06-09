@@ -14,6 +14,7 @@ export interface CreateConversationOptions {
 
 export interface SendMessageOptions {
   content: string;
+  attachedNoteIds?: string[];
 }
 
 /**
@@ -31,11 +32,12 @@ export const createConversation = async (
  */
 export const sendMessage = async (
   conversationId: string,
-  content: string
+  content: string,
+  attachedNoteIds?: string[]
 ): Promise<SendMessageResponse> => {
   const response = await baseClient.post<SendMessageResponse>(
     `/conversations/${conversationId}/messages`,
-    { content }
+    { content, attachedNoteIds }
   );
   return response.data;
 };
@@ -74,11 +76,25 @@ export const getConversation = async (
  * List all conversations for the current user
  */
 export const listConversations = async (
-  page: number = 1,
-  resultsPerPage: number = 20
+  page = 1,
+  resultsPerPage = 20
 ): Promise<ConversationListResponse> => {
   const response = await baseClient.get<ConversationListResponse>(
     `/conversations?page=${page}&resultsPerPage=${resultsPerPage}`
+  );
+  return response.data;
+};
+
+/**
+ * Rename a conversation
+ */
+export const updateConversation = async (
+  conversationId: string,
+  title: string
+): Promise<Conversation> => {
+  const response = await baseClient.patch<Conversation>(
+    `/conversations/${conversationId}`,
+    { title }
   );
   return response.data;
 };

@@ -1,54 +1,35 @@
 import { useState, useEffect, useContext } from 'react'
-import {
-  Burger,
-  useMantineTheme,
-  Group,
-  NavLink,
-  Stack,
-  Divider,
-  Badge,
-  ActionIcon,
-  Tooltip,
-} from '@mantine/core'
-import { useMediaQuery } from '@mantine/hooks'
-import {
-  IconSettings,
-  IconLogout,
-  IconHome,
-  IconCheck,
-  IconBook,
-  IconTags,
-  IconQuestionMark,
-  IconMicrophone,
-  IconMessagePlus,
-} from '@tabler/icons-react'
-import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useMediaQuery, useLocalStorage } from '@mantine/hooks'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '@/providers/UserProvider/UserContext';
 import { TabsProvider } from '@/providers/TabsProvider';
 import { getUrl } from '@/constants/urls';
-import { NoteTree } from '@/views/NoteTree';
-import { Search } from '@/components/Search/Search';
-import { TabBar } from '@/components/TabBar';
 import { TranscriptionModal } from '@/components/TranscriptionModal';
 import { ChatDrawer } from '@/components/ChatDrawer';
 import { createConversation } from '@/api/conversationApi';
+import { Topbar } from './Topbar';
+import { Sidebar } from './Sidebar';
 
-const HEADER_HEIGHT = 40;
-const LEFT_NAVBAR_WIDTH_DESKTOP = 225;
+const HEADER_HEIGHT = 52;
+const SIDEBAR_WIDTH = 240;
+const SIDEBAR_RAIL_WIDTH = 60;
 
 export const AppLayout = () => {
-  const theme = useMantineTheme()
   const isMobile = useMediaQuery('(max-width: 768px)')
-  const [opened, setOpened] = useState(true)
+  const [opened, setOpened] = useState(false)
+  const [collapsed, setCollapsed] = useLocalStorage({
+    key: 'griffin-sidebar-collapsed',
+    defaultValue: false,
+  })
   const [transcriptionModalOpened, setTranscriptionModalOpened] = useState(false)
   const [chatDrawerOpened, setChatDrawerOpened] = useState(false)
   const [activeChatConversationId, setActiveChatConversationId] = useState<string | null>(null)
   const [isChatPinned, setIsChatPinned] = useState(false)
-  const { user, loading, logout } = useContext(UserContext)
+  const { user, loading } = useContext(UserContext)
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Close navbar on mobile when route changes
+  // Close the mobile drawer when the route changes
   useEffect(() => {
     if (isMobile) {
       setOpened(false)
@@ -80,14 +61,13 @@ export const AppLayout = () => {
     }
   }, [user, loading, navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate(getUrl('login').path(), { replace: true });
-    } catch (error) {
-      console.error('Logout error:', error);
+  const handleToggle = () => {
+    if (isMobile) {
+      setOpened((o) => !o)
+    } else {
+      setCollapsed((c) => !c)
     }
-  };
+  }
 
   const openChatDrawer = (conversationId: string | null = null) => {
     setActiveChatConversationId(conversationId);
@@ -117,79 +97,28 @@ export const AppLayout = () => {
     }
   };
 
-  const navigationData = [
-    { icon: IconHome, label: 'Dashboard', path: getUrl('dashboard').path(), color: 'blue' },
-    { icon: IconCheck, label: 'Tasks', path: getUrl('tasks').path(), color: 'green' },
-    { icon: IconBook, label: 'Notebooks', path: getUrl('notebooks').path(), color: 'indigo' },
-    { icon: IconTags, label: 'Tags', path: getUrl('tags').path(), color: 'violet' },
-    { icon: IconQuestionMark, label: 'Questions', path: getUrl('questions').path(), color: 'orange' },
-  ]
+  const sidebarWidth = isMobile
+    ? SIDEBAR_WIDTH
+    : collapsed
+      ? SIDEBAR_RAIL_WIDTH
+      : SIDEBAR_WIDTH
 
   return (
     <TabsProvider>
     <div>
-      {/* Full-width header */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          height: HEADER_HEIGHT,
-          padding: theme.spacing.md,
-          background: 'var(--mantine-color-body)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: isMobile ? theme.spacing.xs : theme.spacing.md,
-        }}
-      >
-        <Burger
-          opened={opened}
-          onClick={() => setOpened((o) => !o)}
-          size="sm"
-          color={theme.colors.gray[6]}
-          mr={isMobile ? "xs" : "xl"}
-        />
-
-        <Group style={{ flex: 1, minWidth: 0 }} justify="space-between" gap={isMobile ? "xs" : "md"}>
-          <div style={{ flex: '0 0 auto', minWidth: isMobile ? 100 : 200, maxWidth: isMobile ? 'none' : '500px' }}>
-            <Search />
-          </div>
-          {!isMobile && (
-            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', marginLeft: 8, marginRight: 8 }}>
-              <TabBar />
-            </div>
-          )}
-          <Group gap="xs" style={{ flexShrink: 0 }}>
-            <Tooltip label="Chat">
-              <ActionIcon
-                variant="light"
-                color="teal"
-                size={isMobile ? "md" : "lg"}
-                onClick={handleOpenChat}
-              >
-                <IconMessagePlus size={isMobile ? 18 : 20} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Voice Transcription">
-              <ActionIcon
-                variant="light"
-                color="blue"
-                size={isMobile ? "md" : "lg"}
-                onClick={() => setTranscriptionModalOpened(true)}
-              >
-                <IconMicrophone size={isMobile ? 18 : 20} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-        </Group>
-      </div>
+      <Topbar
+        height={HEADER_HEIGHT}
+        isMobile={!!isMobile}
+        opened={opened}
+        collapsed={collapsed}
+        onToggle={handleToggle}
+        onOpenChat={handleOpenChat}
+        onOpenTranscription={() => setTranscriptionModalOpened(true)}
+      />
 
       {/* Content area with navbar */}
-      <div style={{ 
-        display: 'flex', 
+      <div style={{
+        display: 'flex',
         marginTop: HEADER_HEIGHT,
         background: 'var(--mantine-color-body)',
         minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
@@ -213,81 +142,30 @@ export const AppLayout = () => {
         )}
 
         {/* Left navbar */}
-        <div 
-          style={{ 
+        <div
+          style={{
             position: isMobile ? 'fixed' : 'relative',
             top: isMobile ? HEADER_HEIGHT : 'auto',
-            left: isMobile ? (opened ? 0 : -LEFT_NAVBAR_WIDTH_DESKTOP) : 'auto',
-            width: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
-            minWidth: isMobile ? LEFT_NAVBAR_WIDTH_DESKTOP : (opened ? LEFT_NAVBAR_WIDTH_DESKTOP : 0),
-            transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
+            left: isMobile ? (opened ? 0 : -SIDEBAR_WIDTH) : 'auto',
+            width: sidebarWidth,
+            minWidth: sidebarWidth,
+            flexShrink: 0,
+            transition: isMobile ? 'left 0.25s ease' : 'width 0.2s ease',
             overflow: 'hidden',
             background: 'var(--mantine-color-body)',
-            padding: opened ? '15px' : 0,
-            display: 'flex',
-            flexDirection: 'column',
+            borderRight: isMobile ? 'none' : '1px solid var(--mantine-color-default-border)',
             height: isMobile ? `calc(100vh - ${HEADER_HEIGHT}px)` : '100%',
             zIndex: 60,
-            boxShadow: isMobile && opened ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
+            boxShadow: isMobile && opened ? '2px 0 8px rgba(0,0,0,0.1)' : 'none',
           }}
         >
-          <Stack gap="xs" style={{ overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
-            {navigationData.map((item) => {
-              const isActive = location.pathname === item.path
-              return (
-                <Link key={item.label} to={item.path} style={{ textDecoration: 'none' }}>
-                  <NavLink
-                    label={item.label}
-                    leftSection={<item.icon size="1rem" stroke={1.5} />}
-                    rightSection={
-                      item.label === 'Messages' && (
-                        <Badge size="xs" color="red" variant="filled">
-                          3
-                        </Badge>
-                      )
-                    }
-                    active={isActive}
-                    component="div"
-                    styles={{
-                      root: {
-                        borderRadius: theme.radius.sm,
-                      },
-                    }}
-                  />
-                </Link>
-              )
-            })}
-            <Divider my="sm" />
-          </Stack>
-
-          <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-            <NoteTree />
-          </div>
-
-          <Divider my="sm" />
-
-          <Stack gap="xs">
-            <Link to={getUrl('settings').path()} style={{ textDecoration: 'none' }}>
-              <NavLink
-                label="Settings"
-                leftSection={<IconSettings size="1rem" stroke={1.5} />}
-                active={location.pathname === getUrl('settings').path()}
-                component="div"
-              />
-            </Link>
-            <NavLink
-              onClick={handleLogout}
-              label="Logout"
-              leftSection={<IconLogout size="1rem" stroke={1.5} />}
-              color="red"
-            />
-          </Stack>
+          <Sidebar collapsed={!isMobile && collapsed} />
         </div>
 
         {/* Main content */}
-        <div 
+        <div
           className="flex-1 bg-[var(--mantine-color-body)] w-full rounded-lg shadow-md sm:mr-4 mb-4 main-content-area"
-          style={{ 
+          style={{
             height: 'calc(100% - 1rem)',
             overflowY: 'auto',
             overflowX: 'hidden',
@@ -333,4 +211,3 @@ export const AppLayout = () => {
     </TabsProvider>
   )
 }
-

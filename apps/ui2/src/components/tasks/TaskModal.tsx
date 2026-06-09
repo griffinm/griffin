@@ -1,15 +1,14 @@
-import { Modal, Button, Group } from "@mantine/core";
+import { Modal, Button, ActionIcon } from "@mantine/core";
 import { Task } from "@/types/task";
 import { TaskForm, TaskFormData } from "@/views/tasks";
 import { useMediaQuery } from "@mantine/hooks";
-import { theme } from "@/theme";
 import { createTask, updateTask, addTagToTask, removeTagFromTask } from "@/api/tasksApi";
 import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTask } from "@/hooks/useTasks";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconExternalLink } from "@tabler/icons-react";
+import { IconExternalLink, IconX } from "@tabler/icons-react";
 
 export function TaskModal({
   task,
@@ -20,7 +19,7 @@ export function TaskModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints?.sm})`);
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   
@@ -132,28 +131,53 @@ export function TaskModal({
     }
   };
 
+  const isEditing = !!taskData?.id;
+
   return (
-    <Modal 
-      opened={open} 
-      onClose={onClose} 
-      padding={0} 
-      withCloseButton={false} 
-      size="80%"
+    <Modal
+      opened={open}
+      onClose={onClose}
+      padding={0}
+      withCloseButton={false}
+      size={900}
       fullScreen={isMobile}
+      overlayProps={{ backgroundOpacity: 0.4, blur: 2 }}
+      styles={{
+        content: {
+          display: 'flex',
+          flexDirection: 'column',
+          ...(isMobile ? {} : { height: '86vh' }),
+        },
+        body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 0 },
+      }}
     >
-      {taskData?.id && (
-        <Group justify="flex-end" p="md" pb={0}>
-          <Button
-            variant="subtle"
-            size="xs"
-            leftSection={<IconExternalLink size={14} />}
-            onClick={handleOpenInPage}
-          >
-            Open in Page
-          </Button>
-        </Group>
-      )}
-      <TaskForm task={taskData} onSubmit={handleSubmit} onCancel={onClose} />
+      {/* Header band */}
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--at-line)] px-5 py-3">
+        <span className="task-meta text-[11px] text-[var(--mantine-color-dimmed)]">
+          {isEditing ? 'Edit task' : 'New task'}
+        </span>
+        <div className="flex items-center gap-1">
+          {isEditing && (
+            <Button
+              variant="subtle"
+              size="xs"
+              color="gray"
+              leftSection={<IconExternalLink size={14} />}
+              onClick={handleOpenInPage}
+            >
+              Open in page
+            </Button>
+          )}
+          <ActionIcon variant="subtle" color="gray" onClick={onClose} aria-label="Close">
+            <IconX size={18} />
+          </ActionIcon>
+        </div>
+      </div>
+
+      {/* Form fills remaining height (its own scroll body + sticky footer) */}
+      <div className="min-h-0 flex-1">
+        <TaskForm task={taskData} onSubmit={handleSubmit} onCancel={onClose} />
+      </div>
     </Modal>
   );
 }

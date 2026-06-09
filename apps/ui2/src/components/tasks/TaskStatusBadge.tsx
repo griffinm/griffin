@@ -1,75 +1,67 @@
-import { Badge, Menu } from '@mantine/core';
+import { Badge, Menu, UnstyledButton } from '@mantine/core';
 import { TaskStatus } from '@/types/task';
 import { IconChevronDown } from '@tabler/icons-react';
+import { statusMeta } from './taskVisuals';
 
 interface TaskStatusBadgeProps {
   status: TaskStatus;
-  onChange?: (status: TaskStatus) => void;
+  onChange?: (_status: TaskStatus) => void;
   disabled?: boolean;
+  /** 'badge' = Mantine pill (default); 'chip' = mono dot + label (Atelier board). */
+  variant?: 'badge' | 'chip';
 }
 
-export function TaskStatusBadge({ status, onChange, disabled = false }: TaskStatusBadgeProps) {
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TODO:
-        return 'blue';
-      case TaskStatus.IN_PROGRESS:
-        return 'orange';
-      case TaskStatus.COMPLETED:
-        return 'green';
-      default:
-        return 'gray';
-    }
-  };
+export function TaskStatusBadge({
+  status,
+  onChange,
+  disabled = false,
+  variant = 'badge',
+}: TaskStatusBadgeProps) {
+  const meta = statusMeta(status);
+  const interactive = !!onChange && !disabled;
 
-  const getStatusLabel = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TODO:
-        return 'To Do';
-      case TaskStatus.IN_PROGRESS:
-        return 'In Progress';
-      case TaskStatus.COMPLETED:
-        return 'Completed';
-      default:
-        return status;
-    }
-  };
-
-  // If no onChange handler provided, render as non-interactive badge
-  if (!onChange || disabled) {
-    return (
-      <Badge color={getStatusColor(status)} variant="light">
-        {getStatusLabel(status)}
+  const target =
+    variant === 'chip' ? (
+      <UnstyledButton
+        component="span"
+        className="task-meta inline-flex items-center gap-1.5 text-[11px] text-[var(--mantine-color-text)] leading-none"
+        style={{ cursor: interactive ? 'pointer' : 'default' }}
+      >
+        <span className={`h-2 w-2 rounded-full ${meta.dotClass}`} />
+        {meta.label}
+        {interactive && <IconChevronDown size={11} className="opacity-50" />}
+      </UnstyledButton>
+    ) : (
+      <Badge
+        color={meta.color}
+        variant="light"
+        style={{ cursor: interactive ? 'pointer' : 'default' }}
+        rightSection={interactive ? <IconChevronDown size={12} /> : undefined}
+      >
+        {meta.label}
       </Badge>
     );
+
+  if (!interactive) {
+    return target;
   }
 
   return (
     <Menu shadow="md" width={200}>
-      <Menu.Target>
-        <Badge 
-          color={getStatusColor(status)} 
-          variant="light"
-          style={{ cursor: 'pointer' }}
-          rightSection={<IconChevronDown size={12} />}
-        >
-          {getStatusLabel(status)}
-        </Badge>
-      </Menu.Target>
+      <Menu.Target>{target}</Menu.Target>
       <Menu.Dropdown>
         <Menu.Label>Change status</Menu.Label>
         {Object.values(TaskStatus).map((statusOption) => (
           <Menu.Item
             key={statusOption}
             onClick={() => onChange(statusOption)}
-            color={status === statusOption ? getStatusColor(statusOption) : undefined}
+            color={status === statusOption ? statusMeta(statusOption).color : undefined}
             style={{ fontWeight: status === statusOption ? 600 : 400 }}
           >
-            {getStatusLabel(statusOption)}
+            {statusMeta(statusOption).label}
           </Menu.Item>
         ))}
       </Menu.Dropdown>
     </Menu>
   );
 }
-

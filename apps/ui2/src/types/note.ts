@@ -4,10 +4,12 @@ export interface Note {
   id: string;
   title: string;
   content?: string;
+  preview?: string;
   notebookId: string;
   version: number;
   createdAt: Date;
   updatedAt: Date;
+  pinnedAt?: string | null;
   tags?: Tag[];
 }
 

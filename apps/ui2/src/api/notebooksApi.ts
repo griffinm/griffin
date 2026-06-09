@@ -1,5 +1,6 @@
 import { baseClient } from "./baseClient";
 import { Notebook } from "@/types/notebook";
+import { Tag } from "@/types/tag";
 
 export const fetchNotebooks = async (): Promise<Notebook[]> => {
   const response = await baseClient.get<Notebook[]>('/notebooks');
@@ -40,5 +41,20 @@ export const updateNotebook = async (id: string, notebook: CreateOrUpdateNoteboo
 
 export const deleteNotebook = async (id: string): Promise<void> => {
   await baseClient.delete(`/notebooks/${id}`);
+};
+
+export const fetchNotebookDefaultTags = async (id: string): Promise<Tag[]> => {
+  const response = await baseClient.get<Tag[]>(`/notebooks/${id}/default-tags`);
+  return response.data;
+};
+
+export const addNotebookDefaultTag = async (id: string, tagId: string): Promise<Tag[]> => {
+  const response = await baseClient.post<Tag[]>(`/notebooks/${id}/default-tags`, { tagId });
+  return response.data;
+};
+
+export const removeNotebookDefaultTag = async (id: string, tagId: string): Promise<Tag[]> => {
+  const response = await baseClient.delete<Tag[]>(`/notebooks/${id}/default-tags/${tagId}`);
+  return response.data;
 };
 

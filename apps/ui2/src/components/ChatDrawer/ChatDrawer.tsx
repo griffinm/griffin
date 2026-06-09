@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Drawer, Stack, Box } from '@mantine/core';
+import { getUrl } from '@/constants/urls';
 import { useChat } from './useChat';
 import { ChatHeader } from './ChatHeader';
 import { ChatInput } from './ChatInput';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatHistoryPanel } from './ChatHistoryPanel';
 import { ChatHistoryDrawer } from './ChatHistoryDrawer';
+import { ChatEmptyState } from './ChatEmptyState';
 
 interface ChatDrawerProps {
   opened: boolean;
   onClose: () => void;
   conversationId: string | null;
-  onPinChange?: (pinned: boolean) => void;
+  onPinChange?: (_pinned: boolean) => void;
   renderAsSidebar?: boolean;
-  onConversationChange?: (conversationId: string) => void;
+  onConversationChange?: (_conversationId: string) => void;
   onNewChat?: () => void;
 }
 
@@ -28,6 +31,7 @@ export const ChatDrawer = ({
 }: ChatDrawerProps) => {
   const [pinned, setPinned] = useState(false);
   const [historyDrawerOpened, setHistoryDrawerOpened] = useState(false);
+  const navigate = useNavigate();
 
   const isActive = opened || pinned || renderAsSidebar;
 
@@ -43,7 +47,10 @@ export const ChatDrawer = ({
     viewportRef,
     setInputValue,
     handleSendMessage,
+    submitMessage,
+    handleRegenerate,
     handleDeleteConversation,
+    handleRenameConversation,
     loadConversationHistory,
   } = useChat({
     conversationId,
@@ -89,6 +96,19 @@ export const ChatDrawer = ({
     setHistoryDrawerOpened(false);
   };
 
+  // Hand off to the full-page chat experience.
+  const handleExpand = () => {
+    const target = conversationId
+      ? getUrl('chatConversation').path(conversationId)
+      : getUrl('chat').path();
+    if (pinned) {
+      setPinned(false);
+      onPinChange?.(false);
+    }
+    onClose();
+    navigate(target);
+  };
+
   // Render the main chat content (messages or history panel)
   const renderContent = () => {
     if (!conversationId) {
@@ -96,8 +116,10 @@ export const ChatDrawer = ({
         <ChatHistoryPanel
           conversations={conversations}
           isLoading={isLoadingHistory}
+          activeConversationId={conversationId}
           onSelectConversation={handleSelectConversation}
           onDeleteConversation={handleDeleteConversation}
+          onRenameConversation={handleRenameConversation}
           onNewChat={onNewChat}
         />
       );
@@ -110,6 +132,10 @@ export const ChatDrawer = ({
           isLoading={isLoading}
           isWaitingForResponse={isWaitingForResponse}
           viewportRef={viewportRef}
+          onRegenerate={handleRegenerate}
+          emptyState={
+            <ChatEmptyState compact onSelectPrompt={(text) => submitMessage(text)} />
+          }
         />
         <ChatInput
           value={inputValue}
@@ -143,6 +169,7 @@ export const ChatDrawer = ({
             showCloseButton={false}
             onTogglePin={handleTogglePin}
             onOpenHistory={handleOpenHistory}
+            onExpand={handleExpand}
             onClose={onClose}
           />
           <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -158,6 +185,7 @@ export const ChatDrawer = ({
           activeConversationId={conversationId}
           onSelectConversation={handleSelectConversation}
           onDeleteConversation={handleDeleteConversation}
+          onRenameConversation={handleRenameConversation}
         />
       </>
     );
@@ -183,6 +211,7 @@ export const ChatDrawer = ({
             showCloseButton={!pinned}
             onTogglePin={handleTogglePin}
             onOpenHistory={handleOpenHistory}
+            onExpand={handleExpand}
             onClose={onClose}
           />
         }
@@ -213,6 +242,7 @@ export const ChatDrawer = ({
         activeConversationId={conversationId}
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
+        onRenameConversation={handleRenameConversation}
       />
     </>
   );

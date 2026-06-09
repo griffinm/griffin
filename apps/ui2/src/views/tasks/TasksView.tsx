@@ -51,51 +51,53 @@ export function TasksView() {
   }, []);
 
   return (
-    <div className="p-5 w-full max-w-full overflow-hidden">
-      <TasksHeader
-        onCreateClick={() => setCreateModalOpen(true)}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
-
-      <TasksFilters
-        search={search}
-        onSearchChange={setSearch}
-        selectedPriorities={selectedPriorities}
-        onPrioritiesChange={setSelectedPriorities}
-        selectedTags={selectedTags}
-        onTagsChange={setSelectedTags}
-        availableTags={availableTags}
-      />
-      
-      {viewMode === 'cols' && (
-        <TaskCols 
-          setActiveTask={setActiveTask}
-          activeTask={activeTask}
-          searchTasks={searchTasks}
-          selectedPriorities={selectedPriorities}
-          selectedTags={selectedTags}
+    <div className="task-surface min-h-full w-full">
+      <div className="relative z-10 w-full max-w-full overflow-hidden p-5">
+        <TasksHeader
+          onCreateClick={() => setCreateModalOpen(true)}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
-      )}
-      
-      {viewMode === 'rows' && (
-        <TaskRows
-          setActiveTask={setActiveTask}
-          activeTask={activeTask}
-          searchTasks={searchTasks}
-          selectedPriorities={selectedPriorities}
-          selectedTags={selectedTags}
-        />
-      )}
 
-      <TaskModal 
-        task={activeTask || undefined}
-        open={createModalOpen || activeTask !== null}
-        onClose={() => {
-          setCreateModalOpen(false);
-          setActiveTask(null);
-        }}
-      />
+        <TasksFilters
+          search={search}
+          onSearchChange={setSearch}
+          selectedPriorities={selectedPriorities}
+          onPrioritiesChange={setSelectedPriorities}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+          availableTags={availableTags}
+        />
+
+        {viewMode === 'cols' && (
+          <TaskCols
+            setActiveTask={setActiveTask}
+            activeTask={activeTask}
+            searchTasks={searchTasks}
+            selectedPriorities={selectedPriorities}
+            selectedTags={selectedTags}
+          />
+        )}
+
+        {viewMode === 'rows' && (
+          <TaskRows
+            setActiveTask={setActiveTask}
+            activeTask={activeTask}
+            searchTasks={searchTasks}
+            selectedPriorities={selectedPriorities}
+            selectedTags={selectedTags}
+          />
+        )}
+
+        <TaskModal
+          task={activeTask || undefined}
+          open={createModalOpen || activeTask !== null}
+          onClose={() => {
+            setCreateModalOpen(false);
+            setActiveTask(null);
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -1,115 +1,122 @@
-import { Text, Box, Group } from '@mantine/core';
-import { IconRobot, IconUser } from '@tabler/icons-react';
+import { Text, Box } from '@mantine/core';
 import { ConversationItem, ConversationItemRole } from '@/types/conversation';
 import { ChatComponentRenderer } from './ChatComponentRenderer';
+import { AttachedNoteChips } from './AttachedNoteChips';
+import { AssistantMark } from './AssistantMark';
+import { MessageActions } from './MessageActions';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { markdownComponents } from './markdownComponents';
 
 interface ChatMessageProps {
   message: ConversationItem;
+  /** Provided only for the latest assistant turn to enable regeneration. */
+  onRegenerate?: () => void;
 }
 
-export const ChatMessage = ({ message }: ChatMessageProps) => {
+const RoleLabel = ({ isUser }: { isUser: boolean }) => (
+  <div
+    className="chat-mono"
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 6,
+      fontSize: 11,
+      fontWeight: 600,
+      letterSpacing: '0.09em',
+      textTransform: 'uppercase',
+      color: 'var(--mantine-color-dimmed)',
+    }}
+  >
+    {!isUser && <AssistantMark size={13} />}
+    <span>{isUser ? 'You' : 'Assistant'}</span>
+  </div>
+);
+
+/**
+ * Bubbleless, document-style message. Both roles are full-width and
+ * left-aligned, distinguished by a mono role label and (for the assistant) the
+ * signature mark + a subtle aurora tint panel. Rich content — markdown, code,
+ * and embedded task/note cards — gets the full column width.
+ */
+export const ChatMessage = ({ message, onRegenerate }: ChatMessageProps) => {
   const isUser = message.role === ConversationItemRole.USER;
   const isTool = message.role === ConversationItemRole.TOOL;
 
-  // Render tool messages if they have componentData
+  // Tool messages: render their cards full-width with no label or tint.
   if (isTool) {
-    if (!message.componentData) {
-      return null; // Don't show tool messages without component data
-    }
-
+    if (!message.componentData) return null;
     return (
-      <Box
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-start',
-          marginBottom: 12,
-        }}
-      >
-        <Group
-          gap="xs"
-          style={{
-            maxWidth: '90%',
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-          }}
-        >
-          <div className="flex flex-1 min-w-0 ml-10">
-            <ChatComponentRenderer componentData={message.componentData} />
-          </div>
-        </Group>
-      </Box>
+      <div className="chat-message-in" style={{ padding: '4px 0' }}>
+        <ChatComponentRenderer componentData={message.componentData} />
+      </div>
     );
   }
 
+  const body = (
+    <>
+      {message.content ? (
+        <div style={{ wordBreak: 'break-word' }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            {message.content}
+          </ReactMarkdown>
+        </div>
+      ) : (
+        <Text size="sm" c="dimmed">
+          Empty message
+        </Text>
+      )}
+      {message.componentData?.type === 'attached-notes' ? (
+        <Box mt={8}>
+          <AttachedNoteChips notes={message.componentData.data} />
+        </Box>
+      ) : (
+        message.componentData && (
+          <ChatComponentRenderer componentData={message.componentData} />
+        )
+      )}
+    </>
+  );
+
   return (
-    <Box
-      style={{
-        display: 'flex',
-        justifyContent: isUser ? 'flex-end' : 'flex-start',
-        marginBottom: 10,
-      }}
-    >
-      <Group
-        gap="xs"
+    <div className="chat-message-in group" style={{ position: 'relative', padding: '8px 0' }}>
+      {/* Floating hover actions */}
+      <div
+        className="opacity-0 transition-opacity duration-150 group-hover:opacity-100"
         style={{
-          maxWidth: '85%',
-          flexDirection: isUser ? 'row-reverse' : 'row',
-          marginRight: isUser ? '10px' : '0',
-          alignItems: 'flex-start',
+          position: 'absolute',
+          top: 6,
+          right: 6,
+          zIndex: 2,
+          borderRadius: 8,
+          padding: 2,
+          background: 'var(--mantine-color-body)',
+          border: '1px solid var(--mantine-color-default-border)',
+          boxShadow: 'var(--mantine-shadow-sm)',
         }}
       >
-        {!isUser && (
-          <Box
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--mantine-color-gray-6)',
-              color: 'var(--mantine-color-white)',
-              flexShrink: 0,
-              lineHeight: '1',
-            }}
-          >
-            <IconRobot size={18} />
-          </Box>
-        )}
-        <Box style={{ flex: 1, minWidth: 0 }}>
-          <Box
-            style={{
-              backgroundColor: isUser ? 'var(--mantine-color-blue-light)' : 'var(--mantine-color-default-hover)',
-              padding: '3px 10px',
-              borderRadius: 12,
-              border: `1px solid ${isUser ? 'var(--mantine-color-blue-3)' : 'var(--mantine-color-default-border)'}`,
-              lineHeight: '1',
-            }}
-          >
-            <div className="text-sm leading-normal word-break-break-word">
-              {message.content ? (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={markdownComponents}
-                >
-                  {message.content}
-                </ReactMarkdown>
-              ) : (
-                <Text size="sm" c="dimmed">
-                  Empty message
-                </Text>
-              )}
-            </div>
-          </Box>
-          {/* Render component data if present */}
-          {message.componentData && (
-            <ChatComponentRenderer componentData={message.componentData} />
-          )}
+        <MessageActions content={message.content} onRegenerate={onRegenerate} />
+      </div>
+
+      {isUser ? (
+        <div style={{ paddingRight: 56 }}>
+          <RoleLabel isUser />
+          {body}
+        </div>
+      ) : (
+        <Box
+          style={{
+            background: 'var(--chat-assistant-tint)',
+            border: '1px solid var(--mantine-color-default-border)',
+            borderRadius: 14,
+            padding: '12px 16px',
+          }}
+        >
+          <RoleLabel isUser={false} />
+          {body}
         </Box>
-      </Group>
-    </Box>
+      )}
+    </div>
   );
 };

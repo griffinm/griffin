@@ -9,6 +9,7 @@ import { Loader } from '@mantine/core'
 import { IconFileText, IconLink } from '@tabler/icons-react'
 import { fetchSearchResults } from '@/api/searchApi'
 import { fetchNoteById } from '@/api/notesApi'
+import { MenuPanel, MenuRow, MenuStatus } from './MenuPrimitives'
 
 const SEARCH_TIMEOUT = 300
 const MIN_SEARCH_LENGTH = 2
@@ -133,19 +134,17 @@ export const NoteLinkList = forwardRef<NoteLinkListRef, NoteLinkListProps>(
     const renderBody = () => {
       if (loading) {
         return (
-          <div className="flex items-center gap-2 p-3 text-sm text-[var(--mantine-color-dimmed)]">
-            <Loader size="xs" />
-            <span>{pastedNoteId ? 'Resolving note…' : 'Searching…'}</span>
-          </div>
+          <MenuStatus>
+            <span className="flex items-center gap-2">
+              <Loader size="xs" />
+              {pastedNoteId ? 'Resolving note…' : 'Searching…'}
+            </span>
+          </MenuStatus>
         )
       }
 
       if (error) {
-        return (
-          <div className="p-3 text-sm text-[var(--mantine-color-red-text)]">
-            {error}
-          </div>
-        )
+        return <MenuStatus tone="error">{error}</MenuStatus>
       }
 
       if (items.length === 0) {
@@ -153,48 +152,26 @@ export const NoteLinkList = forwardRef<NoteLinkListRef, NoteLinkListProps>(
           query.length < MIN_SEARCH_LENGTH && !pastedNoteId
             ? 'Type to search your notes, or paste a note link…'
             : 'No matching notes'
-        return (
-          <div className="p-3 text-sm text-[var(--mantine-color-dimmed)]">
-            {hint}
-          </div>
-        )
+        return <MenuStatus>{hint}</MenuStatus>
       }
 
       return items.map((item, index) => (
-        <div
+        <MenuRow
           key={item.id}
-          // Keep the editor focused so `command` inserts at the suggestion range.
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => selectItem(index)}
-          className={`flex flex-col p-2 cursor-pointer border-b border-[var(--mantine-color-gray-1)] last:border-b-0 ${
-            index === selectedIndex
-              ? 'bg-[var(--mantine-color-default-hover)]'
-              : 'hover:bg-[var(--mantine-color-default-hover)]'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {pastedNoteId ? (
-              <IconLink size={14} className="text-[var(--mantine-color-dimmed)] flex-shrink-0" />
-            ) : (
-              <IconFileText size={14} className="text-[var(--mantine-color-dimmed)] flex-shrink-0" />
-            )}
-            <span className="font-medium text-sm truncate">{item.label}</span>
-          </div>
-          {item.snippet && (
-            <div
-              className="text-xs text-[var(--mantine-color-dimmed)] italic mt-1 line-clamp-2"
-              dangerouslySetInnerHTML={{ __html: item.snippet }}
-            />
-          )}
-        </div>
+          selected={index === selectedIndex}
+          onSelect={() => selectItem(index)}
+          leading={pastedNoteId ? <IconLink size={16} /> : <IconFileText size={16} />}
+          title={item.label}
+          description={
+            item.snippet ? (
+              <span dangerouslySetInnerHTML={{ __html: item.snippet }} />
+            ) : undefined
+          }
+        />
       ))
     }
 
-    return (
-      <div className="w-80 max-h-80 overflow-y-auto bg-[var(--mantine-color-body)] border border-[var(--mantine-color-gray-3)] rounded-md shadow-lg">
-        {renderBody()}
-      </div>
-    )
+    return <MenuPanel label="Link to note">{renderBody()}</MenuPanel>
   },
 )
 

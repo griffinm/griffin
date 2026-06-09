@@ -156,3 +156,65 @@
     background-color: var(--mantine-color-blue-light-hover);
   }
 }
+
+// Dropdown placement "pill" (Dropdown extension). The node is inline, so it
+// flows within text. Colors come from the option's Mantine color scheme,
+// applied inline as CSS variables by getPillStyle().
+.dropdown-component {
+  display: inline;
+  white-space: nowrap;
+}
+
+.dropdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 0.85em;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  vertical-align: baseline;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+
+  &--interactive {
+    cursor: pointer;
+    padding-right: 5px; // balances the trailing caret
+
+    &:hover {
+      background-color: var(--pill-bg-hover, var(--pill-bg));
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow:
+        0 0 0 2px var(--mantine-color-body),
+        0 0 0 3px currentColor;
+    }
+  }
+}
+
+.dropdown-pill__caret {
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: transform 120ms ease;
+}
+
+// Configure-dropdowns modal: detail pane fades/slides in when the selection
+// changes (the pane is keyed by id so it remounts).
+@keyframes dropdownDetailIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-detail {
+  animation: dropdownDetailIn 160ms ease;
+}

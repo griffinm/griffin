@@ -21,10 +21,17 @@ export interface ConversationItem {
   toolCallId?: string | null;
   toolName?: string | null;
   componentData?: {
-    type: 'task' | 'note';
+    type: 'task' | 'note' | 'attached-notes';
     data: any | any[];
   };
   createdAt: Date;
+}
+
+/** A compact reference to a note attached to a chat message. */
+export interface AttachedNoteRef {
+  id: string;
+  title: string;
+  notebookId?: string;
 }
 
 export interface Conversation {
