@@ -6,6 +6,7 @@ import { SearchService } from "../search/search.service";
 import { associateTasks } from "./associateTasks";
 import { associateQuestions } from "./associateQuestions";
 import { associateDropdownInstances } from "./associateDropdownInstances";
+import { associateDataTables } from "./associateDataTables";
 import { applyNotebookDefaultTags } from "./applyNotebookDefaultTags";
 import { buildNotePreview } from "./buildNotePreview";
 import { Prisma, Tag } from "@prisma/client";
@@ -178,6 +179,7 @@ export class NoteService {
     associateTasks(updatedNote, userId, this.prisma, this.logger);
     associateQuestions(updatedNote, userId, this.prisma, this.logger);
     associateDropdownInstances(updatedNote, this.prisma, this.logger);
+    associateDataTables(updatedNote, this.prisma, this.logger);
 
     return updatedNote;
   }

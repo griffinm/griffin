@@ -218,3 +218,282 @@
 .dropdown-detail {
   animation: dropdownDetailIn 160ms ease;
 }
+
+// Data table block (DataTable extension): a structured "quiet database" —
+// the chrome recedes (hairline card, small-caps tracked headers with type
+// glyphs, hover-revealed affordances) so the data carries the color: select
+// cells reuse the Dropdown feature's pills.
+.data-table-component {
+  margin: 0.75em 0;
+}
+
+.data-table {
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px dashed var(--mantine-color-default-border);
+    border-radius: 8px;
+
+    &--loading {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      border-style: solid;
+    }
+  }
+
+  // ---- block toolbar (grip · filters · hidden count) -----------------------
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+    min-height: 26px;
+  }
+
+  &__grip {
+    display: inline-flex;
+    align-items: center;
+    cursor: grab;
+    color: var(--mantine-color-dimmed);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover &__grip {
+    opacity: 0.7;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  // Each filter is a single pill-shaped chip; the controls inside lose their
+  // frames so the chip reads as one object: [column · op · value · ×].
+  &__filter {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--mantine-color-default-border);
+    border-radius: 999px;
+    padding: 1px 4px 1px 8px;
+    background: var(--mantine-color-body);
+
+    .mantine-Input-input {
+      border: none;
+      background: transparent;
+      min-height: 24px;
+      height: 24px;
+      font-size: var(--mantine-font-size-xs);
+    }
+
+    .mantine-Input-section {
+      height: 24px;
+    }
+  }
+
+  &__hidden-count {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // ---- the table card -------------------------------------------------------
+
+  // The card is also the horizontal scroll container for narrow viewports.
+  &__card {
+    border: 1px solid var(--mantine-color-default-border);
+    border-radius: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: var(--mantine-color-body);
+  }
+
+  &__table {
+    thead tr {
+      // A whisper of a wash so the header band reads as structure, not content.
+      background: color-mix(
+        in srgb,
+        var(--mantine-color-default-hover) 55%,
+        transparent
+      );
+    }
+
+    tbody tr {
+      transition: background-color 0.1s ease;
+    }
+
+    tbody tr:hover {
+      background: var(--mantine-color-default-hover);
+    }
+
+    // Quiet affordances: clear (×) buttons inside cells surface on row hover
+    // or while editing, never at rest.
+    tbody .mantine-InputClearButton-root,
+    tbody .mantine-CloseButton-root {
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    tbody tr:hover .mantine-InputClearButton-root,
+    tbody tr:focus-within .mantine-InputClearButton-root,
+    tbody tr:hover .mantine-CloseButton-root,
+    tbody tr:focus-within .mantine-CloseButton-root {
+      opacity: 0.7;
+    }
+
+    // Same for each column's config chevron, revealed by its own header.
+    th [aria-label='Configure column'] {
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    th:hover [aria-label='Configure column'],
+    th:focus-within [aria-label='Configure column'] {
+      opacity: 1;
+    }
+  }
+
+  // ---- column headers: small-caps tracked labels with a type glyph ----------
+  // (echoes the sidebar's section labels — WORKSPACE, NOTEBOOKS)
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  &__header-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mantine-color-dimmed);
+    cursor: pointer;
+    transition: color 0.12s ease;
+
+    &:hover,
+    &.is-sorted {
+      color: var(--mantine-color-blue-filled);
+    }
+  }
+
+  &__type-glyph {
+    opacity: 0.55;
+    flex-shrink: 0;
+  }
+
+  // ---- cells -----------------------------------------------------------------
+
+  &__td--number {
+    .mantine-Input-input {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  // Empty select cell: a quiet dash that invites a click.
+  &__select-empty {
+    display: inline-flex;
+    align-items: center;
+    min-width: 28px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    color: var(--mantine-color-dimmed);
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity 0.12s ease, background-color 0.12s ease;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+      background: var(--mantine-color-default-hover);
+      outline: none;
+    }
+  }
+
+  &__actions-col {
+    width: 32px;
+  }
+
+  &__row-delete {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  tr:hover &__row-delete {
+    opacity: 0.7;
+  }
+
+  // ---- ghost "new row" -------------------------------------------------------
+
+  &__new-row {
+    cursor: pointer;
+
+    td {
+      padding: 5px 10px;
+    }
+  }
+
+  &__new-row-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--mantine-font-size-xs);
+    color: var(--mantine-color-dimmed);
+    opacity: 0.7;
+    transition: opacity 0.12s ease;
+  }
+
+  &__new-row:hover &__new-row-label {
+    opacity: 1;
+  }
+}
+
+// The data table draws its own hairlines: reset the prose-table cell chrome
+// that the editor applies to every <table> in the document (scoped under
+// .ProseMirror + card to win that specificity battle), then add ours back.
+// Fixed layout: data columns share the width evenly; the actions column
+// keeps its 32px.
+.ProseMirror .data-table__card .data-table__table {
+  width: 100%;
+  min-width: 320px;
+  margin: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: none;
+  }
+
+  thead th {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--mantine-color-default-border);
+  }
+
+  tbody td {
+    padding: 3px 10px;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--mantine-color-default-border) 60%, transparent);
+    // Multi-line text cells grow; keep neighbors pinned to the top.
+    vertical-align: top;
+  }
+
+  tbody tr:last-of-type td {
+    border-bottom: none;
+  }
+}

@@ -18,6 +18,7 @@ import { AudioModule } from '../audio/audio.module';
 import { LlmModule } from '../llm/llm.module';
 import { QueueModule } from '../queue/queue.module';
 import { DropdownsModule } from '../dropdowns/dropdowns.module';
+import { DataTablesModule } from '../data-tables/data-tables.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { DropdownsModule } from '../dropdowns/dropdowns.module';
     QueueModule,
     LlmModule,
     DropdownsModule,
+    DataTablesModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerMiddleware],

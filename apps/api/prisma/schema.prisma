@@ -23,6 +23,7 @@ model User {
   audioTranscriptions AudioTranscription[]
   conversations       Conversation[]
   dropdowns           Dropdown[]
+  dataTables          DataTable[]
   googleConnection    GoogleConnection?
 
   @@map("users")
@@ -118,6 +119,7 @@ model Note {
   questions  Question[]
   tasks      Task[]
   dropdownInstances DropdownInstance[]
+  dataTables DataTable[]
 
   @@map("notes")
 }
@@ -309,4 +311,23 @@ model DropdownInstance {
   @@index([dropdownId])
   @@index([noteId])
   @@map("dropdown_instances")
+}
+
+model DataTable {
+  id        String    @id @default(uuid()) @map("id")
+  noteId    String    @map("note_id")
+  userId    String    @map("user_id")
+  columns   Json      @map("columns") // DataTableColumn[]
+  rows      Json      @map("rows") // DataTableRow[] — stored in insertion order; sort/filter never reorder
+  sort      Json?     @map("sort") // DataTableSort | null
+  filters   Json      @default("[]") @map("filters") // DataTableFilter[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  note      Note      @relation(fields: [noteId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([noteId])
+  @@index([userId])
+  @@map("data_tables")
 }

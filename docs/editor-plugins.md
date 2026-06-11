@@ -35,6 +35,14 @@ apps/ui2/src/components/Editor/
     ├── CollapsibleHeading/ # extends @tiptap/extension-heading
     │   ├── Extension.ts
     │   └── Component.tsx
+    ├── DataTable/          # block node (backend-backed by reference)
+    │   ├── Extension.ts
+    │   ├── Component.tsx
+    │   ├── MenuItem.tsx
+    │   ├── CellEditor.tsx        # typed inline cell input
+    │   ├── ColumnHeader.tsx      # sort cycling + column config popover
+    │   ├── FilterBar.tsx         # persisted filter editor
+    │   └── view.ts               # pure sort/filter/coercion helpers
     ├── Dropdown/           # inline node (backend-backed instance reference)
     │   ├── Extension.ts
     │   ├── Component.tsx
@@ -81,9 +89,14 @@ const baseExtensions = [
   NoteLinkExtension,
 ];
 
-// Inside the Editor component — inject this note's id into the Dropdown plugin:
+// Inside the Editor component — inject this note's id into the plugins that
+// create backend rows for their placements:
 const extensions = useMemo(
-  () => [...baseExtensions, DropdownExtension.configure({ noteId })],
+  () => [
+    ...baseExtensions,
+    DropdownExtension.configure({ noteId }),
+    DataTableExtension.configure({ noteId }),
+  ],
   [noteId],
 );
 ```
@@ -96,8 +109,9 @@ rather than building custom equivalents:
 `StarterKit` (Bold, Italic, Strike, Code, CodeBlock, Paragraph, lists, Blockquote,
 HorizontalRule, Image, History, …), `TaskList` + `TaskItem` (checkbox lists — distinct
 from the custom **Task** block), `TextAlign`, `Link`, `TableCell` / `TableHeader` /
-`TableRow`, `TableImproved` (resizable tables, `mui-tiptap`), `ResizableImage`
-(`mui-tiptap`), `LinkBubbleMenuHandler` (`mui-tiptap`).
+`TableRow`, `TableImproved` (resizable **prose** tables, `mui-tiptap` — distinct from
+the custom **DataTable** block, which is for typed, sortable/filterable data),
+`ResizableImage` (`mui-tiptap`), `LinkBubbleMenuHandler` (`mui-tiptap`).
 
 ---
 
@@ -332,6 +346,52 @@ addInputRules() {
 - **Files:** `Extension.ts`, `Component.tsx`, `MenuItem.tsx`; plus
   `components/dropdowns/` (config modal, color picker, color util) and the
   `dropdowns` API/hooks/types.
+
+### DataTable — `plugins/DataTable/`
+
+- **What:** A structured, Notion-style data table with **typed columns**
+  (`text | number | date | select`) that can be **sorted** (click a column header:
+  none → asc → desc) and **filtered** (AND-combined per-column conditions). Distinct
+  from the stock prose table (`TableImproved`), which stays free-form; design
+  rationale and data shapes in [docs/data-table-design.md](data-table-design.md).
+- **Select columns** have two option sources (chosen in the column config popover):
+  **custom** typed-in strings stored on the column, or a **linked Dropdown
+  definition** (`column.dropdownId`) reusing the Dropdown feature's options. Linked
+  cells store the *option id* (like `DropdownInstance.selectedOptionId`), so renaming
+  an option in the Dropdown config propagates to every cell, and options render with
+  their configured colors. Switching type or source remaps existing values
+  best-effort by label. Select sorting follows the **defined option order**, not
+  alphabetical.
+- **Base / type:** Custom `Node`, `group: 'block'`, `atom: true`, `draggable: true`
+  (the drag handle is a grip icon in the table's toolbar row, not the whole block).
+- **Attributes:** `tableId` (the backing row) and `cloneFrom` (transient, see paste).
+- **Storage:** Backend-backed **by reference** — the node stores only `tableId`; the
+  columns, rows, and the applied sort/filters live as JSON on a `DataTable` Prisma row.
+  See [dataTablesApi.ts](../apps/ui2/src/api/dataTablesApi.ts),
+  [useDataTables.ts](../apps/ui2/src/hooks/useDataTables.ts),
+  [types/dataTable.ts](../apps/ui2/src/types/dataTable.ts). Sort/filter are applied
+  **non-destructively** in the NodeView (`view.ts`): the stored row order never changes.
+- **Persistence model:** edits update the React Query cache optimistically and PATCH
+  `/data-tables/:id` on a ~450 ms debounce (`useUpdateDataTable` deliberately does
+  **not** write responses back into the cache — see the comment in `useDataTables.ts`).
+  Because edits go to the table's own row, they do **not** touch `Note.content`, bump
+  the note version, or pollute search/previews.
+- **Lifecycle:**
+  - **Lazy creation** — a fresh node has `tableId === ''`; the NodeView POSTs
+    `/data-tables` on mount (seeding 3 text columns × 3 rows) and writes the id back.
+  - **Clone on paste** — the dedup `appendTransaction` plugin differs from Dropdown's:
+    a duplicated placement gets `tableId: ''` **plus `cloneFrom: <original id>`**, and
+    the NodeView POSTs `/data-tables/clone` so the copy keeps the data (row ids
+    regenerated) instead of resetting to empty.
+  - **Association on save** —
+    [associateDataTables.ts](../apps/api/src/notes/associateDataTables.ts) (called from
+    `NoteService.update`) soft-deletes tables of the note whose `tableid="…"` no longer
+    appears in the saved content.
+- **Trigger:** Toolbar button (`DataTableMenuItem`, database icon, `noteId`-gated) and
+  the `@ → Data Table` action (direct insert).
+- **Files:** `Extension.ts`, `Component.tsx`, `MenuItem.tsx`, `CellEditor.tsx`,
+  `ColumnHeader.tsx`, `FilterBar.tsx`, `view.ts`; plus the `data-tables` API module
+  ([apps/api/src/data-tables/](../apps/api/src/data-tables/)).
 
 ### Question — `plugins/Question/`
 

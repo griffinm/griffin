@@ -51,6 +51,8 @@ import { CollapsibleHeading } from './plugins/CollapsibleHeading/Extension';
 import { NoteLinkExtension } from './plugins/NoteLink/Extension';
 import { DropdownExtension } from './plugins/Dropdown/Extension';
 import { DropdownMenuItem } from './plugins/Dropdown/MenuItem';
+import { DataTableExtension } from './plugins/DataTable/Extension';
+import { DataTableMenuItem } from './plugins/DataTable/MenuItem';
 import { createMedia } from '@/api/mediaApi';
 import { useOpenNote } from '@/hooks/useOpenNote';
 import './styles.scss';
@@ -110,10 +112,15 @@ export function Editor({
     [computedColorScheme],
   );
 
-  // Build the extension list per editor instance so the Dropdown plugin can be
-  // configured with this note's id (needed to create instance rows).
+  // Build the extension list per editor instance so the Dropdown and DataTable
+  // plugins can be configured with this note's id (needed to create their
+  // backing rows).
   const extensions = useMemo(
-    () => [...baseExtensions, DropdownExtension.configure({ noteId })],
+    () => [
+      ...baseExtensions,
+      DropdownExtension.configure({ noteId }),
+      DataTableExtension.configure({ noteId }),
+    ],
     [noteId],
   );
 
@@ -123,11 +130,14 @@ export function Editor({
   });
 
   // The editor is created once, so push the current noteId into the Dropdown
-  // plugin's storage whenever it changes (its NodeViews read it from there to
-  // create instance rows).
+  // and DataTable plugins' storage whenever it changes (their NodeViews read
+  // it from there to create their backing rows).
   useEffect(() => {
     if (editor?.storage?.dropdown) {
       editor.storage.dropdown.noteId = noteId;
+    }
+    if (editor?.storage?.dataTable) {
+      editor.storage.dataTable.noteId = noteId;
     }
   }, [editor, noteId]);
 
@@ -318,6 +328,7 @@ export function Editor({
             <MenuDivider />
             <TaskMenuItem />
             {noteId && <DropdownMenuItem noteId={noteId} />}
+            {noteId && <DataTableMenuItem />}
             <QuestionMenuItem />
             <PromptMenuItem />
             <MenuDivider />

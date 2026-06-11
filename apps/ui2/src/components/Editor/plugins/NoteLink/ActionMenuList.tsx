@@ -11,6 +11,7 @@ import {
   IconHelp,
   IconCheckbox,
   IconTable,
+  IconDatabase,
   type TablerIcon,
 } from '@tabler/icons-react'
 import { MenuPanel, MenuRow, MenuStatus } from './MenuPrimitives'
@@ -31,6 +32,7 @@ export const EDITOR_ACTIONS: EditorAction[] = [
   { id: 'question', label: 'Question', Icon: IconHelp },
   { id: 'task', label: 'Task', Icon: IconCheckbox },
   { id: 'table', label: 'Table', Icon: IconTable },
+  { id: 'dataTable', label: 'Data Table', Icon: IconDatabase },
 ]
 
 export interface ActionMenuListRef {

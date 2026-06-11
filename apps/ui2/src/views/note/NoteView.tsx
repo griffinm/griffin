@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Center, Loader, Text, Menu, ActionIcon, Switch } from '@mantine/core';
-import { IconDots, IconTrash, IconCopy, IconFolderSymlink } from '@tabler/icons-react';
+import { Anchor, Breadcrumbs, Center, Loader, Text, Menu, ActionIcon, Switch } from '@mantine/core';
+import { IconChevronRight, IconDots, IconTrash, IconCopy, IconFolderSymlink } from '@tabler/icons-react';
 import { useNote, useUpdateNote, useDeleteNote } from '@/hooks/useNotes';
+import { useNotebooks } from '@/hooks/useNotebooks';
+import { getNotebookPath } from '@/utils/notebookPath';
 import { Editor } from '@/components/Editor';
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { Editor as TiptapEditor } from '@tiptap/core';
@@ -25,6 +27,7 @@ export function NoteView() {
   const { updateTabTitle, closeTab } = useTabsContext();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const { data: note, isLoading, error } = useNote(noteId || '');
+  const { data: notebooks } = useNotebooks();
   const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -244,6 +247,8 @@ export function NoteView() {
     );
   }
 
+  const notebookPath = getNotebookPath(note.notebookId, notebooks);
+
   return (
     <div
       ref={containerRef}
@@ -270,8 +275,30 @@ export function NoteView() {
           transition: 'all 0.2s ease',
         }}
       >
+        {/* Notebook ancestry breadcrumb */}
+        {!isScrolled && notebookPath.length > 0 && (
+          <Breadcrumbs
+            separator={<IconChevronRight size={12} />}
+            separatorMargin={4}
+            style={{ flexWrap: 'wrap', rowGap: 2, marginBottom: 4 }}
+          >
+            {notebookPath.map((notebook) => (
+              <Anchor
+                key={notebook.id}
+                component="button"
+                type="button"
+                size="xs"
+                c="dimmed"
+                onClick={() => navigate(`/notebooks/${notebook.id}`)}
+              >
+                {notebook.title || 'Untitled Notebook'}
+              </Anchor>
+            ))}
+          </Breadcrumbs>
+        )}
+
         {/* Title row with tags and menu */}
-        <div style={{ 
+        <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px',

@@ -26,9 +26,9 @@ export interface AtMenuListRef {
  * Multi-stage popup mounted by the "@" suggestion (see `suggestion.ts`):
  * stage 1 is the actions menu (`ActionMenuList`). "Link To Note" and "Dropdown"
  * switch to a stage-2 list — note search (`NoteLinkList`) or dropdown picker
- * (`DropdownPickerList`). The remaining actions (Prompt, Question, Task, Table)
- * insert their node directly and dismiss the popup. Keyboard events are routed
- * to the active stage.
+ * (`DropdownPickerList`). The remaining actions (Prompt, Question, Task, Table,
+ * Data Table) insert their node directly and dismiss the popup. Keyboard events
+ * are routed to the active stage.
  */
 interface AtMenuListProps {
   /** Text typed after the "@" trigger. */
@@ -68,6 +68,7 @@ export const AtMenuList = forwardRef<AtMenuListRef, AtMenuListProps>(
         case 'prompt':
         case 'question':
         case 'task':
+        case 'dataTable':
           // Direct insert (no stage 2): replacing the whole suggestion range
           // ("@" + query) drops in the atom block node and, by removing the
           // "@", ends the suggestion and dismisses the popup.
